@@ -14,11 +14,31 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $admins = [
-            ['name' => 'Admin One', 'email' => 'admin1@gmail.com'],
-            ['name' => 'Admin Two', 'email' => 'admin2@gmail.com'],
-            ['name' => 'Admin Three', 'email' => 'admin3@gmail.com'],
-            ['name' => 'Admin Four', 'email' => 'admin4@gmail.com'],
-            ['name' => 'Admin Five', 'email' => 'admin5@gmail.com'],
+            [
+                'name' => 'Admin One',
+                'email' => 'admin1@gmail.com',
+                'password' => '1111',
+            ],
+            [
+                'name' => 'Admin Two',
+                'email' => 'admin2@gmail.com',
+                'password' => '2222',
+            ],
+            [
+                'name' => 'Admin Three',
+                'email' => 'admin3@gmail.com',
+                'password' => '3333',
+            ],
+            [
+                'name' => 'Admin Four',
+                'email' => 'admin4@gmail.com',
+                'password' => '4444',
+            ],
+            [
+                'name' => 'Admin Five',
+                'email' => 'admin5@gmail.com',
+                'password' => '5555',
+            ],
         ];
 
         foreach ($admins as $admin) {
@@ -26,7 +46,7 @@ class AdminUserSeeder extends Seeder
                 ['email' => $admin['email']],
                 [
                     'name' => $admin['name'],
-                    'password' => Hash::make('admin123'),
+                    'password' => Hash::make($admin['password']),
                     'is_admin' => true,
                 ]
             );

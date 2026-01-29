@@ -5,8 +5,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Frontend\HomeController;
 
 
+//frontend routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
+
+
+
+
+
+//backend routes
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Login page
