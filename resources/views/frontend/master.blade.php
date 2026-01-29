@@ -76,6 +76,30 @@
 <!-- custom js -->
 <script src="{{ asset('feane-1.0.0/js/custom.js') }}"></script>
   <!-- End Google Map -->
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{{-- SweetAlert Flash Messages --}}
+@if(session('success'))
+<script>
+  Swal.fire({
+    icon: 'success',
+    title: 'Success',
+    text: "{{ session('success') }}",
+    confirmButtonColor: '#f1b816'
+  });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: "{{ session('error') }}",
+    confirmButtonColor: '#d33'
+  });
+</script>
+@endif
 
 </body>
 
