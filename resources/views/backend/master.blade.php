@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -9,87 +8,136 @@
     <meta name="description" content="" />
     <meta name="keyword" content="" />
     <meta name="author" content="flexilecode" />
-    <!--! The above 6 meta tags *must* come first in the head; any other head content must come *after* these tags !-->
-    <!--! BEGIN: Apps Title-->
+
     <title>Duralux || Dashboard</title>
-    <!--! END:  Apps Title-->
-    <!--! BEGIN: Favicon-->
-    <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.ico" />
-    <!--! END: Favicon-->
-    <!--! BEGIN: Bootstrap CSS-->
-    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css" />
-    <!--! END: Bootstrap CSS-->
-    <!--! BEGIN: Vendors CSS-->
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/daterangepicker.min.css" />
-    <!--! END: Vendors CSS-->
-    <!--! BEGIN: Custom CSS-->
-    <link rel="stylesheet" type="text/css" href="assets/css/theme.min.css" />
-    <!--! END: Custom CSS-->
-    <!--! HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries !-->
-    <!--! WARNING: Respond.js doesn"t work if you view the page via file: !-->
-    <!--[if lt IE 9]>
-			<script src="https:oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-			<script src="https:oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-		<![endif]-->
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon.ico') }}" />
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/vendors/css/vendors.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendors/css/daterangepicker.min.css') }}" />
+
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}" />
 </head>
 
 <body>
-    <!--! ================================================================ !-->
-    <!--! [Start] Navigation Manu !-->
-    <!--! ================================================================ !-->
-@include('backend.partials.sidebar')
-    <!--! ================================================================ !-->
-    <!--! [End]  Navigation Manu !-->
-    <!--! ================================================================ !-->
-    <!--! ================================================================ !-->
-    <!--! [Start] Header !-->
-    <!--! ================================================================ !-->
-@include('backend.partials.header')
-    <!--! ================================================================ !-->
-    <!--! [End] Header !-->
-    <!--! ================================================================ !-->
-    <!--! ================================================================ !-->
-    <!--! [Start] Main Content !-->
-    <!--! ================================================================ !-->
-<!--  GLOBAL CONTENT WRAPPER (ONLY HERE) -->
+
+    <!-- ================= Sidebar ================= -->
+    @include('backend.partials.sidebar')
+    <!-- ========================================== -->
+
+    <!-- ================= Header ================= -->
+    @include('backend.partials.header')
+    <!-- ========================================== -->
+
+    <!-- ================= Main Content ================= -->
     <main class="nxl-container">
         <div class="nxl-content">
 
-            {{-- Page content will come here --}}
+            {{-- Page specific content --}}
             @yield('content')
 
         </div>
     </main>
-    <!-- ✅ END GLOBAL WRAPPER -->
+    <!-- =============================================== -->
 
-    <!--! ================================================================ !-->
-    <!--! [End] Main Content !-->
-    <!--! ================================================================ !-->
-    <!--! ================================================================ !-->
-    <!--! BEGIN: Theme Customizer !-->
-    <!--! ================================================================ !-->
-@include('backend.partials.customizer')
-    <!--! ================================================================ !-->
-    <!--! [End] Theme Customizer !-->
-    <!--! ================================================================ !-->
-    <!--! ================================================================ !-->
-    <!--! Footer Script !-->
-    <!--! ================================================================ !-->
-    <!--! BEGIN: Vendors JS !-->
-    <script src="assets/vendors/js/vendors.min.js"></script>
-    <!-- vendors.min.js {always must need to be top} -->
-    <script src="assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="assets/vendors/js/apexcharts.min.js"></script>
-    <script src="assets/vendors/js/circle-progress.min.js"></script>
-    <!--! END: Vendors JS !-->
-    <!--! BEGIN: Apps Init  !-->
-    <script src="assets/js/common-init.min.js"></script>
-    <script src="assets/js/dashboard-init.min.js"></script>
-    <!--! END: Apps Init !-->
-    <!--! BEGIN: Theme Customizer  !-->
-    <script src="assets/js/theme-customizer-init.min.js"></script>
-    <!--! END: Theme Customizer !-->
+    <!-- ================= Theme Customizer ================= -->
+    @include('backend.partials.customizer')
+    <!-- =================================================== -->
+
+    <!-- ================= Scripts ================= -->
+
+    <!-- Vendors JS -->
+    <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
+
+    <!-- App Init -->
+    <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
+    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
+
+    <!-- Theme Customizer -->
+    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
+
+    <!-- ================= SweetAlert2 ================= -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ================= Global SweetAlert Messages ================= -->
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: "{{ session('success') }}",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "{{ session('error') }}"
+            });
+        </script>
+    @endif
+
+    <!-- ================= SweetAlert Confirmations ================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // 🔴 DELETE CONFIRM (any form with .delete-form)
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "This action cannot be undone!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+            // 🔒 LOGOUT CONFIRM (sidebar logout)
+            document.querySelectorAll('.logout-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Logout?',
+                        text: 'You will be logged out from admin panel',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Logout',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+        });
+    </script>
+
 </body>
-
 </html>
