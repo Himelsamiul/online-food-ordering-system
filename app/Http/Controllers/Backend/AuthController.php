@@ -23,15 +23,21 @@ class AuthController extends Controller
 
         if (!auth()->user()->is_admin) {
             auth()->logout();
-            return back()->with('error', 'You are not admin');
+
+            return back()->withErrors([
+                'login' => 'You are not authorized as admin'
+            ]);
         }
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Welcome back!');
     }
 
-    return back()->with('error', 'Invalid email or password');
+    return back()->withErrors([
+        'login' => 'Invalid email or password'
+    ]);
 }
+
 
     public function logout()
 {

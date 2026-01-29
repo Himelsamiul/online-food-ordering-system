@@ -216,8 +216,16 @@
                                 <div class="d-flex align-items-center">
                                     <img src="{{ asset('assets/images/avatar/1.png') }}" alt="user-image" class="img-fluid user-avtar" />
                                     <div>
-                                        <h6 class="text-dark mb-0">Alexandra Della <span class="badge bg-soft-success text-success ms-1">PRO</span></h6>
-                                        <span class="fs-12 fw-medium text-muted">alex@example.com</span>
+                                        <h6 class="text-dark mb-0">
+    {{ auth()->user()->name }}
+    <span class="badge bg-soft-success text-success ms-1">ADMIN</span>
+</h6>
+<span class="fs-12 fw-medium text-muted">
+    {{ auth()->user()->email }}
+</span>
+
+
+
                                     </div>
                                 </div>
                             </div>
@@ -277,10 +285,15 @@
                                 <span>Profile Details</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <a href="./auth-login-minimal.html" class="dropdown-item">
-                                <i class="feather-log-out"></i>
-                                <span>Logout</span>
-                            </a>
+                            <form action="{{ route('admin.logout') }}" method="POST" id="logout-form">
+    @csrf
+    <a href="javascript:void(0);"
+       class="dropdown-item"
+       onclick="document.getElementById('logout-form').submit();">
+        <i class="feather-log-out"></i>
+        <span>Logout</span>
+    </a>
+</form>
                         </div>
                     </div>
                 </div>
