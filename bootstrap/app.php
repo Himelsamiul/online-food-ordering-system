@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminAuth;
+use App\Http\Middleware\FrontendAuth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // ✅ Admin middleware alias (Laravel 12 way)
         $middleware->alias([
             'admin' => AdminAuth::class,
+            'frontend.auth' => FrontendAuth::class,
         ]);
 
     })

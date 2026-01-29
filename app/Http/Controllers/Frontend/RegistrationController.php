@@ -45,8 +45,29 @@ class RegistrationController extends Controller
             'image'     => $imagePath,
         ]);
 
-       return redirect()->route('home')
+       return redirect()->route('login')
     ->with('success', 'Registration successful');
 
+    }
+
+    public function registrations()
+    {
+        $registrations = Registration::latest()->get();
+        return view('backend.pages.registrations.index', compact('registrations'));
+    }
+
+    // ✅ Delete a registered user
+    public function deleteRegistration($id)
+    {
+        $user = Registration::findOrFail($id);
+
+        // delete image if exists
+        if ($user->image && file_exists(public_path('storage/' . $user->image))) {
+            unlink(public_path('storage/' . $user->image));
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'User deleted successfully');
     }
 }

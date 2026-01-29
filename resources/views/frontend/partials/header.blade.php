@@ -1,34 +1,66 @@
  <header class="header_section">
-      <div class="container">
-        <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="">
-            <span>
-              Feane
-            </span>
-          </a>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg custom_nav-container ">
+      <a class="navbar-brand" href="{{ route('home') }}">
+        <span>Feane</span>
+      </a>
 
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class=""> </span>
-          </button>
+      <button class="navbar-toggler" type="button" data-toggle="collapse"
+        data-target="#navbarSupportedContent">
+        <span></span>
+      </button>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav  mx-auto ">
-              <li class="nav-item active">
-                <a class="nav-link" href="{{ route('home') }}">Home <span class="sr-only">(current)</span></a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">Menu</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">About</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">Contact us</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ route('register') }}">Registration</a>
-              </li>
-            </ul>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mx-auto ">
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('home') }}">Home</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#">Menu</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('about') }}">About</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#">Contact us</a>
+          </li>
+
+          {{-- 🔐 AUTH SECTION (ONLY THIS IS DYNAMIC) --}}
+          @if(session()->has('frontend_user'))
+
+            <li class="nav-item">
+              <a class="nav-link text-warning" href="#">
+                {{ session('frontend_user.name') }}
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="nav-link btn btn-link p-0">
+                  Logout
+                </button>
+              </form>
+            </li>
+
+          @else
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('register') }}">Registration</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('login') }}">Login</a>
+            </li>
+
+          @endif
+
+        </ul>
+
             <div class="user_option">
               <a href="" class="user_link">
                 <i class="fa fa-user" aria-hidden="true"></i>
@@ -92,9 +124,6 @@
                   <i class="fa fa-search" aria-hidden="true"></i>
                 </button>
               </form>
-              <a href="" class="order_online">
-                Order Online
-              </a>
             </div>
           </div>
         </nav>
