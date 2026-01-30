@@ -32,7 +32,6 @@ public function login(Request $request)
         return back()->with('error', 'Invalid username/email or password');
     }
 
-    // ✅ USER SESSION SET
     Session::put('frontend_user', [
         'id'       => $user->id,
         'name'     => $user->full_name,
@@ -40,9 +39,15 @@ public function login(Request $request)
         'email'    => $user->email,
     ]);
 
+    
+    if ($request->has('remember')) {
+        session()->put('remember_me', true);
+    }
+
     return redirect()->route('home')
         ->with('success', 'Login successful');
 }
+
 
 
 public function logout()
