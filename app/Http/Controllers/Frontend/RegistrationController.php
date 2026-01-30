@@ -70,4 +70,23 @@ class RegistrationController extends Controller
 
         return back()->with('success', 'User deleted successfully');
     }
+
+    // User profile
+public function profile()
+{
+    $sessionUser = session('frontend_user');
+
+    if (!$sessionUser) {
+        return redirect()->route('login');
+    }
+
+    $user = Registration::findOrFail($sessionUser['id']);
+
+    return view('frontend.pages.profile', compact('user'));
+}
+
+
+
+
+    
 }

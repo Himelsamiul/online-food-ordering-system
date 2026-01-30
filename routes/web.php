@@ -17,12 +17,11 @@ Route::post('/register', [RegistrationController::class, 'store'])->name('regist
 Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
+Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
 Route::middleware('frontend.auth')->group(function () {
-
-    // About Us (protected as you asked)
-    Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
-
+    
+// user profile
+    Route::get('/profile', [RegistrationController::class, 'profile'])->name('profile');
 });
 
 

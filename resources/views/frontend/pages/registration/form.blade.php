@@ -119,20 +119,5 @@
         </div>
     </div>
 </section>
-<style>
 
-    /* FIX footer overlap on inner pages */
-.registration-section {
-    position: relative;
-    z-index: 1;
-    background: #f8f9fa;
-    padding-bottom: 100px; /* footer space */
-}
-
-.footer_section {
-    position: relative !important;
-    margin-top: 0 !important;
-}
-
-</style>
 @endsection

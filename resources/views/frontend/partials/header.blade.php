@@ -29,11 +29,11 @@
             <a class="nav-link" href="#">Contact us</a>
           </li>
 
-          {{-- 🔐 AUTH SECTION (ONLY THIS IS DYNAMIC) --}}
+          {{--  AUTH SECTION (ONLY THIS IS DYNAMIC) --}}
           @if(session()->has('frontend_user'))
 
             <li class="nav-item">
-              <a class="nav-link text-warning" href="#">
+              <a class="nav-link text-warning" href="{{ route('profile') }}">
                 {{ session('frontend_user.name') }}
               </a>
             </li>

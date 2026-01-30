@@ -53,7 +53,12 @@
   <!-- footer section -->
 @include('frontend.partials.footer')
   <!-- footer section -->
-
+<style>
+.footer_section {
+    position: relative !important;
+    margin-top: 0 !important;
+}
+</style>
   <!-- jQery -->
   <!-- jquery -->
 <script src="{{ asset('feane-1.0.0/js/jquery-3.4.1.min.js') }}"></script>
