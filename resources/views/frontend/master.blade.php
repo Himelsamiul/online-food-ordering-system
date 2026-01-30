@@ -41,7 +41,7 @@
 
   <div class="hero_area">
     <div class="bg-box">
-      <img src="images/hero-bg.jpg" alt="">
+      <img src="{{ asset('images/hero-bg.jpg') }}" alt="">
     </div>
     <!-- header section strats -->
    @include('frontend.partials.header')
@@ -58,6 +58,46 @@
     position: relative !important;
     margin-top: 0 !important;
 }
+
+
+/* Glass / Transparent Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.12); /* transparency */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    color: #fff;
+}
+
+/* Text tuning inside glass card */
+.glass-card h4,
+.glass-card h5 {
+    color: #ffffff;
+}
+
+.glass-card p,
+.glass-card small {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Table inside glass card */
+.glass-card table {
+    color: #fff;
+}
+
+.glass-card table thead {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.glass-card table tbody tr {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.glass-card table tbody tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.35);
+}
+
 </style>
   <!-- jQery -->
   <!-- jquery -->

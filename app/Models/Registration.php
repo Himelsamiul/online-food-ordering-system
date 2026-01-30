@@ -14,5 +14,6 @@ class Registration extends Model
         'dob',
         'password',
         'image',
+        'address',
     ];
 }

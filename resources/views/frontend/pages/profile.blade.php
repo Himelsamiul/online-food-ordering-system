@@ -8,7 +8,7 @@
         {{-- PROFILE CARD (CENTERED) --}}
         <div class="row justify-content-center mb-5">
             <div class="col-lg-5 col-md-7 col-sm-10">
-                <div class="card shadow-lg p-4 text-center">
+                <div class="card glass-card shadow-lg p-4 text-center">
 
                     {{-- USER IMAGE / ICON --}}
                     <div class="mb-3">
@@ -31,15 +31,23 @@
 
                     <p class="mb-1"><strong>Email:</strong> {{ $user->email }}</p>
                     <p class="mb-1"><strong>Phone:</strong> {{ $user->phone }}</p>
+                    <p class="mb-1"><strong>Address:</strong> {{ $user->address }}</p>
                     <p class="mb-0"><strong>DOB:</strong> {{ $user->dob }}</p>
+                        {{-- EDIT BUTTON --}}
+    <hr>
+    <a href="{{ route('profile.edit') }}" class="btn btn-outline-light mt-2">
+        Edit Profile
+    </a>
                 </div>
             </div>
         </div>
 
+
+
         {{-- ORDER HISTORY (FULL WIDTH BELOW PROFILE) --}}
         <div class="row">
             <div class="col-12">
-                <div class="card shadow-lg p-4">
+                <div class="card glass-card shadow-lg p-4">
 
                     <h4 class="mb-3">Order History</h4>
 

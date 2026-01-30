@@ -7,7 +7,7 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
 
-                <div class="card shadow p-4">
+                <div class="card glass-card shadow p-4">
                     <h3 class="text-center mb-4">User Registration</h3>
 
                     <form action="{{ route('register.store') }}" method="POST" enctype="multipart/form-data">
@@ -19,6 +19,7 @@
                             <input type="text"
                                    name="full_name"
                                    value="{{ old('full_name') }}"
+                                   placeholder="e.g. John Doe"
                                    class="form-control @error('full_name') is-invalid @enderror">
                             @error('full_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -31,9 +32,10 @@
                             <input type="text"
                                    name="username"
                                    value="{{ old('username') }}"
+                                      placeholder="e.g. johndoe123"
                                    class="form-control @error('username') is-invalid @enderror">
                             @error('username')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback" style="font-weight: bold;">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -46,7 +48,7 @@
                                    value="{{ old('phone') }}"
                                    class="form-control @error('phone') is-invalid @enderror">
                             @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback" style="font-weight: bold;">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -56,9 +58,22 @@
                             <input type="email"
                                    name="email"
                                    value="{{ old('email') }}"
-                                   class="form-control @error('email') is-invalid @enderror">
+                                   placeholder="example@mail.com"
+                                   class="form-control @error('email') is-invalid @enderror" style="font-weight: bold;">
                             @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback" style="font-weight: bold;">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        {{-- Address --}}
+                        <div class="form-group mb-3">
+                            <label>Address</label>
+                            <input type="text"
+                                   name="address"
+                                   value="{{ old('address') }}"
+                                   placeholder="e.g. 123 Main Street, City"
+                                   class="form-control @error('address') is-invalid @enderror" style="font-weight: bold;">
+                            @error('address')
+                                <div class="invalid-feedback" style="font-weight: bold;">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -68,6 +83,7 @@
                             <input type="date"
                                    name="dob"
                                    value="{{ old('dob') }}"
+                                   placeholder="YYYY-MM-DD"
                                    class="form-control @error('dob') is-invalid @enderror">
                             @error('dob')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -79,6 +95,7 @@
                             <label>Password</label>
                             <input type="password"
                                    name="password"
+                                   placeholder="Enter a strong password"
                                    class="form-control @error('password') is-invalid @enderror">
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -90,6 +107,7 @@
                             <label>Confirm Password</label>
                             <input type="password"
                                    name="password_confirmation"
+                                      placeholder="Re-enter your password"
                                    class="form-control">
                         </div>
 
@@ -98,6 +116,7 @@
                             <label>Profile Image (optional)</label>
                             <input type="file"
                                    name="image"
+                                   placeholder="Upload your profile picture"
                                    class="form-control @error('image') is-invalid @enderror">
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -106,7 +125,7 @@
 
                         {{-- Submit --}}
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-outline-light mt-2">
                                 Register
                             </button>
                         </div>

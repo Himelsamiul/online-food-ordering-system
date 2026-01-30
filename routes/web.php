@@ -22,6 +22,8 @@ Route::middleware('frontend.auth')->group(function () {
     
 // user profile
     Route::get('/profile', [RegistrationController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [RegistrationController::class, 'editProfile'])->name('profile.edit');
+    Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
 });
 
 

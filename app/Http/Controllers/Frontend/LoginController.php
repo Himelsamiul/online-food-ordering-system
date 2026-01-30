@@ -44,7 +44,7 @@ public function login(Request $request)
         session()->put('remember_me', true);
     }
 
-    return redirect()->route('home')
+    return redirect()->route('profile')
         ->with('success', 'Login successful');
 }
 

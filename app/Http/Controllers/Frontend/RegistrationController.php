@@ -25,8 +25,9 @@ class RegistrationController extends Controller
                 'unique:registrations,phone'
             ],
             'email'     => 'required|email|unique:registrations,email',
-            'dob'       => 'required|date',
+            'dob'       => 'required|date|before:today',
             'password'  => 'required|min:6|confirmed',
+            'address'   => 'nullable|string|max:500',
             'image'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -41,6 +42,7 @@ class RegistrationController extends Controller
             'phone'     => $request->phone,
             'email'     => $request->email,
             'dob'       => $request->dob,
+            'address'   => $request->address,
             'password'  => Hash::make($request->password),
             'image'     => $imagePath,
         ]);
@@ -85,7 +87,71 @@ public function profile()
     return view('frontend.pages.profile', compact('user'));
 }
 
+// Show edit profile form
+public function editProfile()
+{
+    $sessionUser = session('frontend_user');
 
+    if (!$sessionUser) {
+        return redirect()->route('login');
+    }
+
+    $user = Registration::findOrFail($sessionUser['id']);
+
+    return view('frontend.pages.profile-edit', compact('user'));
+}
+
+// Update profile
+public function updateProfile(Request $request)
+{
+    $sessionUser = session('frontend_user');
+    $user = Registration::findOrFail($sessionUser['id']);
+
+    $request->validate([
+        'full_name' => 'required|string|max:255',
+        'username'  => 'required|string|max:100|unique:registrations,username,' . $user->id,
+        'phone'     => [
+            'required',
+            'regex:/^(013|014|015|016|017|018|019)[0-9]{8}$/',
+            'unique:registrations,phone,' . $user->id
+        ],
+        'email' => 'required|email|unique:registrations,email,' . $user->id,
+        'dob'   => 'required|date|before:today',
+        'address' => 'nullable|string|max:500',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+
+    ], [
+        'required' => 'This field is required.',
+        'email'    => 'Please enter a valid email address.',
+        'unique'   => 'This value is already taken.',
+        'regex'    => 'Invalid phone number format.',
+    ]);
+
+    // image update (optional)
+    if ($request->hasFile('image')) {
+        if ($user->image && file_exists(public_path('storage/'.$user->image))) {
+            unlink(public_path('storage/'.$user->image));
+        }
+
+        $user->image = $request->file('image')->store('registrations', 'public');
+    }
+
+    $user->update([
+        'full_name' => $request->full_name,
+        'username'  => $request->username,
+        'phone'     => $request->phone,
+        'email'     => $request->email,
+        'dob'       => $request->dob,
+        'address'   => $request->address,
+    ]);
+
+    // update session name/email
+    session()->put('frontend_user.name', $user->full_name);
+    session()->put('frontend_user.email', $user->email);
+
+    return redirect()->route('profile')
+        ->with('success', 'Profile updated successfully');
+}
 
 
     

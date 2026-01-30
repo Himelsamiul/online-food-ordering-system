@@ -7,7 +7,7 @@
         <div class="row justify-content-center">
             <div class="col-md-5">
 
-                <div class="card shadow p-4">
+                <div class="glass-card shadow p-4">
                     <h3 class="text-center mb-4">Login</h3>
 
                     <form action="{{ route('login.submit') }}" method="POST">
@@ -47,7 +47,7 @@
 
                         {{-- Submit --}}
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-outline-light mt-2">
                                 Login
                             </button>
                         </div>
