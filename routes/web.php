@@ -11,20 +11,26 @@ use App\Http\Controllers\Frontend\LoginController;
 
 
 //frontend routes
+// frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/register', [RegistrationController::class, 'create'])->name('register');
-Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
-Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+
+Route::middleware('guest:frontend')->group(function () {
+    Route::get('/register', [RegistrationController::class, 'create'])->name('register');
+    Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
+    Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+});
+
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
-Route::middleware('frontend.auth')->group(function () {
-    
-// user profile
+
+Route::middleware('auth:frontend')->group(function () {
     Route::get('/profile', [RegistrationController::class, 'profile'])->name('profile');
     Route::get('/profile/edit', [RegistrationController::class, 'editProfile'])->name('profile.edit');
     Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
 });
+
 
 
 //backend routes
@@ -48,4 +54,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('category.edit');
         Route::post('/categories/{id}/update', [CategoryController::class, 'update'])->name('category.update');     
         Route::delete('/categories/{id}/delete', [CategoryController::class, 'destroy'])->name('category.delete');
+      
+        // Login history
+        Route::get('/login-history', [LoginController::class, 'loginHistory'])->name('login.history');
+
+        
 });

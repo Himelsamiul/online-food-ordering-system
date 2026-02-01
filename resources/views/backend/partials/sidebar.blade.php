@@ -90,7 +90,7 @@
                         </a>
                         <ul class="nxl-submenu">
                             <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.registrations') }}">Customers</a></li>
-                            <li class="nxl-item"><a class="nxl-link" href="customers-view.html">Customers View</a></li>
+                            <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.login.history') }}">Customers Login History</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="customers-create.html">Customers Create</a></li>
                         </ul>
                     </li>
