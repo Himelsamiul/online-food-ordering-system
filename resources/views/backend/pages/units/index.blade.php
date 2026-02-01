@@ -153,7 +153,7 @@
 
                             <div class="col-md-12 d-flex gap-2 mt-2">
                                 <button type="submit" class="btn btn-primary">
-                                    🔎 Search
+                                     Search
                                 </button>
 
                                 <a href="{{ route('admin.units.index') }}"
