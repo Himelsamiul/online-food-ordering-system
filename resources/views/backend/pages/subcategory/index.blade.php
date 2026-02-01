@@ -74,7 +74,9 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.subcategory.store') }}" method="POST">
+                <form action="{{ route('admin.subcategory.store') }}"
+                      method="POST"
+                      enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
@@ -98,6 +100,14 @@
                                placeholder="Subcategory name"
                                value="{{ old('name') }}"
                                required>
+                    </div>
+
+                    {{-- IMAGE FIELD --}}
+                    <div class="mb-3">
+                        <label class="form-label">Subcategory Image</label>
+                        <input type="file"
+                               name="image"
+                               class="form-control">
                     </div>
 
                     <div class="mb-3">
@@ -202,6 +212,7 @@
                         <thead>
                         <tr>
                             <th style="width:60px;">SL</th>
+                            <th style="width:80px;">Image</th>
                             <th>Category</th>
                             <th>Subcategory</th>
                             <th>Create Time</th>
@@ -213,6 +224,18 @@
                         @forelse($subcategories as $key => $subcategory)
                             <tr>
                                 <td>{{ $subcategories->firstItem() + $key }}</td>
+
+                                {{-- IMAGE --}}
+                                <td>
+                                    @if($subcategory->image)
+                                        <img src="{{ asset('storage/'.$subcategory->image) }}"
+                                             width="50"
+                                             class="rounded">
+                                    @else
+                                        <i class="fa fa-image text-muted"></i>
+                                    @endif
+                                </td>
+
                                 <td>{{ $subcategory->category->name ?? 'N/A' }}</td>
                                 <td>{{ $subcategory->name }}</td>
                                 <td>{{ $subcategory->created_at->format('d M Y h:i A') }}</td>
@@ -222,59 +245,54 @@
                                     </span>
                                 </td>
 
+                                <td>
+                                    <div class="d-grid gap-1">
 
+                                        <a href="{{ route('admin.subcategory.edit', $subcategory->id) }}"
+                                           class="btn btn-sm btn-primary">
+                                            Edit
+                                        </a>
 
-<td>
-    <div class="d-grid gap-1">
+                                        @if($subcategory->foods_count > 0)
 
-        <a href="{{ route('admin.subcategory.edit', $subcategory->id) }}"
-           class="btn btn-sm btn-primary">
-            Edit
-        </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-secondary"
+                                                    onclick="toggleFoods({{ $subcategory->id }})">
+                                                Delete
+                                            </button>
 
-        @if($subcategory->foods_count > 0)
+                                            <small class="text-muted text-center">
+                                                Already used in food
+                                            </small>
 
-            <button type="button"
-                    class="btn btn-sm btn-secondary"
-                    onclick="toggleFoods({{ $subcategory->id }})">
-                Delete
-            </button>
+                                            <div id="foods-{{ $subcategory->id }}" style="display:none;">
+                                                <ul class="mb-0 ps-3 text-muted">
+                                                    @foreach($subcategory->foods as $food)
+                                                        <li>{{ $food->name }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
 
-            <small class="text-muted text-center">
-                Already used in food
-            </small>
+                                        @else
 
-            <div id="foods-{{ $subcategory->id }}" style="display:none;">
-                <ul class="mb-0 ps-3 text-muted">
-                    @foreach($subcategory->foods as $food)
-                        <li>{{ $food->name }}</li>
-                    @endforeach
-                </ul>
-            </div>
+                                            <form action="{{ route('admin.subcategory.delete', $subcategory->id) }}"
+                                                  method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Are you sure?')">
+                                                    Delete
+                                                </button>
+                                            </form>
 
-        @else
+                                        @endif
 
-            <form action="{{ route('admin.subcategory.delete', $subcategory->id) }}"
-                  method="POST">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-sm btn-danger"
-                        onclick="return confirm('Are you sure?')">
-                    Delete
-                </button>
-            </form>
-
-        @endif
-
-    </div>
-</td>
-
-
-
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">
+                                <td colspan="7" class="text-center text-muted">
                                     No subcategories found
                                 </td>
                             </tr>
@@ -312,9 +330,10 @@
         }
     });
 
-     function toggleFoods(id) {
+    function toggleFoods(id) {
         const el = document.getElementById('foods-' + id);
         el.style.display = (el.style.display === 'none') ? 'block' : 'none';
     }
 </script>
+
 @endsection

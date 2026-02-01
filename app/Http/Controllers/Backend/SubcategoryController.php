@@ -6,65 +6,69 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Subcategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SubcategoryController extends Controller
 {
-    // index + create form
+    // =========================
+    // INDEX (list + filter)
+    // =========================
     public function index(Request $request)
-{
-    // Category list for dropdown
-    $categories = Category::where('status', 1)->get();
+    {
+        // Active categories for dropdown
+        $categories = Category::where('status', 1)->get();
 
-    // Base query
-    $query = Subcategory::with(['category', 'foods:id,name,subcategory_id'])
+        $query = Subcategory::with(['category'])
             ->withCount('foods');
 
-    // 🔍 Filter by category
-    if ($request->filled('category_id')) {
-        $query->where('category_id', $request->category_id);
+        // Filter: category
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filter: name
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        // Filter: status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $subcategories = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('backend.pages.subcategory.index', compact(
+            'categories',
+            'subcategories'
+        ));
     }
 
-    // Search by subcategory name
-    if ($request->filled('name')) {
-        $query->where('name', 'like', '%' . $request->name . '%');
-    }
-
-    //  Filter by status
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
-
-    // From date
-    if ($request->filled('from_date')) {
-        $query->whereDate('created_at', '>=', $request->from_date);
-    }
-
-    //  To date
-    if ($request->filled('to_date')) {
-        $query->whereDate('created_at', '<=', $request->to_date);
-    }
-
-    // Pagination + keep filters
-    $subcategories = $query->latest()
-        ->paginate(10)
-        ->withQueryString();
-
-    return view('backend.pages.subcategory.index', compact(
-        'categories',
-        'subcategories'
-    ));
-}
-
-    // store
+    // =========================
+    // STORE
+    // =========================
     public function store(Request $request)
     {
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name'        => 'required|string|max:255',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status'      => 'required|boolean',
         ]);
 
-        // 🔴 Duplicate check (same category + same name)
+        // Duplicate check
         $exists = Subcategory::where('category_id', $request->category_id)
             ->where('name', $request->name)
             ->exists();
@@ -75,16 +79,25 @@ class SubcategoryController extends Controller
                 ->with('error', 'This subcategory already exists in the selected category.');
         }
 
+        // Image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('subcategories', 'public');
+        }
+
         Subcategory::create([
             'category_id' => $request->category_id,
             'name'        => $request->name,
+            'image'       => $imagePath,
             'status'      => $request->status,
         ]);
 
         return back()->with('success', 'Subcategory created successfully');
     }
 
-    // edit page
+    // =========================
+    // EDIT
+    // =========================
     public function edit(Subcategory $subcategory)
     {
         $categories = Category::where('status', 1)->get();
@@ -95,16 +108,19 @@ class SubcategoryController extends Controller
         ));
     }
 
-    // update
+    // =========================
+    // UPDATE
+    // =========================
     public function update(Request $request, Subcategory $subcategory)
     {
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name'        => 'required|string|max:255',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status'      => 'required|boolean',
         ]);
 
-        // 🔴 Duplicate check (except current subcategory)
+        // Duplicate check (ignore current)
         $exists = Subcategory::where('category_id', $request->category_id)
             ->where('name', $request->name)
             ->where('id', '!=', $subcategory->id)
@@ -116,9 +132,22 @@ class SubcategoryController extends Controller
                 ->with('error', 'This subcategory already exists in the selected category.');
         }
 
+        // Image update
+        $imagePath = $subcategory->image;
+
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($subcategory->image && Storage::disk('public')->exists($subcategory->image)) {
+                Storage::disk('public')->delete($subcategory->image);
+            }
+
+            $imagePath = $request->file('image')->store('subcategories', 'public');
+        }
+
         $subcategory->update([
             'category_id' => $request->category_id,
             'name'        => $request->name,
+            'image'       => $imagePath,
             'status'      => $request->status,
         ]);
 
@@ -127,15 +156,23 @@ class SubcategoryController extends Controller
             ->with('success', 'Subcategory updated successfully');
     }
 
-    // delete
-public function destroy(Subcategory $subcategory)
-{
-    if ($subcategory->foods()->count() > 0) {
-        return back()->with('error', 'This subcategory is already used in food items.');
+    // =========================
+    // DELETE
+    // =========================
+    public function destroy(Subcategory $subcategory)
+    {
+        // Prevent delete if used in foods
+        if ($subcategory->foods()->count() > 0) {
+            return back()->with('error', 'This subcategory is already used in food items.');
+        }
+
+        // Delete image
+        if ($subcategory->image && Storage::disk('public')->exists($subcategory->image)) {
+            Storage::disk('public')->delete($subcategory->image);
+        }
+
+        $subcategory->delete();
+
+        return back()->with('success', 'Subcategory deleted successfully');
     }
-
-    $subcategory->delete();
-
-    return back()->with('success', 'Subcategory deleted successfully');
-}
 }

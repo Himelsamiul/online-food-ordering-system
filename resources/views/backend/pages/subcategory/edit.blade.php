@@ -30,7 +30,8 @@
                 @endif
 
                 <form action="{{ route('admin.subcategory.update', $subcategory->id) }}"
-                      method="POST">
+                      method="POST"
+                      enctype="multipart/form-data">
                     @csrf
 
                     {{-- Category --}}
@@ -58,6 +59,36 @@
                         >
                     </div>
 
+                    {{-- EXISTING IMAGE PREVIEW --}}
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+                        <div>
+                            @if($subcategory->image)
+                                <img
+                                    src="{{ asset('storage/'.$subcategory->image) }}"
+                                    width="100"
+                                    class="rounded border mb-2"
+                                >
+                            @else
+                                <i class="fa fa-image text-muted"></i>
+                                <span class="text-muted ms-1">No image uploaded</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- NEW IMAGE UPLOAD --}}
+                    <div class="mb-3">
+                        <label class="form-label">Change Image</label>
+                        <input
+                            type="file"
+                            name="image"
+                            class="form-control"
+                        >
+                        <small class="text-muted">
+                            Leave empty to keep current image
+                        </small>
+                    </div>
+
                     {{-- Status --}}
                     <div class="mb-3">
                         <label class="form-label">Status</label>
@@ -71,7 +102,7 @@
                         </select>
                     </div>
 
-                    {{-- Buttons (UNCHANGED UI) --}}
+                    {{-- Buttons --}}
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             Update Subcategory
