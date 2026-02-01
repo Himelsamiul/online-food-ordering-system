@@ -41,9 +41,103 @@ class LoginController extends Controller
         $user = Auth::guard('frontend')->user();
 
         // IP (local safe)
-        $ip = app()->environment('local')
-            ? '8.8.8.8'
-            : $request->ip();
+$fakeIps = [
+
+    // 🇺🇸 United States
+    '8.8.8.8',
+
+    // 🇨🇦 Canada
+    '99.79.0.1',
+
+    // 🇬🇧 United Kingdom
+    '81.2.69.142',
+
+    // 🇩🇪 Germany
+    '91.198.174.192',
+
+    // 🇫🇷 France
+    '62.210.0.1',
+
+    // 🇳🇱 Netherlands
+    '5.79.64.0',
+
+    // 🇧🇩 Bangladesh
+    '103.21.244.0',
+
+    // 🇮🇳 India
+    '49.44.0.1',
+
+    // 🇵🇰 Pakistan
+    '39.32.0.1',
+
+    // 🇱🇰 Sri Lanka
+    '112.134.0.1',
+
+    // 🇯🇵 Japan
+    '43.224.0.1',
+
+    // 🇨🇳 China
+    '36.112.0.1',
+
+    // 🇸🇬 Singapore
+    '139.99.0.1',
+
+    // 🇦🇺 Australia
+    '1.1.1.1',
+
+    // 🇳🇿 New Zealand
+    '202.89.32.1',
+
+    // 🇧🇷 Brazil
+    '191.96.0.1',
+
+    // 🇦🇷 Argentina
+    '190.16.0.1',
+
+    // 🇨🇱 Chile
+    '190.107.0.1',
+
+    // 🇲🇽 Mexico
+    '187.188.0.1',
+
+    // 🇿🇦 South Africa
+    '102.165.0.1',
+
+    // 🇳🇬 Nigeria
+    '105.112.0.1',
+
+    // 🇪🇬 Egypt
+    '41.32.0.1',
+
+    // 🇸🇦 Saudi Arabia
+    '95.177.0.1',
+
+    // 🇹🇷 Turkey
+    '88.255.0.1',
+
+    // 🇷🇺 Russia
+    '5.8.0.1',
+
+    // 🇪🇸 Spain
+    '83.44.0.1',
+
+    // 🇮🇹 Italy
+    '79.0.0.1',
+
+    // 🇸🇪 Sweden
+    '85.224.0.1',
+
+    // 🇳🇴 Norway
+    '84.48.0.1',
+
+    // 🇫🇮 Finland
+    '62.236.0.1',
+];
+
+
+$ip = app()->environment('local')
+    ? $fakeIps[array_rand($fakeIps)]
+    : $request->ip();
 
         $location = GeoIP::getLocation($ip);
 
@@ -91,15 +185,33 @@ class LoginController extends Controller
 
 public function loginHistory(Request $request)
 {
-    // pagination limit (default 20)
     $perPage = $request->get('per_page', 20);
 
-    $histories = LoginHistory::with('registration')
-        ->latest('logged_in_at')
+    $query = LoginHistory::with('registration')
+        ->latest('logged_in_at');
+
+    // 🔍 Search by name / username
+    if ($request->filled('name')) {
+        $query->whereHas('registration', function ($q) use ($request) {
+            $q->where('full_name', 'like', '%' . $request->name . '%')
+              ->orWhere('username', 'like', '%' . $request->name . '%');
+        });
+    }
+
+    // 🌍 Search by country
+    if ($request->filled('country')) {
+        $query->where('country', 'like', '%' . $request->country . '%');
+    }
+
+    // 📅 Search by date (login date)
+    if ($request->filled('date')) {
+        $query->whereDate('logged_in_at', $request->date);
+    }
+
+    $histories = $query
         ->paginate($perPage)
-        ->withQueryString(); // dropdown change করলে page reset না হয়
+        ->withQueryString();
 
-    return view('backend.pages.loginhistory', compact('histories', 'perPage'));
+    return view('backend.pages.loginhistory', compact('histories'));
 }
-
 }
