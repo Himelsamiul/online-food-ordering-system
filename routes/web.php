@@ -8,6 +8,7 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\RegistrationController;
 use App\Http\Controllers\Frontend\LoginController;
+use App\Http\Controllers\Backend\SubcategoryController;
 
 
 //frontend routes
@@ -57,6 +58,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
       
         // Login history
         Route::get('/login-history', [LoginController::class, 'loginHistory'])->name('login.history');
+
+        // Subcategory Module
+Route::get('/subcategories', [SubcategoryController::class, 'index'])->name('subcategory.index');
+Route::post('/subcategories', [SubcategoryController::class, 'store'])->name('subcategory.store');
+Route::get('/subcategories/{subcategory}/edit', [SubcategoryController::class, 'edit'])->name('subcategory.edit');
+Route::post('/subcategories/{subcategory}/update', [SubcategoryController::class, 'update'])->name('subcategory.update');
+Route::delete('/subcategories/{subcategory}/delete', [SubcategoryController::class, 'destroy'])->name('subcategory.delete');
 
         
 });

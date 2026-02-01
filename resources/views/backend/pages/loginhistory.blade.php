@@ -47,7 +47,7 @@
 
     {{-- 📋 Table --}}
     <table class="table table-bordered table-striped align-middle">
-        <thead class="table-light">
+        <thead class="table-responsive">
             <tr>
                 <th style="width:60px">SL</th>
                 <th>User</th>
