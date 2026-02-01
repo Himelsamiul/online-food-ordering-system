@@ -11,18 +11,18 @@ use App\Http\Controllers\Frontend\LoginController;
 use App\Http\Controllers\Backend\SubcategoryController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\FoodController;
+use App\Http\Controllers\Frontend\MenuController;
 
 
 //frontend routes
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-Route::middleware('guest:frontend')->group(function () {
+Route::get('/category/{id}', [MenuController::class, 'show']) ->name('category.show');
     Route::get('/register', [RegistrationController::class, 'create'])->name('register');
     Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-});
+
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 

@@ -63,7 +63,9 @@
     <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
 
     <!-- Theme Customizer -->
-    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
+   <!-- <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script> -->
+
+    {{-- Page specific scripts --}}
 
     <!-- ================= SweetAlert2 ================= -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

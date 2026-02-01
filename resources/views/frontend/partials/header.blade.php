@@ -17,9 +17,39 @@
             <a class="nav-link" href="{{ route('home') }}">Home</a>
           </li>
 
-          <li class="nav-item">
-            <a class="nav-link" href="#">Menu</a>
-          </li>
+<li class="nav-item dropdown">
+    <a
+        class="nav-link dropdown-toggle"
+        href="#"
+        id="categoryDropdown"
+        role="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+    >
+        Category
+    </a>
+
+    <div class="dropdown-menu" aria-labelledby="categoryDropdown">
+
+        {{-- SAFE CHECK: categories না থাকলেও error হবে না --}}
+        @forelse (($categories ?? []) as $category)
+            <a
+                class="dropdown-item"
+                href="{{ route('category.show', $category->id) }}"
+            >
+                {{ $category->name }}
+            </a>
+        @empty
+            <span class="dropdown-item text-muted">
+                No category available
+            </span>
+        @endforelse
+
+    </div>
+</li>
+
+
 
           <li class="nav-item">
             <a class="nav-link" href="{{ route('about') }}">About</a>
