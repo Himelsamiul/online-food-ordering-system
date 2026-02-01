@@ -83,6 +83,5 @@ Route::post('/foods/store', [FoodController::class, 'store'])->name('foods.store
 Route::get('/foods/{id}/edit', [FoodController::class, 'edit'])->name('foods.edit');
 Route::put('/foods/{id}/update', [FoodController::class, 'update'])->name('foods.update');
 Route::delete('/foods/{id}/delete', [FoodController::class, 'delete'])->name('foods.delete');
-
-        
+Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show');       
 });

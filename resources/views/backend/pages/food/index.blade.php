@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
-{{-- ================= Filter Styles (Same as Category) ================= --}}
+{{-- ================= Filter Styles ================= --}}
 <style>
     .filter-card {
         background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(16,185,129,.08));
@@ -115,45 +115,73 @@
                     <th>Subcategory</th>
                     <th>Price</th>
                     <th>Discount</th>
+                    <th>Discount Amount</th>
+                    <th>Final Price</th>
                     <th>Quantity</th>
                     <th>Unit</th>
-                    <th>Low Alert</th>
-                    <th>Barcode</th>
-                    <th>Description</th>
+                    
+                    
                     <th>Status</th>
-                    <th>Created</th>
+                    
                     <th width="160">Action</th>
                 </tr>
                 </thead>
 
                 <tbody>
                 @forelse($foods as $food)
+
+                    @php
+                        $price = $food->price;
+                        $discountPercent = $food->discount ?? 0;
+                        $discountAmount = ($price * $discountPercent) / 100;
+                        $finalPrice = $price - $discountAmount;
+                    @endphp
+
                     <tr>
                         <td>
                             @if($food->image)
                                 <img src="{{ asset('storage/'.$food->image) }}"
                                      style="height:45px;border-radius:6px">
-                            @else -
+                            @else
+                                -
                             @endif
                         </td>
+
                         <td>{{ $food->name }}</td>
                         <td>{{ $food->sku }}</td>
                         <td>{{ $food->subcategory->category->name ?? 'N/A' }}</td>
                         <td>{{ $food->subcategory->name ?? 'N/A' }}</td>
-                        <td>{{ $food->price }}</td>
-                        <td>{{ $food->discount ?? '-' }}</td>
+
+                        <td>{{ number_format($price,2) }} tk</td>
+
+                        <td>
+                            {{ $discountPercent ? $discountPercent.'%' : '-' }}
+                        </td>
+
+                        <td class="text-danger">
+                            {{ $discountAmount > 0 ? '-'.number_format($discountAmount,2).' tk' : '-' }}
+                        </td>
+
+                        <td class="fw-semibold text-success">
+                            {{ number_format($finalPrice,2) }} tk
+                        </td>
+
                         <td>{{ $food->quantity }}</td>
                         <td>{{ $food->unit->name ?? '-' }}</td>
-                        <td>{{ $food->low_stock_alert ?? '-' }}</td>
-                        <td>{{ $food->barcode ?? '-' }}</td>
-                        <td>{{ Str::limit($food->description, 30) }}</td>
                         <td>
                             <span class="badge {{ $food->status ? 'bg-success' : 'bg-danger' }}">
                                 {{ $food->status ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
-                        <td>{{ $food->created_at->format('d M Y h:i A') }}</td>
+
+                        
+
                         <td>
+
+                            <a href="{{ route('admin.foods.show', $food->id) }}"
+       class="btn btn-sm btn-info">
+        View
+    </a>
                             <a href="{{ route('admin.foods.edit',$food->id) }}"
                                class="btn btn-sm btn-primary">Edit</a>
 
@@ -168,9 +196,10 @@
                             </form>
                         </td>
                     </tr>
+
                 @empty
                     <tr>
-                        <td colspan="14" class="text-center text-muted">
+                        <td colspan="17" class="text-center text-muted">
                             No food found
                         </td>
                     </tr>

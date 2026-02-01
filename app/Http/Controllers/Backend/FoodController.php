@@ -158,4 +158,27 @@ class FoodController extends Controller
 
         return back()->with('success', 'Food deleted successfully');
     }
+
+
+
+    public function show($id)
+{
+    $food = Food::with([
+        'subcategory.category',
+        'unit'
+    ])->findOrFail($id);
+
+    $price = $food->price;
+    $discountPercent = $food->discount ?? 0;
+    $discountAmount = ($price * $discountPercent) / 100;
+    $finalPrice = $price - $discountAmount;
+
+    return view('backend.pages.food.show', compact(
+        'food',
+        'price',
+        'discountPercent',
+        'discountAmount',
+        'finalPrice'
+    ));
+}
 }
