@@ -10,6 +10,31 @@
             </div>
 
             <div class="card-body">
+
+                {{-- Flash Messages --}}
+                @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                {{-- Validation Errors --}}
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('admin.category.update', $category->id) }}" method="POST">
                     @csrf
 
@@ -19,7 +44,7 @@
                             type="text"
                             name="name"
                             class="form-control"
-                            value="{{ $category->name }}"
+                            value="{{ old('name', $category->name) }}"
                             required
                         >
                     </div>
@@ -30,16 +55,16 @@
                             name="description"
                             class="form-control"
                             rows="3"
-                        >{{ $category->description }}</textarea>
+                        >{{ old('description', $category->description) }}</textarea>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-control">
-                            <option value="1" {{ $category->status ? 'selected' : '' }}>
+                            <option value="1" {{ old('status', $category->status) == 1 ? 'selected' : '' }}>
                                 Active
                             </option>
-                            <option value="0" {{ !$category->status ? 'selected' : '' }}>
+                            <option value="0" {{ old('status', $category->status) == 0 ? 'selected' : '' }}>
                                 Inactive
                             </option>
                         </select>
@@ -56,6 +81,7 @@
                         </a>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>

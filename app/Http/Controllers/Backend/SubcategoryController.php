@@ -13,9 +13,10 @@ class SubcategoryController extends Controller
     public function index()
     {
         $categories = Category::where('status', 1)->get();
+
         $subcategories = Subcategory::with('category')
-    ->latest()
-    ->paginate(10);
+            ->latest()
+            ->paginate(10);
 
         return view('backend.pages.subcategory.index', compact(
             'categories',
@@ -29,7 +30,19 @@ class SubcategoryController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name'        => 'required|string|max:255',
+            'status'      => 'required|boolean',
         ]);
+
+        // 🔴 Duplicate check (same category + same name)
+        $exists = Subcategory::where('category_id', $request->category_id)
+            ->where('name', $request->name)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->with('error', 'This subcategory already exists in the selected category.');
+        }
 
         Subcategory::create([
             'category_id' => $request->category_id,
@@ -57,7 +70,20 @@ class SubcategoryController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name'        => 'required|string|max:255',
+            'status'      => 'required|boolean',
         ]);
+
+        // 🔴 Duplicate check (except current subcategory)
+        $exists = Subcategory::where('category_id', $request->category_id)
+            ->where('name', $request->name)
+            ->where('id', '!=', $subcategory->id)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->with('error', 'This subcategory already exists in the selected category.');
+        }
 
         $subcategory->update([
             'category_id' => $request->category_id,

@@ -10,6 +10,25 @@
             </div>
 
             <div class="card-body">
+
+                {{-- Error Message (duplicate etc.) --}}
+                @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- Validation Errors --}}
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('admin.subcategory.update', $subcategory->id) }}"
                       method="POST">
                     @csrf
@@ -20,7 +39,7 @@
                         <select name="category_id" class="form-control" required>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}"
-                                    {{ $subcategory->category_id == $category->id ? 'selected' : '' }}>
+                                    {{ old('category_id', $subcategory->category_id) == $category->id ? 'selected' : '' }}>
                                     {{ $category->name }}
                                 </option>
                             @endforeach
@@ -34,7 +53,7 @@
                             type="text"
                             name="name"
                             class="form-control"
-                            value="{{ $subcategory->name }}"
+                            value="{{ old('name', $subcategory->name) }}"
                             required
                         >
                     </div>
@@ -43,15 +62,16 @@
                     <div class="mb-3">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-control">
-                            <option value="1" {{ $subcategory->status ? 'selected' : '' }}>
+                            <option value="1" {{ old('status', $subcategory->status) == 1 ? 'selected' : '' }}>
                                 Active
                             </option>
-                            <option value="0" {{ !$subcategory->status ? 'selected' : '' }}>
+                            <option value="0" {{ old('status', $subcategory->status) == 0 ? 'selected' : '' }}>
                                 Inactive
                             </option>
                         </select>
                     </div>
 
+                    {{-- Buttons (UNCHANGED UI) --}}
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             Update Subcategory
@@ -62,6 +82,7 @@
                             Back
                         </a>
                     </div>
+
                 </form>
             </div>
         </div>

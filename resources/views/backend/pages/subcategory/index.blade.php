@@ -11,6 +11,31 @@
             </div>
             <div class="card-body">
 
+                {{-- Success Message --}}
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                {{-- Error Message (duplicate etc.) --}}
+                @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- Validation Errors --}}
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('admin.subcategory.store') }}" method="POST">
                     @csrf
 
@@ -20,7 +45,8 @@
                         <select name="category_id" class="form-control" required>
                             <option value="">Select Category</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}">
+                                <option value="{{ $category->id }}"
+                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                     {{ $category->name }}
                                 </option>
                             @endforeach
@@ -30,21 +56,20 @@
                     {{-- Subcategory Name --}}
                     <div class="mb-3">
                         <label class="form-label">Subcategory Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            class="form-control"
-                            placeholder="Subcategory name"
-                            required
-                        >
+                        <input type="text"
+                               name="name"
+                               class="form-control"
+                               placeholder="Subcategory name"
+                               value="{{ old('name') }}"
+                               required>
                     </div>
 
                     {{-- Status --}}
                     <div class="mb-3">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-control">
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
+                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
 
@@ -69,11 +94,12 @@
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th style="width:60px;">#</th>
+                                <th style="width:60px;">SL</th>
                                 <th>Category</th>
                                 <th>Subcategory</th>
+                                <th>Create Time</th>
                                 <th style="width:120px;">Status</th>
-                                <th style="width:120px;">Action</th>
+                                <th style="width:140px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,6 +112,10 @@
                                     </td>
 
                                     <td>{{ $subcategory->name }}</td>
+
+                                    <td>
+                                        {{ $subcategory->created_at->format('d M Y h:i A') }}
+                                    </td>
 
                                     <td>
                                         @if($subcategory->status)
@@ -106,7 +136,6 @@
                                               class="d-inline">
                                             @csrf
                                             @method('DELETE')
-
                                             <button type="submit"
                                                     class="btn btn-sm btn-danger"
                                                     onclick="return confirm('Are you sure?')">
@@ -117,7 +146,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">
+                                    <td colspan="6" class="text-center text-muted">
                                         No subcategories found
                                     </td>
                                 </tr>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Models\SubCategory;
 
 class CategoryController extends Controller
 {
@@ -21,6 +22,13 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|boolean'
         ]);
+    $exists = Category::where('name', $request->name)->exists();
+
+    if ($exists) {
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'This category already exists.');
+    }
 
         Category::create($request->only('name','description','status'));
 
@@ -42,6 +50,18 @@ class CategoryController extends Controller
             'status' => 'required|boolean'
         ]);
 
+    // 🔴 check duplicate except current ID
+    $exists = Category::where('name', $request->name)
+        ->where('id', '!=', $id)
+        ->exists();
+
+    if ($exists) {
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'This category name already exists.');
+    }
+
+
         Category::findOrFail($id)
             ->update($request->only('name','description','status'));
 
@@ -50,11 +70,19 @@ class CategoryController extends Controller
     }
 
 
-    public function destroy($id)
+public function destroy($id)
 {
+    $hasSub = SubCategory::where('category_id', $id)->exists();
+
+    if ($hasSub) {
+        return redirect()->route('admin.category.index')
+            ->with('error', 'This category has subcategories. Delete them first.');
+    }
+
     Category::findOrFail($id)->delete();
 
     return redirect()->route('admin.category.index')
         ->with('success', 'Category deleted successfully');
 }
+
 }
