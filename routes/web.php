@@ -9,6 +9,7 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\RegistrationController;
 use App\Http\Controllers\Frontend\LoginController;
 use App\Http\Controllers\Backend\SubcategoryController;
+use App\Http\Controllers\Backend\UnitController;
 
 
 //frontend routes
@@ -65,6 +66,13 @@ Route::post('/subcategories', [SubcategoryController::class, 'store'])->name('su
 Route::get('/subcategories/{subcategory}/edit', [SubcategoryController::class, 'edit'])->name('subcategory.edit');
 Route::post('/subcategories/{subcategory}/update', [SubcategoryController::class, 'update'])->name('subcategory.update');
 Route::delete('/subcategories/{subcategory}/delete', [SubcategoryController::class, 'destroy'])->name('subcategory.delete');
+
+//unit module
+Route::get('/units', [UnitController::class, 'index'])->name('units.index');
+Route::post('/units', [UnitController::class, 'store'])->name('units.store');
+Route::get('/units/{id}/edit', [UnitController::class, 'edit'])->name('units.edit');
+Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update');
+Route::delete('/units/{id}/delete', [UnitController::class, 'delete'])->name('units.delete');
 
         
 });
