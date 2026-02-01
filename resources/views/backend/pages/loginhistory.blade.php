@@ -74,7 +74,12 @@
                         </small>
                     </td>
 
-                    <td>{{ $history->ip_address }}</td>
+                   <td style="
+    color: #{{ substr(md5($history->ip_address), 0, 6) }};
+    font-weight: 600;
+">
+    {{ $history->ip_address }}
+</td>
 
                     <td>{{ $history->country }}, {{ $history->city }}</td>
 
