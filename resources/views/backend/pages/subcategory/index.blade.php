@@ -221,23 +221,56 @@
                                         {{ $subcategory->status ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <a href="{{ route('admin.subcategory.edit', $subcategory->id) }}"
-                                       class="btn btn-sm btn-primary">
-                                        Edit
-                                    </a>
 
-                                    <form action="{{ route('admin.subcategory.delete', $subcategory->id) }}"
-                                          method="POST"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Are you sure?')">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
+
+
+<td>
+    <div class="d-grid gap-1">
+
+        <a href="{{ route('admin.subcategory.edit', $subcategory->id) }}"
+           class="btn btn-sm btn-primary">
+            Edit
+        </a>
+
+        @if($subcategory->foods_count > 0)
+
+            <button type="button"
+                    class="btn btn-sm btn-secondary"
+                    onclick="toggleFoods({{ $subcategory->id }})">
+                Delete
+            </button>
+
+            <small class="text-muted text-center">
+                Already used in food
+            </small>
+
+            <div id="foods-{{ $subcategory->id }}" style="display:none;">
+                <ul class="mb-0 ps-3 text-muted">
+                    @foreach($subcategory->foods as $food)
+                        <li>{{ $food->name }}</li>
+                    @endforeach
+                </ul>
+            </div>
+
+        @else
+
+            <form action="{{ route('admin.subcategory.delete', $subcategory->id) }}"
+                  method="POST">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure?')">
+                    Delete
+                </button>
+            </form>
+
+        @endif
+
+    </div>
+</td>
+
+
+
                             </tr>
                         @empty
                             <tr>
@@ -278,5 +311,10 @@
             fromPicker.set("maxDate", dateStr);
         }
     });
+
+     function toggleFoods(id) {
+        const el = document.getElementById('foods-' + id);
+        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    }
 </script>
 @endsection

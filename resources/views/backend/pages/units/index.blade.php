@@ -60,6 +60,10 @@
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
 
+                @if(session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -91,7 +95,7 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary w-100">
                         Add Unit
                     </button>
                 </form>
@@ -153,7 +157,7 @@
 
                             <div class="col-md-12 d-flex gap-2 mt-2">
                                 <button type="submit" class="btn btn-primary">
-                                     Search
+                                    Search
                                 </button>
 
                                 <a href="{{ route('admin.units.index') }}"
@@ -175,10 +179,11 @@
                             <th>Unit Name</th>
                             <th>Create Time</th>
                             <th style="width:120px;">Status</th>
-                            <th style="width:140px;">Action</th>
+                            <th style="width:160px;">Action</th>
                         </tr>
                         </thead>
                         <tbody>
+
                         @forelse($units as $key => $unit)
                             <tr>
                                 <td>{{ $units->firstItem() + $key }}</td>
@@ -190,21 +195,48 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.units.edit', $unit->id) }}"
-                                       class="btn btn-sm btn-primary">
-                                        Edit
-                                    </a>
+                                    <div class="d-grid gap-1">
 
-                                    <form action="{{ route('admin.units.delete', $unit->id) }}"
-                                          method="POST"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Are you sure?')">
-                                            Delete
-                                        </button>
-                                    </form>
+                                        <a href="{{ route('admin.units.edit', $unit->id) }}"
+                                           class="btn btn-sm btn-primary">
+                                            Edit
+                                        </a>
+
+                                        @if($unit->foods_count > 0)
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-secondary"
+                                                    onclick="toggleFoods({{ $unit->id }})">
+                                                Delete
+                                            </button>
+
+                                            <small class="text-muted text-center">
+                                                Used in food
+                                            </small>
+
+                                            <div id="foods-{{ $unit->id }}" style="display:none;">
+                                                <ul class="mb-0 ps-3 text-muted">
+                                                    @foreach($unit->foods as $food)
+                                                        <li>{{ $food->name }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+
+                                        @else
+
+                                            <form action="{{ route('admin.units.delete', $unit->id) }}"
+                                                  method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Are you sure?')">
+                                                    Delete
+                                                </button>
+                                            </form>
+
+                                        @endif
+
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -214,6 +246,7 @@
                                 </td>
                             </tr>
                         @endforelse
+
                         </tbody>
                     </table>
                 </div>
@@ -246,6 +279,11 @@
             fromPicker.set("maxDate", dateStr);
         }
     });
+
+    function toggleFoods(id) {
+        const el = document.getElementById('foods-' + id);
+        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    }
 </script>
 
 @endsection

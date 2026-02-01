@@ -27,7 +27,11 @@ class UnitController extends Controller
             ]);
         }
 
-        $units = $query->latest()->paginate(10);
+        $units = $query
+            ->with(['foods:id,name,unit_id'])
+            ->withCount('foods')
+            ->latest()
+            ->paginate(10);
 
         return view('backend.pages.units.index', compact('units'));
     }
@@ -35,13 +39,12 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'   => 'required',
+            'name'   => 'required|string|max:255',
             'status' => 'required|boolean',
         ]);
 
         $name = strtolower(trim($request->name));
 
-        // 🔴 Duplicate check
         if (Unit::where('name', $name)->exists()) {
             return back()
                 ->withInput()
@@ -67,13 +70,12 @@ class UnitController extends Controller
         $unit = Unit::findOrFail($id);
 
         $request->validate([
-            'name'   => 'required',
+            'name'   => 'required|string|max:255',
             'status' => 'required|boolean',
         ]);
 
         $name = strtolower(trim($request->name));
 
-        // 🔴 Duplicate check (ignore current ID)
         $exists = Unit::where('name', $name)
             ->where('id', '!=', $unit->id)
             ->exists();
@@ -96,7 +98,13 @@ class UnitController extends Controller
 
     public function delete($id)
     {
-        Unit::findOrFail($id)->delete();
+        $unit = Unit::withCount('foods')->findOrFail($id);
+
+        if ($unit->foods_count > 0) {
+            return back()->with('error', 'This unit is used in food items and cannot be deleted.');
+        }
+
+        $unit->delete();
 
         return back()->with('success', 'Unit deleted successfully.');
     }

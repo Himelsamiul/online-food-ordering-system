@@ -16,7 +16,8 @@ class SubcategoryController extends Controller
     $categories = Category::where('status', 1)->get();
 
     // Base query
-    $query = Subcategory::with('category');
+    $query = Subcategory::with(['category', 'foods:id,name,subcategory_id'])
+            ->withCount('foods');
 
     // 🔍 Filter by category
     if ($request->filled('category_id')) {
@@ -127,10 +128,14 @@ class SubcategoryController extends Controller
     }
 
     // delete
-    public function destroy(Subcategory $subcategory)
-    {
-        $subcategory->delete();
-
-        return back()->with('success', 'Subcategory deleted successfully');
+public function destroy(Subcategory $subcategory)
+{
+    if ($subcategory->foods()->count() > 0) {
+        return back()->with('error', 'This subcategory is already used in food items.');
     }
+
+    $subcategory->delete();
+
+    return back()->with('success', 'Subcategory deleted successfully');
+}
 }
