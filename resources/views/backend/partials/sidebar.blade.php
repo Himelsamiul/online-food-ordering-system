@@ -48,7 +48,7 @@
                     </li>
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
-                            <span class="nxl-micon"><i class="feather-send"></i></span>
+                            <span class="nxl-micon"><i class="feather-layers"></i></span>
                             <span class="nxl-mtext">Sub Category</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
                         <ul class="nxl-submenu">

@@ -9,12 +9,37 @@ use App\Models\SubCategory;
 
 class CategoryController extends Controller
 {
-    public function index()
-    {
-        $categories = Category::latest()->paginate(10);
-        return view('backend.pages.category.index', compact('categories'));
+public function index(Request $request)
+{
+    $query = Category::query();
+
+    //  Search by category name
+    if ($request->filled('name')) {
+        $query->where('name', 'like', '%' . $request->name . '%');
     }
 
+    //  Filter by status
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    //  From date
+    if ($request->filled('from_date')) {
+        $query->whereDate('created_at', '>=', $request->from_date);
+    }
+
+    //  To date
+    if ($request->filled('to_date')) {
+        $query->whereDate('created_at', '<=', $request->to_date);
+    }
+
+    // Pagination + keep filter values
+    $categories = $query->latest()
+                        ->paginate(10)
+                        ->withQueryString();
+
+    return view('backend.pages.category.index', compact('categories'));
+}
     public function store(Request $request)
     {
         $request->validate([

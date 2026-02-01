@@ -10,19 +10,49 @@ use Illuminate\Http\Request;
 class SubcategoryController extends Controller
 {
     // index + create form
-    public function index()
-    {
-        $categories = Category::where('status', 1)->get();
+    public function index(Request $request)
+{
+    // Category list for dropdown
+    $categories = Category::where('status', 1)->get();
 
-        $subcategories = Subcategory::with('category')
-            ->latest()
-            ->paginate(10);
+    // Base query
+    $query = Subcategory::with('category');
 
-        return view('backend.pages.subcategory.index', compact(
-            'categories',
-            'subcategories'
-        ));
+    // 🔍 Filter by category
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
     }
+
+    // Search by subcategory name
+    if ($request->filled('name')) {
+        $query->where('name', 'like', '%' . $request->name . '%');
+    }
+
+    //  Filter by status
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // From date
+    if ($request->filled('from_date')) {
+        $query->whereDate('created_at', '>=', $request->from_date);
+    }
+
+    //  To date
+    if ($request->filled('to_date')) {
+        $query->whereDate('created_at', '<=', $request->to_date);
+    }
+
+    // Pagination + keep filters
+    $subcategories = $query->latest()
+        ->paginate(10)
+        ->withQueryString();
+
+    return view('backend.pages.subcategory.index', compact(
+        'categories',
+        'subcategories'
+    ));
+}
 
     // store
     public function store(Request $request)
