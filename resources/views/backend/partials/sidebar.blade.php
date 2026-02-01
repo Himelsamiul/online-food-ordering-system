@@ -69,12 +69,11 @@
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-send"></i></span>
-                            <span class="nxl-mtext">Applications</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                            <span class="nxl-mtext">Food</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
                         <ul class="nxl-submenu">
-                            <li class="nxl-item"><a class="nxl-link" href="apps-chat.html">Chat</a></li>
-                            <li class="nxl-item"><a class="nxl-link" href="apps-email.html">Email</a></li>
-                            <li class="nxl-item"><a class="nxl-link" href="apps-tasks.html">Tasks</a></li>
+                            <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.foods.index') }}">Food Index</a></li>
+                            <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.foods.create') }}">Food Create</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="apps-notes.html">Notes</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="apps-storage.html">Storage</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="apps-calendar.html">Calendar</a></li>

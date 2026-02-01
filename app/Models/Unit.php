@@ -13,4 +13,10 @@ class Unit extends Model
         'name',
         'status',
     ];
+
+    public function foods()
+{
+    return $this->hasMany(Food::class);
+}
+
 }

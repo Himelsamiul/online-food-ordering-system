@@ -10,6 +10,7 @@ use App\Http\Controllers\Frontend\RegistrationController;
 use App\Http\Controllers\Frontend\LoginController;
 use App\Http\Controllers\Backend\SubcategoryController;
 use App\Http\Controllers\Backend\UnitController;
+use App\Http\Controllers\Backend\FoodController;
 
 
 //frontend routes
@@ -73,6 +74,15 @@ Route::post('/units', [UnitController::class, 'store'])->name('units.store');
 Route::get('/units/{id}/edit', [UnitController::class, 'edit'])->name('units.edit');
 Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update');
 Route::delete('/units/{id}/delete', [UnitController::class, 'delete'])->name('units.delete');
+
+
+/* Food */
+Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
+Route::get('/foods/create', [FoodController::class, 'create'])->name('foods.create');
+Route::post('/foods/store', [FoodController::class, 'store'])->name('foods.store');
+Route::get('/foods/{id}/edit', [FoodController::class, 'edit'])->name('foods.edit');
+Route::put('/foods/{id}/update', [FoodController::class, 'update'])->name('foods.update');
+Route::delete('/foods/{id}/delete', [FoodController::class, 'delete'])->name('foods.delete');
 
         
 });
