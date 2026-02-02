@@ -8,7 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Str;
 class OrderController extends Controller
 {
     /**
@@ -32,8 +32,11 @@ public function create()
     /**
      * Store Order (COD for now)
      */
+
+
 public function store(Request $request)
 {
+    // ================= CART CHECK =================
     $cart = session()->get('cart', []);
 
     if (count($cart) === 0) {
@@ -41,35 +44,50 @@ public function store(Request $request)
             ->with('error', 'Your cart is empty');
     }
 
-    // validate user input
+    // ================= VALIDATION =================
     $request->validate([
         'phone'          => 'required|string|max:20',
         'address'        => 'required|string|max:500',
         'payment_method' => 'required|in:cod,stripe',
     ]);
 
-    // calculate total (SERVER SIDE)
+    // ================= USER =================
+    $user = Auth::guard('frontend')->user();
+
+    if (!$user) {
+        return redirect()->route('login');
+    }
+
+    // ================= TOTAL CALCULATION =================
     $grandTotal = 0;
+
     foreach ($cart as $item) {
         $grandTotal += $item['price'] * $item['quantity'];
     }
 
-    // 🔑 CORE LOGIC (THIS IS WHAT YOU WANTED)
+    // ================= ORDER NUMBER =================
+    $orderNumber = 'ORD-' . now()->format('ymd') . '-' . rand(1000, 9999);
+
+    // ================= PAYMENT LOGIC =================
     $paymentMethod = $request->payment_method;
 
-    $paymentStatus = $paymentMethod === 'stripe'
-        ? 'paid'
-        : 'pending'; // COD
+    if ($paymentMethod === 'stripe') {
 
-    $transactionNumber = $paymentMethod === 'stripe'
-        ? 'STRIPE-' . uniqid()   // future real stripe id
-        : null;
+        // future real stripe transaction id
+        $paymentStatus = 'paid';
+        $transactionNumber = 'STRIPE-' . strtoupper(Str::random(12));
 
-    // create order
+    } else {
+        // COD
+        $paymentStatus = 'pending';
+        $transactionNumber = 'COD-' . strtoupper(Str::random(12));
+    }
+
+    // ================= CREATE ORDER =================
     $order = Order::create([
-        'order_number'       => 'ORD-' . date('ymd') . '-' . rand(1000, 9999),
-        'user_id'            => Auth::guard('frontend')->id(),
-        'name'               => Auth::guard('frontend')->user()->full_name,
+        'order_number'       => $orderNumber,
+        'user_id'            => $user->id,
+        'name'               => $user->full_name,
         'phone'              => $request->phone,
         'address'            => $request->address,
         'total_amount'       => $grandTotal,
@@ -79,9 +97,10 @@ public function store(Request $request)
         'order_status'       => 'pending',
     ]);
 
-    // save order items + reduce stock
+    // ================= ORDER ITEMS + STOCK REDUCE =================
     foreach ($cart as $item) {
 
+        // save order items (relation)
         $order->items()->create([
             'food_id'  => $item['food_id'],
             'price'    => $item['price'], // discounted price
@@ -94,12 +113,15 @@ public function store(Request $request)
             ->decrement('quantity', $item['quantity']);
     }
 
-    // clear cart
+    // ================= CLEAR CART =================
     session()->forget('cart');
 
+    // ================= REDIRECT =================
     return redirect()->route('order.success', $order->id)
         ->with('success', 'Order placed successfully');
 }
+
+
     /**
      * Order Success Page
      */

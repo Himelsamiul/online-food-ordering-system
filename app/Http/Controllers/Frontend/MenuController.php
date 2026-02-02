@@ -25,10 +25,10 @@ class MenuController extends Controller
     // SUBCATEGORY → FOODS
     public function foods(Subcategory $subcategory)
     {
-        $foods = Food::where('subcategory_id', $subcategory->id)
-            ->where('status', 1)
-            ->get();
-
+$foods = Food::where('subcategory_id', $subcategory->id)
+    ->where('status', 1)
+    ->where('quantity', '>', 0)   // 🔥 stock out হলে hide
+    ->get();
         return view('frontend.pages.foods', compact('subcategory', 'foods'));
     }
 

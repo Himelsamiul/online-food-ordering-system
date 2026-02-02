@@ -6,6 +6,7 @@
     .success-card {
         background: rgba(255,255,255,0.08);
         backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         border-radius: 20px;
         border: 1px solid rgba(255,255,255,0.15);
         box-shadow: 0 20px 40px rgba(0,0,0,0.35);
@@ -26,25 +27,28 @@
     }
 
     .order-info div {
-        padding: 6px 0;
+        padding: 10px 0;
         border-bottom: 1px dashed rgba(255,255,255,0.2);
         display: flex;
         justify-content: space-between;
+        align-items: center;
     }
 
     .badge-paid {
         background: #2ecc71;
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 20px;
         font-size: 13px;
+        font-weight: 700;
     }
 
     .badge-pending {
         background: #f1c40f;
         color: #000;
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 20px;
         font-size: 13px;
+        font-weight: 700;
     }
 </style>
 
@@ -54,8 +58,10 @@
 
             <div class="success-card">
 
+                {{-- ICON --}}
                 <div class="success-icon">✅</div>
 
+                {{-- TITLE --}}
                 <h3 class="fw-bold mb-2">
                     Order Placed Successfully!
                 </h3>
@@ -64,7 +70,7 @@
                     Thank you for your order. We’ll start preparing your food shortly 🍽️
                 </p>
 
-                {{-- ORDER INFO --}}
+                {{-- ORDER DETAILS --}}
                 <div class="order-info">
 
                     <div>
@@ -73,8 +79,15 @@
                     </div>
 
                     <div>
+                        <span>Transaction Number</span>
+                        <strong>{{ $order->transaction_number }}</strong>
+                    </div>
+
+                    <div>
                         <span>Total Amount</span>
-                        <strong>৳{{ number_format($order->total_amount, 2) }}</strong>
+                        <strong>
+                            ৳{{ number_format($order->total_amount, 2) }}
+                        </strong>
                     </div>
 
                     <div>
@@ -102,9 +115,11 @@
 
                 </div>
 
+                {{-- ACTION --}}
                 <div class="mt-4">
                     <a href="{{ route('home') }}"
-                       class="btn btn-success px-4 py-2 fw-bold">
+                       class="btn btn-success px-4 py-2 fw-bold"
+                       style="border-radius:30px;">
                         🍔 Back to Menu
                     </a>
                 </div>
