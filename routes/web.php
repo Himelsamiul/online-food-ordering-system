@@ -12,6 +12,7 @@ use App\Http\Controllers\Backend\SubcategoryController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\FoodController;
 use App\Http\Controllers\Frontend\MenuController;
+use App\Http\Controllers\Frontend\CartController;
 
 
 //frontend routes
@@ -37,6 +38,22 @@ Route::middleware('auth:frontend')->group(function () {
     Route::get('/profile/edit', [RegistrationController::class, 'editProfile'])->name('profile.edit');
     Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
     Route::post('/cart/add/{food}', [MenuController::class, 'addToCart'])->name('cart.add');
+
+
+        Route::get('/cart', [CartController::class, 'index'])
+        ->name('cart.index');
+
+    Route::post('/cart/add/{food}', [CartController::class, 'add'])
+        ->name('cart.add');
+
+    Route::post('/cart/update/{food}', [CartController::class, 'update'])
+        ->name('cart.update');
+
+    Route::post('/cart/remove/{food}', [CartController::class, 'remove'])
+        ->name('cart.remove');
+
+    Route::post('/cart/clear', [CartController::class, 'clear'])
+        ->name('cart.clear');
 });
 
 

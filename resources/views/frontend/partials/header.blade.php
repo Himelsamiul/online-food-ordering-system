@@ -35,7 +35,7 @@
 
     <div class="dropdown-menu" aria-labelledby="categoryDropdown">
 
-        {{-- SAFE CHECK: categories না থাকলেও error হবে না --}}
+     
         @forelse (($categories ?? []) as $category)
             <a
                 class="dropdown-item"
@@ -101,7 +101,7 @@
             <i class="fa fa-user" aria-hidden="true"></i>
           </a>
 
-<a class="cart_link position-relative" href="#">
+<a class="cart_link position-relative" href="{{ route('cart.index') }}">
     <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
       viewBox="0 0 456.029 456.029"

@@ -71,11 +71,17 @@
         padding: 10px 12px;
         border-radius: 50%;
         transition: 0.2s;
+        border: none;
     }
 
     .add-cart-btn:hover {
         background: #157347;
         color: #fff;
+    }
+
+    .add-cart-btn.disabled-btn {
+        background: #6c757d;
+        cursor: not-allowed;
     }
 
     .details-link {
@@ -104,11 +110,6 @@
         box-shadow: 0 8px 25px rgba(25,135,84,0.25);
     }
 
-    .food-note:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 30px rgba(25,135,84,0.35);
-    }
-
     @keyframes fadeSlide {
         from {
             opacity: 0;
@@ -134,7 +135,7 @@
     <div class="row justify-content-center mb-5">
         <div class="col-lg-10">
             <div class="food-note">
-                🍽️ Freshly prepared food items are listed below.  
+                🍽️ Freshly prepared food items are listed below.
                 Prices may vary based on availability and offers — choose your favorite dish and enjoy a delicious experience!
             </div>
         </div>
@@ -155,6 +156,9 @@
                     $discountAmount = 0;
                     $finalPrice = $price;
                 }
+
+                $cart = session('cart', []);
+                $alreadyInCart = isset($cart[$food->id]);
             @endphp
 
             <div class="col-sm-6 col-lg-4 mb-4">
@@ -168,7 +172,7 @@
                         </span>
                     @endif
 
-                    {{-- IMAGE (DETAILS CLICK) --}}
+                    {{-- IMAGE --}}
                     <a href="{{ route('food.details', $food->id) }}" class="details-link">
                         <div class="food-img">
                             @if ($food->image)
@@ -183,7 +187,6 @@
                     <div class="food-details">
 
                         <div>
-                            {{-- NAME --}}
                             <a href="{{ route('food.details', $food->id) }}" class="details-link">
                                 <h5 class="fw-bold mb-1">
                                     {{ $food->name }}
@@ -196,18 +199,15 @@
                                 </p>
                             @endif
 
-                            {{-- STOCK --}}
                             <p class="fw-bold mb-1 {{ $food->quantity > 0 ? 'text-success' : 'text-danger' }}">
                                 Stock:
                                 {{ $food->quantity > 0 ? $food->quantity.' available' : 'Out of stock' }}
                             </p>
 
-                            {{-- PRICE --}}
                             <p class="text-muted small mb-0">
                                 Price: ৳{{ number_format($price, 2) }}
                             </p>
 
-                            {{-- DISCOUNT --}}
                             <p class="text-warning small discount-row {{ $discountPercent == 0 ? 'discount-hidden' : '' }}">
                                 Discount: ৳{{ number_format($discountAmount, 2) }}
                             </p>
@@ -219,16 +219,28 @@
                                 ৳{{ number_format($finalPrice, 2) }}
                             </h5>
 
-<form action="{{ route('cart.add', $food->id) }}" method="POST">
-    @csrf
-    <button type="submit"
-            class="add-cart-btn"
-            title="Add to cart"
-            {{ $food->quantity < 1 ? 'disabled' : '' }}>
-        <i class="fa fa-shopping-cart"></i>
-    </button>
-</form>
-
+                            @if ($alreadyInCart)
+                                <div class="text-end">
+                                    <button class="add-cart-btn disabled-btn" disabled>
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    <small class="d-block text-warning mt-1">
+                                        Already in cart<br>
+                                        <span class="text-muted">
+                                            Please update quantity from cart
+                                        </span>
+                                    </small>
+                                </div>
+                            @else
+                                <form action="{{ route('cart.add', $food->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                            class="add-cart-btn"
+                                            {{ $food->quantity < 1 ? 'disabled' : '' }}>
+                                        <i class="fa fa-shopping-cart"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
 
                     </div>
@@ -242,9 +254,7 @@
                     <h5 class="fw-bold text-muted">
                         No food available
                     </h5>
-                    <p>
-                        Please check back later for delicious options!
-                    </p>
+                    <p>Please check back later for delicious options!</p>
                 </div>
             </div>
         @endforelse
