@@ -86,15 +86,58 @@
     .details-link:hover {
         color: inherit;
     }
+
+    /* FOOD NOTE */
+    .food-note {
+        background: linear-gradient(
+            135deg,
+            rgba(25,135,84,0.25),
+            rgba(25,135,84,0.05)
+        );
+        border: 1px solid rgba(25,135,84,0.4);
+        border-radius: 16px;
+        padding: 18px 22px;
+        text-align: center;
+        color: #1dbf73;
+        font-weight: 700;
+        animation: fadeSlide 0.8s ease;
+        box-shadow: 0 8px 25px rgba(25,135,84,0.25);
+    }
+
+    .food-note:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(25,135,84,0.35);
+    }
+
+    @keyframes fadeSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <div class="container py-5">
 
     {{-- SUBCATEGORY TITLE --}}
-    <div class="text-center mb-5">
+    <div class="text-center mb-3">
         <h3 class="fw-bold text-success">
             {{ $subcategory->name }}
         </h3>
+    </div>
+
+    {{-- FOOD NOTE --}}
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="food-note">
+                🍽️ Freshly prepared food items are listed below.  
+                Prices may vary based on availability and offers — choose your favorite dish and enjoy a delicious experience!
+            </div>
+        </div>
     </div>
 
     <div class="row">
@@ -140,7 +183,7 @@
                     <div class="food-details">
 
                         <div>
-                            {{-- NAME (DETAILS CLICK) --}}
+                            {{-- NAME --}}
                             <a href="{{ route('food.details', $food->id) }}" class="details-link">
                                 <h5 class="fw-bold mb-1">
                                     {{ $food->name }}
@@ -164,7 +207,7 @@
                                 Price: ৳{{ number_format($price, 2) }}
                             </p>
 
-                            {{-- DISCOUNT (STRUCTURE SAFE) --}}
+                            {{-- DISCOUNT --}}
                             <p class="text-warning small discount-row {{ $discountPercent == 0 ? 'discount-hidden' : '' }}">
                                 Discount: ৳{{ number_format($discountAmount, 2) }}
                             </p>
@@ -176,7 +219,6 @@
                                 ৳{{ number_format($finalPrice, 2) }}
                             </h5>
 
-                            {{-- CART BUTTON --}}
                             <a href="javascript:void(0)"
                                class="add-cart-btn"
                                title="Add to cart">
@@ -195,6 +237,9 @@
                     <h5 class="fw-bold text-muted">
                         No food available
                     </h5>
+                    <p>
+                        Please check back later for delicious options!
+                    </p>
                 </div>
             </div>
         @endforelse

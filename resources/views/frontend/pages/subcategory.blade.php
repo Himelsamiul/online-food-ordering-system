@@ -27,23 +27,56 @@
         transform: translateY(-6px);
         box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     }
+
+    /* FOOD NOTE (SAME STYLE AS FOOD PAGE) */
+    .food-note {
+        background: linear-gradient(
+            135deg,
+            rgba(25,135,84,0.25),
+            rgba(25,135,84,0.05)
+        );
+        border: 1px solid rgba(25,135,84,0.4);
+        border-radius: 16px;
+        padding: 18px 22px;
+        text-align: center;
+        color: #1dbf73;
+        font-weight: 700;
+        animation: fadeSlide 0.8s ease;
+        box-shadow: 0 8px 25px rgba(25,135,84,0.25);
+    }
+
+    .food-note:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(25,135,84,0.35);
+    }
+
+    @keyframes fadeSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <div class="container py-5">
 
-    {{-- FOOD SUBCATEGORY NOTE --}}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="glass-card p-4 text-center">
-                <h5 class="fw-bold mb-2 text-success">
-                    Explore Our Menu
-                </h5>
+    {{-- PAGE TITLE --}}
+    <div class="text-center mb-3">
+        <h3 class="fw-bold text-success">
+            {{ $category->name }}
+        </h3>
+    </div>
 
-                <p class="fw-bold text-success mb-0">
-                    Choose from a variety of food subcategories to find your favorite dishes quickly and easily.
-                    Each section is carefully organized to help you explore different flavors and meal options
-                    with a smooth and enjoyable browsing experience.
-                </p>
+    {{-- GREEN NOTE --}}
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="food-note">
+                🍽️ Select a food subcategory below to explore delicious items.
+                Each subcategory is carefully organized to help you find your favorite meals quickly and easily.
             </div>
         </div>
     </div>
@@ -92,7 +125,14 @@
         @empty
 
             <div class="col-12 text-center">
-                <p class="text-muted">No subcategories found</p>
+                <div class="glass-card p-5">
+                    <h5 class="fw-bold text-muted">
+                        No subcategories found
+                    </h5>
+                    <p class="text-muted">
+                        Please check back later for more options.
+                    </p>
+                </div>
             </div>
 
         @endforelse
