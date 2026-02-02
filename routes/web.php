@@ -17,13 +17,10 @@ use App\Http\Controllers\Frontend\MenuController;
 //frontend routes
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/category/{id}', [MenuController::class, 'show'])
-    ->name('category.show');
+Route::get('/category/{id}', [MenuController::class, 'show'])->name('category.show');
 
-Route::get('/menu/{subcategory}', [MenuController::class, 'foods'])
-    ->name('menu.foods');
-Route::get('/food/{food}', [MenuController::class, 'foodDetails'])
-    ->name('food.details');
+Route::get('/menu/{subcategory}', [MenuController::class, 'foods'])->name('menu.foods');
+Route::get('/food/{food}', [MenuController::class, 'foodDetails'])->name('food.details');
 
     Route::get('/register', [RegistrationController::class, 'create'])->name('register');
     Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
@@ -39,6 +36,7 @@ Route::middleware('auth:frontend')->group(function () {
     Route::get('/profile', [RegistrationController::class, 'profile'])->name('profile');
     Route::get('/profile/edit', [RegistrationController::class, 'editProfile'])->name('profile.edit');
     Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/cart/add/{food}', [MenuController::class, 'addToCart'])->name('cart.add');
 });
 
 

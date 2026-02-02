@@ -188,18 +188,23 @@
                 </div>
 
                 {{-- CART --}}
-                <div class="mt-4">
-                    @if ($food->quantity > 0)
-                        <a href="javascript:void(0)" class="add-cart-btn">
-                            <i class="fa fa-shopping-cart me-2"></i>
-                            Add to Cart
-                        </a>
-                    @else
-                        <button class="btn btn-secondary" disabled>
-                            Out of Stock
-                        </button>
-                    @endif
-                </div>
+{{-- CART --}}
+<div class="mt-4">
+    @if ($food->quantity > 0)
+        <form action="{{ route('cart.add', $food->id) }}" method="POST">
+            @csrf
+            <button type="submit" class="add-cart-btn">
+                <i class="fa fa-shopping-cart me-2"></i>
+                Add to Cart
+            </button>
+        </form>
+    @else
+        <button class="btn btn-secondary" disabled>
+            Out of Stock
+        </button>
+    @endif
+</div>
+
 
             </div>
         </div>

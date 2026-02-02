@@ -219,11 +219,16 @@
                                 ৳{{ number_format($finalPrice, 2) }}
                             </h5>
 
-                            <a href="javascript:void(0)"
-                               class="add-cart-btn"
-                               title="Add to cart">
-                                <i class="fa fa-shopping-cart"></i>
-                            </a>
+<form action="{{ route('cart.add', $food->id) }}" method="POST">
+    @csrf
+    <button type="submit"
+            class="add-cart-btn"
+            title="Add to cart"
+            {{ $food->quantity < 1 ? 'disabled' : '' }}>
+        <i class="fa fa-shopping-cart"></i>
+    </button>
+</form>
+
                         </div>
 
                     </div>
