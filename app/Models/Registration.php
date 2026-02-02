@@ -30,5 +30,8 @@ class Registration extends Authenticatable
 {
     return $this->hasMany(LoginHistory::class);
 }
-
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
 }

@@ -33,4 +33,10 @@ protected $table = 'foods';
     {
         return $this->belongsTo(Unit::class);
     }
+
+
+        public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

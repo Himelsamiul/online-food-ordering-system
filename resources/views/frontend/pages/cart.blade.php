@@ -301,9 +301,11 @@
                 </small>
             </div>
 
-            <button class="btn btn-success px-4 py-2" disabled>
-                Place Order (Coming Soon)
-            </button>
+<a href="{{ route('order.place') }}"
+   class="btn btn-success px-4 py-2 fw-bold">
+    ✅ Proceed to Checkout
+</a>
+
 
         </div>
 

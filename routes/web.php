@@ -13,6 +13,7 @@ use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Backend\FoodController;
 use App\Http\Controllers\Frontend\MenuController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\OrderController;
 
 
 //frontend routes
@@ -54,6 +55,15 @@ Route::middleware('auth:frontend')->group(function () {
 
     Route::post('/cart/clear', [CartController::class, 'clear'])
         ->name('cart.clear');
+
+            Route::get('/order/place', [OrderController::class, 'create'])
+        ->name('order.place');
+
+    Route::post('/order/store', [OrderController::class, 'store'])
+        ->name('order.store');
+
+    Route::get('/order/success/{order}', [OrderController::class, 'success'])
+        ->name('order.success');
 });
 
 
