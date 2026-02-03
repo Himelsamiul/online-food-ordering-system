@@ -137,15 +137,46 @@ public function store(Request $request)
 
 
     
-    // Admin: all orders list
-    public function adminIndex()
-    {
-        $orders = Order::with('user')
-            ->latest()
-            ->paginate(15);
+// Admin: all orders list with filters
+public function adminIndex(Request $request)
+{
+    $query = Order::query();
 
-        return view('backend.pages.orders.index', compact('orders'));
+    // Order number
+if ($request->filled('order_number')) {
+    $query->where('order_number', trim($request->order_number));
+}
+    // Customer name
+    if ($request->filled('customer_name')) {
+        $query->where('name', $request->customer_name);
     }
+
+    // Phone
+    if ($request->filled('phone')) {
+        $query->where('phone', 'like', '%' . $request->phone . '%');
+    }
+
+    // Payment status
+    if ($request->filled('payment_status')) {
+        $query->where('payment_status', $request->payment_status);
+    }
+
+    // Date range
+    if ($request->filled('from_date') && $request->filled('to_date')) {
+        $query->whereBetween('created_at', [
+            $request->from_date . ' 00:00:00',
+            $request->to_date . ' 23:59:59',
+        ]);
+    }
+
+    $orders = $query->latest()->paginate(15)->withQueryString();
+
+    // customer dropdown list
+    $customers = Order::select('name')->distinct()->orderBy('name')->get();
+
+    return view('backend.pages.orders.index', compact('orders', 'customers'));
+}
+
 
     // Admin: single order details
     public function adminShow(Order $order)
