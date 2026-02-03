@@ -11,34 +11,32 @@ use Illuminate\Support\Facades\Storage;
 
 class FoodController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Food::with(['subcategory.category', 'unit']);
+public function index(Request $request)
+{
+    $query = Food::with(['subcategory.category', 'unit'])
+        ->where('status', 1); // ONLY ACTIVE
 
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        }
-
-        if ($request->filled('subcategory_id')) {
-            $query->where('subcategory_id', $request->subcategory_id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('from_date') && $request->filled('to_date')) {
-            $query->whereBetween('created_at', [
-                $request->from_date . ' 00:00:00',
-                $request->to_date . ' 23:59:59',
-            ]);
-        }
-
-        $foods = $query->latest()->paginate(10);
-        $subcategories = Subcategory::where('status', 1)->with('category')->get();
-
-        return view('backend.pages.food.index', compact('foods', 'subcategories'));
+    if ($request->filled('name')) {
+        $query->where('name', 'like', '%' . $request->name . '%');
     }
+
+    if ($request->filled('subcategory_id')) {
+        $query->where('subcategory_id', $request->subcategory_id);
+    }
+
+    if ($request->filled('from_date') && $request->filled('to_date')) {
+        $query->whereBetween('created_at', [
+            $request->from_date . ' 00:00:00',
+            $request->to_date . ' 23:59:59',
+        ]);
+    }
+
+    $foods = $query->latest()->paginate(10);
+    $subcategories = Subcategory::where('status', 1)->with('category')->get();
+
+    return view('backend.pages.food.index', compact('foods', 'subcategories'));
+}
+
 
     public function create()
     {
@@ -51,7 +49,23 @@ class FoodController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:foods,name',
+            'name' => [
+    'required',
+    'string',
+    'max:255',
+    function ($attribute, $value, $fail) use ($request) {
+
+        $exists = Food::where('name', $value)
+            ->where('subcategory_id', $request->subcategory_id)
+            ->where('status', 1) // only ACTIVE food blocks
+            ->exists();
+
+        if ($exists) {
+            $fail('This food already exists and is active.');
+        }
+    }
+],
+
             'subcategory_id' => 'required|exists:subcategories,id',
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:1',
@@ -191,4 +205,44 @@ public function delete($id)
         'finalPrice'
     ));
 }
+
+
+public function inactive(Request $request)
+{
+    $query = Food::with(['subcategory.category', 'unit'])
+        ->where('status', 0); // ONLY INACTIVE
+
+    if ($request->filled('name')) {
+        $query->where('name', 'like', '%' . $request->name . '%');
+    }
+
+    if ($request->filled('subcategory_id')) {
+        $query->where('subcategory_id', $request->subcategory_id);
+    }
+
+    if ($request->filled('from_date') && $request->filled('to_date')) {
+        $query->whereBetween('created_at', [
+            $request->from_date . ' 00:00:00',
+            $request->to_date . ' 23:59:59',
+        ]);
+    }
+
+    $foods = $query->latest()->paginate(10);
+    $subcategories = Subcategory::where('status', 1)->with('category')->get();
+
+    return view('backend.pages.food.inactive', compact('foods', 'subcategories'));
+}
+
+
+public function activate($id)
+{
+    $food = Food::findOrFail($id);
+
+    $food->update([
+        'status' => 1
+    ]);
+
+    return back()->with('success', 'Food activated successfully');
+}
+
 }

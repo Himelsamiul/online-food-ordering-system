@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
-{{-- ================= Filter Styles ================= --}}
+{{-- ================= Filter Styles (SAME) ================= --}}
 <style>
     .filter-card {
         background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(16,185,129,.08));
@@ -30,9 +30,9 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between">
-        <h5>Food List</h5>
-        <a href="{{ route('admin.foods.create') }}" class="btn btn-primary">
-            + Add Food
+        <h5>Inactive Food List</h5>
+        <a href="{{ route('admin.foods.index') }}" class="btn btn-outline-primary">
+            ← Active Foods
         </a>
     </div>
 
@@ -42,13 +42,9 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-
-        {{-- ================= FILTER ================= --}}
+        {{-- ================= FILTER (SAME AS INDEX) ================= --}}
         <div class="filter-card">
-            <form method="GET" action="{{ route('admin.foods.index') }}">
+            <form method="GET" action="{{ route('admin.foods.inactive') }}">
                 <div class="row g-3 align-items-end">
 
                     <div class="col-md-3">
@@ -72,17 +68,6 @@
                         </select>
                     </div>
 
-{{--
-<div class="col-md-2">
-    <label class="filter-label">Status</label>
-    <select name="status" class="form-select">
-        <option value="">All</option>
-        <option value="1" {{ request('status')==='1'?'selected':'' }}>Active</option>
-        <option value="0" {{ request('status')==='0'?'selected':'' }}>Inactive</option>
-    </select>
-</div>
---}}
-
                     <div class="col-md-2">
                         <label class="filter-label">From</label>
                         <input type="text" id="from_date" name="from_date"
@@ -101,7 +86,7 @@
 
                     <div class="col-md-12 d-flex gap-2 mt-2">
                         <button class="btn btn-primary">🔎 Search</button>
-                        <a href="{{ route('admin.foods.index') }}"
+                        <a href="{{ route('admin.foods.inactive') }}"
                            class="btn btn-outline-secondary">Reset</a>
                     </div>
 
@@ -109,7 +94,7 @@
             </form>
         </div>
 
-        {{-- ================= TABLE ================= --}}
+        {{-- ================= TABLE (SAME STRUCTURE) ================= --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
@@ -121,7 +106,6 @@
                     <th>Subcategory</th>
                     <th>Price</th>
                     <th>Discount</th>
-                    <th>Discount Amount</th>
                     <th>Final Price</th>
                     <th>Quantity</th>
                     <th>Unit</th>
@@ -135,10 +119,9 @@
 
                     @php
                         $price = $food->price;
-                        $discountPercent = $food->discount ?? 0;
-                        $discountAmount = ($price * $discountPercent) / 100;
+                        $discount = $food->discount ?? 0;
+                        $discountAmount = ($price * $discount) / 100;
                         $finalPrice = $price - $discountAmount;
-                        $hasOrders = $food->orderItems->count() > 0;
                     @endphp
 
                     <tr>
@@ -153,83 +136,37 @@
 
                         <td>{{ $food->name }}</td>
                         <td>{{ $food->sku }}</td>
-                        <td>{{ $food->subcategory->category->name ?? 'N/A' }}</td>
-                        <td>{{ $food->subcategory->name ?? 'N/A' }}</td>
-
+                        <td>{{ $food->subcategory->category->name ?? '-' }}</td>
+                        <td>{{ $food->subcategory->name ?? '-' }}</td>
                         <td>{{ number_format($price,2) }} tk</td>
-
-                        <td>{{ $discountPercent ? $discountPercent.'%' : '-' }}</td>
-
-                        <td class="text-danger">
-                            {{ $discountAmount > 0 ? '-'.number_format($discountAmount,2).' tk' : '-' }}
-                        </td>
-
+                        <td>{{ $discount ? $discount.'%' : '-' }}</td>
                         <td class="fw-semibold text-success">
                             {{ number_format($finalPrice,2) }} tk
                         </td>
-
                         <td>{{ $food->quantity }}</td>
                         <td>{{ $food->unit->name ?? '-' }}</td>
 
                         <td>
-                            <span class="badge {{ $food->status ? 'bg-success' : 'bg-danger' }}">
-                                {{ $food->status ? 'Active' : 'Inactive' }}
-                            </span>
+                            <span class="badge bg-secondary">Inactive</span>
                         </td>
 
-                        {{-- ACTION --}}
                         <td>
-                            <a href="{{ route('admin.foods.show', $food->id) }}"
-                               class="btn btn-sm btn-info">View</a>
-
-                            <a href="{{ route('admin.foods.edit',$food->id) }}"
-                               class="btn btn-sm btn-primary">Edit</a>
-
-                            @if($hasOrders)
-                                <button type="button"
-                                        class="btn btn-sm btn-secondary"
-                                        onclick="toggleOrders({{ $food->id }})">
-                                    Delete
+                            <form action="{{ route('admin.foods.activate', $food->id) }}"
+                                  method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button class="btn btn-sm btn-success"
+                                        onclick="return confirm('Activate this food?')">
+                                    Activate
                                 </button>
-                            @else
-                                <form action="{{ route('admin.foods.delete',$food->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Delete this food?')">
-                                        Delete
-                                    </button>
-                                </form>
-                            @endif
+                            </form>
                         </td>
                     </tr>
 
-                    {{-- INLINE ORDER DROPDOWN (CATEGORY STYLE) --}}
-                    @if($hasOrders)
-                        <tr id="orders-{{ $food->id }}" style="display:none;">
-                            <td colspan="13" class="bg-light">
-                                <div class="p-3 border rounded">
-                                    <strong>Ordered by customers:</strong>
-                                    <ul class="mb-0 ps-3 text-muted mt-2">
-                                        @foreach($food->orderItems as $item)
-                                            <li>
-                                                {{ $item->order->name }}
-                                                ({{ $item->order->phone }})
-                                                — Qty: {{ $item->quantity }}
-                                                — {{ $item->order->order_number }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    @endif
-
                 @empty
                     <tr>
-                        <td colspan="13" class="text-center text-muted">
-                            No food found
+                        <td colspan="12" class="text-center text-muted">
+                            No inactive food found
                         </td>
                     </tr>
                 @endforelse
@@ -257,11 +194,7 @@
         maxDate: "today",
         onChange(_, d){ fromPicker.set("maxDate", d); }
     });
-
-    function toggleOrders(id) {
-        const row = document.getElementById('orders-' + id);
-        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-    }
 </script>
 
 @endsection
+fdvyh

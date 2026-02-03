@@ -97,6 +97,14 @@ Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update
 Route::delete('/units/{id}/delete', [UnitController::class, 'delete'])->name('units.delete');
 
 
+// Inactive foods page
+Route::get('/foods/inactive', [FoodController::class, 'inactive'])
+    ->name('foods.inactive');
+
+// Activate inactive food
+Route::patch('/foods/{id}/activate', [FoodController::class, 'activate'])
+    ->name('foods.activate');
+
 /* Food */
 Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
 Route::get('/foods/create', [FoodController::class, 'create'])->name('foods.create');
@@ -109,4 +117,7 @@ Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show')
 // Orders Management
 Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('orders.show');
+
+
+
 });

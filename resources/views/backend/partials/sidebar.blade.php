@@ -119,6 +119,12 @@
                             </a>
                         </li>
                         <li class="nxl-item">
+                        <li class="nxl-item">
+                            <a class="nxl-link" href="{{ route('admin.foods.inactive') }}">
+                                Inactive Foods
+                            </a>
+                        </li>
+                        <li class="nxl-item">
                             <a class="nxl-link" href="{{ route('admin.foods.create') }}">
                                 Food Create
                             </a>
