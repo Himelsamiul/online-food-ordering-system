@@ -190,21 +190,61 @@
                         </div>
                     </div>
                     <div class="dropdown nxl-h-item">
-                        <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button" data-bs-auto-close="outside">
-                            <i class="feather-bell"></i>
-                            <span class="badge bg-danger nxl-h-badge">3</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-notifications-menu">
-                            <div class="d-flex justify-content-between align-items-center notifications-head">
-                                <h6 class="fw-bold text-dark mb-0">Notifications</h6>
-                                <a href="javascript:void(0);" class="fs-11 text-success text-end ms-auto" data-bs-toggle="tooltip" title="Make as Read">
-                                    <i class="feather-check"></i>
-                                    <span>Make as Read</span>
-                                </a>
-                            </div>
+    <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button" data-bs-auto-close="outside">
+        <i class="feather-bell"></i>
 
-                        </div>
+        {{-- BADGE --}}
+        @if($lowStockFoods->count() > 0)
+            <span class="badge bg-danger nxl-h-badge">
+                {{ $lowStockFoods->count() }}
+            </span>
+        @endif
+    </a>
+
+    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-notifications-menu">
+
+        {{-- HEADER --}}
+        <div class="d-flex justify-content-between align-items-center notifications-head">
+            <h6 class="fw-bold text-dark mb-0">Low Stock Alerts</h6>
+        </div>
+
+        {{-- BODY --}}
+        <div class="notifications-body" style="max-height:300px; overflow:auto">
+
+            @forelse($lowStockFoods as $food)
+                <div class="notification-item d-flex align-items-start gap-2 p-2 border-bottom">
+
+                    <div class="text-warning fs-16 mt-1">
+                        <i class="feather-alert-triangle"></i>
                     </div>
+
+                    <div class="flex-grow-1">
+                        <p class="mb-1 fw-semibold text-dark">
+                            {{ $food->name }}
+                        </p>
+                        <small class="text-muted">
+                            Limit:
+                            <strong>{{ $food->low_stock_alert }}</strong>
+                            |
+                            Left:
+                            <span class="text-danger fw-bold">
+                                {{ $food->quantity }}
+                            </span>
+                        </small>
+                    </div>
+
+                </div>
+            @empty
+                <div class="text-center text-muted py-3">
+                    No low stock warnings 🎉
+                </div>
+            @endforelse
+
+        </div>
+
+    </div>
+</div>
+
                     <div class="dropdown nxl-h-item">
                         <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
                             <img src="{{ asset('assets/images/avatar/1.png') }}"

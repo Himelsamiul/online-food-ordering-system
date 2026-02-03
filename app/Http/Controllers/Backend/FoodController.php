@@ -146,18 +146,28 @@ class FoodController extends Controller
             ->with('success', 'Food updated successfully');
     }
 
-    public function delete($id)
-    {
-        $food = Food::findOrFail($id);
+public function delete($id)
+{
+    $food = Food::withCount('orderItems')->findOrFail($id);
 
-        if ($food->image && Storage::disk('public')->exists($food->image)) {
-            Storage::disk('public')->delete($food->image);
-        }
-
-        $food->delete();
-
-        return back()->with('success', 'Food deleted successfully');
+    //  Prevent delete if food has orders
+    if ($food->order_items_count > 0) {
+        return back()->with(
+            'error',
+            'This food has existing orders. You can edit it, but deletion is not allowed.'
+        );
     }
+
+    //  Delete image only if food is really deletable
+    if ($food->image && Storage::disk('public')->exists($food->image)) {
+        Storage::disk('public')->delete($food->image);
+    }
+
+    $food->delete();
+
+    return back()->with('success', 'Food deleted successfully');
+}
+
 
 
 

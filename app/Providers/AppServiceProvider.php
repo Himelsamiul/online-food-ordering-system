@@ -3,6 +3,7 @@
 namespace App\Providers;
 use App\Models\Category;
 use Illuminate\Support\Facades\View;
+use App\Models\Food;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +28,14 @@ public function boot(): void
             Category::where('status', 1)->get()
         );
     });
+
+            // ADMIN HEADER (low stock notifications)
+        View::composer('backend.partials.header', function ($view) {
+            $lowStockFoods = Food::whereColumn('quantity', '<=', 'low_stock_alert')
+                ->where('status', 1)
+                ->get();
+
+            $view->with('lowStockFoods', $lowStockFoods);
+        });
 }
 }
