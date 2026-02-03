@@ -134,4 +134,27 @@ public function store(Request $request)
 
         return view('frontend.pages.order.success', compact('order'));
     }
+
+
+    
+    // Admin: all orders list
+    public function adminIndex()
+    {
+        $orders = Order::with('user')
+            ->latest()
+            ->paginate(15);
+
+        return view('backend.pages.orders.index', compact('orders'));
+    }
+
+    // Admin: single order details
+    public function adminShow(Order $order)
+    {
+        $order->load([
+            'user',
+            'items.food.subcategory.category'
+        ]);
+
+        return view('backend.pages.orders.show', compact('order'));
+    }
 }

@@ -115,5 +115,11 @@ Route::post('/foods/store', [FoodController::class, 'store'])->name('foods.store
 Route::get('/foods/{id}/edit', [FoodController::class, 'edit'])->name('foods.edit');
 Route::put('/foods/{id}/update', [FoodController::class, 'update'])->name('foods.update');
 Route::delete('/foods/{id}/delete', [FoodController::class, 'delete'])->name('foods.delete');
-Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show');       
+Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show'); 
+
+    Route::get('/orders', [OrderController::class, 'adminIndex'])
+        ->name('orders.index');
+
+    Route::get('/orders/{order}', [OrderController::class, 'adminShow'])
+        ->name('orders.show');
 });

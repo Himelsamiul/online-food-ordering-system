@@ -82,10 +82,10 @@
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-at-sign"></i></span>
-                            <span class="nxl-mtext">Proposal</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                            <span class="nxl-mtext">Orders</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
                         <ul class="nxl-submenu">
-                            <li class="nxl-item"><a class="nxl-link" href="proposal.html">Proposal</a></li>
+                            <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.orders.index') }}">Orders Index</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="proposal-view.html">Proposal View</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="proposal-edit.html">Proposal Edit</a></li>
                             <li class="nxl-item"><a class="nxl-link" href="proposal-create.html">Proposal Create</a></li>
