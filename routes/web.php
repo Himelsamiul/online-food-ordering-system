@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\FoodController;
 use App\Http\Controllers\Frontend\MenuController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\OrderController;
+use App\Http\Controllers\Backend\DeliveryManController;
 
 
 // frontend routes
@@ -121,6 +122,13 @@ Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show')
 Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('orders.show');
 
+// Delivery Man Module
+Route::get('/delivery-men', [DeliveryManController::class, 'index'])->name('delivery-men.index');
+Route::post('/delivery-men', [DeliveryManController::class, 'store'])->name('delivery-men.store');
+Route::get('/delivery-men/{deliveryMan}/edit', [DeliveryManController::class, 'edit'])->name('delivery-men.edit');
+Route::put('/delivery-men/{deliveryMan}', [DeliveryManController::class, 'update'])->name('delivery-men.update');
+Route::delete('/delivery-men/{deliveryMan}/delete', [DeliveryManController::class, 'destroy'])->name('delivery-men.delete');
+Route::patch('/delivery-men/{deliveryMan}/status', [DeliveryManController::class, 'toggleStatus'])->name('delivery-men.status');
 
 
 });

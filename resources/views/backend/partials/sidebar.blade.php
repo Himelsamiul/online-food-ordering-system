@@ -152,6 +152,26 @@
                     </ul>
                 </li>
 
+                {{-- Orders --}}
+                <li class="nxl-item nxl-hasmenu">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-shopping-cart"></i>
+                        </span>
+                        <span class="nxl-mtext">Delivery Man</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item">
+                            <a class="nxl-link" href="{{ route('admin.delivery-men.index') }}">
+                                DeliveryMan Index
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 {{-- Payment --}}
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">

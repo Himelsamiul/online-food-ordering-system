@@ -135,6 +135,8 @@
                                 <span class="badge bg-info text-dark">Cooking</span>
                             @elseif($order->order_status === 'delivered')
                                 <span class="badge bg-success">Delivered</span>
+                            @elseif($order->order_status === 'out_for_delivery')
+                                <span class="badge bg-primary">Out for Delivery</span>
                             @else
                                 <span class="badge bg-danger">Cancelled</span>
                             @endif
@@ -211,6 +213,7 @@
             <div class="d-grid gap-2">
                 <button type="button" class="btn btn-outline-warning status-option" data-status="pending">Pending</button>
                 <button type="button" class="btn btn-outline-info status-option" data-status="cooking">Cooking</button>
+                <button type="button" class="btn btn-outline-success status-option" data-status="out_for_delivery">Out for Delivery</button>
                 <button type="button" class="btn btn-outline-success status-option" data-status="delivered">Delivered</button>
                 <button type="button" class="btn btn-outline-danger status-option" data-status="cancelled">Cancelled</button>
             </div>

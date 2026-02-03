@@ -193,7 +193,7 @@ if ($request->filled('order_number')) {
     public function updateStatus(Request $request, Order $order)
 {
     // allowed statuses
-    $allowedStatuses = ['pending', 'cooking', 'delivered', 'cancelled'];
+    $allowedStatuses = ['pending', 'cooking', 'delivered', 'cancelled', 'out_for_delivery'];
 
     // validation
     $request->validate([
