@@ -7,6 +7,7 @@ use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
 
 
 class RegistrationController extends Controller
@@ -84,7 +85,12 @@ public function profile()
         return redirect()->route('login');
     }
 
-    return view('frontend.pages.profile', compact('user'));
+    // logged-in user er orders
+    $orders = Order::where('user_id', $user->id)
+        ->latest()
+        ->get();
+
+    return view('frontend.pages.profile', compact('user', 'orders'));
 }
 
 // Show edit profile form
@@ -139,6 +145,18 @@ public function updateProfile(Request $request)
         ->with('success', 'Profile updated successfully');
 }
 
+public function viewOrder(Order $order)
+{
+    $user = Auth::guard('frontend')->user();
+
+    if ($order->user_id !== $user->id) {
+        abort(403);
+    }
+
+    $order->load('items.food');
+
+    return view('frontend.pages.order.view', compact('order'));
+}
 
 
     

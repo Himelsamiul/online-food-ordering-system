@@ -55,32 +55,70 @@
                         <table class="table table-bordered table-striped align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Order ID</th>
-                                    <th>Date</th>
-                                    <th>Total (৳)</th>
-                                    <th>Status</th>
+        <th>#</th>
+        <th>Order No</th>
+        <th>Transaction No</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Address</th>
+        <th>Total (৳)</th>
+        <th>Payment</th>
+        <th>Payment Status</th>
+        <th>Order Status</th>
+        <th>Date</th>
+        <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>ORD-1001</td>
-                                    <td>2026-01-10</td>
-                                    <td>850</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-1002</td>
-                                    <td>2026-01-18</td>
-                                    <td>420</td>
-                                    <td><span class="badge bg-warning text-dark">Pending</span></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-1003</td>
-                                    <td>2026-01-25</td>
-                                    <td>1290</td>
-                                    <td><span class="badge bg-secondary">Cancelled</span></td>
-                                </tr>
-                            </tbody>
+    @forelse($orders as $index => $order)
+        <tr>
+            <td>{{ $index + 1 }}</td>
+
+            <td>{{ $order->order_number }}</td>
+
+            <td>{{ $order->transaction_number }}</td>
+
+            <td>{{ $order->name }}</td>
+
+            <td>{{ $order->phone }}</td>
+
+            <td>{{ $order->address }}</td>
+
+            <td>{{ number_format($order->total_amount, 2) }}</td>
+
+            <td>{{ strtoupper($order->payment_method) }}</td>
+
+            <td>
+                <span class="badge bg-warning text-dark">
+                    {{ ucfirst($order->payment_status) }}
+                </span>
+            </td>
+
+            {{-- ✅ ORDER STATUS FROM DATABASE --}}
+            <td>
+                <span class="badge bg-warning text-dark">
+                    {{ ucfirst($order->order_status) }}
+                </span>
+            </td>
+
+            <td>{{ $order->created_at->format('d M Y') }}</td>
+
+            <td>
+                <a href="{{ route('profile.order.view', $order->id) }}"
+                   class="btn btn-sm btn-primary">
+                    View
+                </a>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="12" class="text-center text-muted">
+                You have not placed any orders yet.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
+
                         </table>
                     </div>
 

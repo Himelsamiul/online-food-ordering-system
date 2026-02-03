@@ -52,6 +52,7 @@ Route::middleware('auth:frontend')->group(function () {
     Route::get('/order/place', [OrderController::class, 'create'])->name('order.place');
     Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
     Route::get('/order/success/{order}', [OrderController::class, 'success'])->name('order.success');
+    Route::get('/profile/order/{order}', [RegistrationController::class, 'viewOrder'])->name('profile.order.view');
 });
 
 
