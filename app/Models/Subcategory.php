@@ -13,7 +13,7 @@ class Subcategory extends Model
         'status',
     ];
 
-    // Laravel-level relation (no foreign key constraint)
+    
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');

@@ -50,8 +50,8 @@ class CartController extends Controller
         $cart[$food->id] = [
             'food_id'  => $food->id,
             'name'     => $food->name,
-            'original_price' => $food->price,   // 🔥 food create time price
-            'price'          => $finalPrice,     // 🔥 discounted / selling price,
+            'original_price' => $food->price,   //  food create time price
+            'price'          => $finalPrice,     //  discounted / selling price,
             'quantity' => 1,
             'stock'    => $food->quantity,
             'image'    => $food->image,

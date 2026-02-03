@@ -60,7 +60,7 @@ class RegistrationController extends Controller
         return view('backend.pages.registrations.index', compact('registrations'));
     }
 
-    // ✅ Delete a registered user
+    //  Delete a registered user
     public function deleteRegistration($id)
     {
         $user = Registration::findOrFail($id);

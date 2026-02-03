@@ -120,7 +120,7 @@
                     <a href="{{ route('home') }}"
                        class="btn btn-success px-4 py-2 fw-bold"
                        style="border-radius:30px;">
-                        🍔 Back to Menu
+                         Back to Menu
                     </a>
                 </div>
 

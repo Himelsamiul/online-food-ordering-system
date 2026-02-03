@@ -45,7 +45,7 @@
 
     </form>
 
-    {{-- 📋 Table --}}
+    {{--  Table --}}
     <table class="table table-bordered table-striped align-middle">
         <thead class="table-responsive">
             <tr>
@@ -109,7 +109,7 @@
         </tbody>
     </table>
 
-    {{-- ⬇️ Bottom Controls --}}
+    {{--  Bottom Controls --}}
     <div class="d-flex justify-content-between align-items-center mt-3">
 
         {{-- Per Page (Bottom) --}}

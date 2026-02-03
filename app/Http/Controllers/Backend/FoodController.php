@@ -60,7 +60,7 @@ class FoodController extends Controller
             'low_stock_alert' => 'nullable|integer|min:0|lte:quantity',
             'barcode' => 'nullable|string|max:50',
 
-            // 🔥 IMAGE VALIDATION
+            // IMAGE VALIDATION
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 
             'description' => 'nullable|string',

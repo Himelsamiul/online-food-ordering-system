@@ -27,7 +27,7 @@ class MenuController extends Controller
     {
 $foods = Food::where('subcategory_id', $subcategory->id)
     ->where('status', 1)
-    ->where('quantity', '>', 0)   // 🔥 stock out হলে hide
+    ->where('quantity', '>', 0)   // only in-stock items
     ->get();
         return view('frontend.pages.foods', compact('subcategory', 'foods'));
     }
@@ -58,7 +58,7 @@ public function addToCart(Request $request, Food $food)
     // Get cart (unique items only)
     $cart = session()->get('cart', []);
 
-    // 🚫 If already exists, do NOT increase quantity
+    // If already exists, do NOT increase quantity
     if (isset($cart[$food->id])) {
         return redirect()->back()->with('info', 'This item is already in your cart.');
     }
@@ -71,7 +71,7 @@ public function addToCart(Request $request, Food $food)
         ? $price - (($price * $discount) / 100)
         : $price;
 
-    // ✅ Add new product (quantity fixed = 1)
+    //  Add new product (quantity fixed = 1)
     $cart[$food->id] = [
         'food_id' => $food->id,
         'name'    => $food->name,

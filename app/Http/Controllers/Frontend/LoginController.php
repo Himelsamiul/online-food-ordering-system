@@ -198,12 +198,12 @@ public function loginHistory(Request $request)
         });
     }
 
-    // 🌍 Search by country
+    //  Search by country
     if ($request->filled('country')) {
         $query->where('country', 'like', '%' . $request->country . '%');
     }
 
-    // 📅 Search by date (login date)
+    //  Search by date (login date)
     if ($request->filled('date')) {
         $query->whereDate('logged_in_at', $request->date);
     }

@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SubcategoryController extends Controller
 {
-    // =========================
-    // INDEX (list + filter)
-    // =========================
+
     public function index(Request $request)
     {
         // Active categories for dropdown
@@ -56,9 +54,6 @@ class SubcategoryController extends Controller
         ));
     }
 
-    // =========================
-    // STORE
-    // =========================
     public function store(Request $request)
     {
         $request->validate([
@@ -95,9 +90,7 @@ class SubcategoryController extends Controller
         return back()->with('success', 'Subcategory created successfully');
     }
 
-    // =========================
-    // EDIT
-    // =========================
+
     public function edit(Subcategory $subcategory)
     {
         $categories = Category::where('status', 1)->get();
@@ -108,9 +101,7 @@ class SubcategoryController extends Controller
         ));
     }
 
-    // =========================
-    // UPDATE
-    // =========================
+
     public function update(Request $request, Subcategory $subcategory)
     {
         $request->validate([
@@ -156,9 +147,7 @@ class SubcategoryController extends Controller
             ->with('success', 'Subcategory updated successfully');
     }
 
-    // =========================
-    // DELETE
-    // =========================
+
     public function destroy(Subcategory $subcategory)
     {
         // Prevent delete if used in foods

@@ -16,54 +16,42 @@ use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\OrderController;
 
 
-//frontend routes
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
+//menu routes
 Route::get('/category/{id}', [MenuController::class, 'show'])->name('category.show');
-
 Route::get('/menu/{subcategory}', [MenuController::class, 'foods'])->name('menu.foods');
 Route::get('/food/{food}', [MenuController::class, 'foodDetails'])->name('food.details');
 
-    Route::get('/register', [RegistrationController::class, 'create'])->name('register');
-    Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
-    Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-
-
+//registration and login routes
+Route::get('/register', [RegistrationController::class, 'create'])->name('register');
+Route::post('/register', [RegistrationController::class, 'store'])->name('register.store');
+Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
 
+// Protected routes for authenticated frontend users
 Route::middleware('auth:frontend')->group(function () {
+
+// user profile routes
     Route::get('/profile', [RegistrationController::class, 'profile'])->name('profile');
     Route::get('/profile/edit', [RegistrationController::class, 'editProfile'])->name('profile.edit');
     Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
+    
+// cart routes
     Route::post('/cart/add/{food}', [MenuController::class, 'addToCart'])->name('cart.add');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{food}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update/{food}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove/{food}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-
-        Route::get('/cart', [CartController::class, 'index'])
-        ->name('cart.index');
-
-    Route::post('/cart/add/{food}', [CartController::class, 'add'])
-        ->name('cart.add');
-
-    Route::post('/cart/update/{food}', [CartController::class, 'update'])
-        ->name('cart.update');
-
-    Route::post('/cart/remove/{food}', [CartController::class, 'remove'])
-        ->name('cart.remove');
-
-    Route::post('/cart/clear', [CartController::class, 'clear'])
-        ->name('cart.clear');
-
-            Route::get('/order/place', [OrderController::class, 'create'])
-        ->name('order.place');
-
-    Route::post('/order/store', [OrderController::class, 'store'])
-        ->name('order.store');
-
-    Route::get('/order/success/{order}', [OrderController::class, 'success'])
-        ->name('order.success');
+// order routes
+    Route::get('/order/place', [OrderController::class, 'create'])->name('order.place');
+    Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
+    Route::get('/order/success/{order}', [OrderController::class, 'success'])->name('order.success');
 });
 
 
@@ -71,10 +59,10 @@ Route::middleware('auth:frontend')->group(function () {
 //backend routes
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // Login page
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+ // Login page
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         // registered user management
@@ -117,9 +105,7 @@ Route::put('/foods/{id}/update', [FoodController::class, 'update'])->name('foods
 Route::delete('/foods/{id}/delete', [FoodController::class, 'delete'])->name('foods.delete');
 Route::get('/foods/{food}', [FoodController::class, 'show'])->name('foods.show'); 
 
-    Route::get('/orders', [OrderController::class, 'adminIndex'])
-        ->name('orders.index');
-
-    Route::get('/orders/{order}', [OrderController::class, 'adminShow'])
-        ->name('orders.show');
+// Orders Management
+Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
+Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('orders.show');
 });

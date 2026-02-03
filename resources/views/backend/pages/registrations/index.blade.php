@@ -29,7 +29,7 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
 
-                            {{-- ✅ IMAGE FIX --}}
+                            
                             <td>
                                 @if($user->image && file_exists(public_path('storage/'.$user->image)))
                                     <img src="{{ asset('storage/'.$user->image) }}"

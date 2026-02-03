@@ -75,7 +75,7 @@ public function index(Request $request)
             'status' => 'required|boolean'
         ]);
 
-    // 🔴 check duplicate except current ID
+    // check duplicate except current ID
     $exists = Category::where('name', $request->name)
         ->where('id', '!=', $id)
         ->exists();

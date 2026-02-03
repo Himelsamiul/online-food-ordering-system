@@ -58,7 +58,7 @@
 <div class="container py-5">
 
     <h3 class="fw-bold mb-4 text-center text-success">
-        🍽️ Place Your Order
+         Place Your Order
     </h3>
 
     {{-- ================= ORDER SUMMARY ================= --}}
