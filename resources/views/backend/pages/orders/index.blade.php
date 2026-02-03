@@ -22,11 +22,9 @@
 
                     <div class="col-md-2">
                         <label class="form-label">Order No</label>
-                        <input type="text"
-                               name="order_number"
+                        <input type="text" name="order_number"
                                value="{{ request('order_number') }}"
-                               class="form-control"
-                               placeholder="ORD-XXXX">
+                               class="form-control" placeholder="ORD-XXXX">
                     </div>
 
                     <div class="col-md-3">
@@ -44,52 +42,37 @@
 
                     <div class="col-md-2">
                         <label class="form-label">Phone</label>
-                        <input type="text"
-                               name="phone"
+                        <input type="text" name="phone"
                                value="{{ request('phone') }}"
-                               class="form-control"
-                               placeholder="01XXXXXXXXX">
+                               class="form-control" placeholder="01XXXXXXXXX">
                     </div>
 
                     <div class="col-md-2">
                         <label class="form-label">Payment Status</label>
                         <select name="payment_status" class="form-select">
                             <option value="">All</option>
-                            <option value="paid" {{ request('payment_status')=='paid'?'selected':'' }}>
-                                Paid
-                            </option>
-                            <option value="pending" {{ request('payment_status')=='pending'?'selected':'' }}>
-                                Pending
-                            </option>
+                            <option value="paid" {{ request('payment_status')=='paid'?'selected':'' }}>Paid</option>
+                            <option value="pending" {{ request('payment_status')=='pending'?'selected':'' }}>Pending</option>
                         </select>
                     </div>
 
                     <div class="col-md-2">
                         <label class="form-label">From Date</label>
-                        <input type="text"
-                               id="from_date"
-                               name="from_date"
+                        <input type="text" id="from_date" name="from_date"
                                value="{{ request('from_date') }}"
-                               class="form-control"
-                               placeholder="YYYY-MM-DD">
+                               class="form-control" placeholder="YYYY-MM-DD">
                     </div>
 
                     <div class="col-md-2">
                         <label class="form-label">To Date</label>
-                        <input type="text"
-                               id="to_date"
-                               name="to_date"
+                        <input type="text" id="to_date" name="to_date"
                                value="{{ request('to_date') }}"
-                               class="form-control"
-                               placeholder="YYYY-MM-DD">
+                               class="form-control" placeholder="YYYY-MM-DD">
                     </div>
 
                     <div class="col-md-12 d-flex gap-2">
                         <button class="btn btn-primary">🔍 Search</button>
-                        <a href="{{ route('admin.orders.index') }}"
-                           class="btn btn-outline-secondary">
-                            Reset
-                        </a>
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">Reset</a>
                     </div>
 
                 </div>
@@ -124,13 +107,10 @@
                     <tr>
                         <td>{{ $orders->firstItem() + $key }}</td>
                         <td class="fw-semibold">{{ $order->order_number }}</td>
-                        <td class="text-muted">
-                            {{ $order->transaction_number ?? '-' }}
-                        </td>
+                        <td class="text-muted">{{ $order->transaction_number ?? '-' }}</td>
                         <td>{{ $order->name }}</td>
                         <td>{{ $order->phone }}</td>
                         <td>{{ $order->address }}</td>
-
                         <td>{{ number_format($order->total_amount, 2) }}</td>
 
                         <td>
@@ -147,26 +127,62 @@
                             @endif
                         </td>
 
+                        {{-- ORDER STATUS (READ ONLY) --}}
                         <td>
-                            <span class="badge bg-secondary">
-                                {{ ucfirst($order->order_status) }}
-                            </span>
+                            @if($order->order_status === 'pending')
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @elseif($order->order_status === 'cooking')
+                                <span class="badge bg-info text-dark">Cooking</span>
+                            @elseif($order->order_status === 'delivered')
+                                <span class="badge bg-success">Delivered</span>
+                            @else
+                                <span class="badge bg-danger">Cancelled</span>
+                            @endif
                         </td>
 
                         <td>{{ $order->created_at->format('d M Y, h:i A') }}</td>
 
-                        <td>
-                            <a href="{{ route('admin.orders.show', $order->id) }}"
-                               class="btn btn-sm btn-primary">
-                                View
-                            </a>
-                        </td>
+                        {{-- ACTION --}}
+<td class="text-center">
+    <div class="d-flex justify-content-center align-items-center gap-2">
+
+        {{-- Status change --}}
+        <button type="button"
+                class="btn btn-light action-btn action-dot"
+                data-order-id="{{ $order->id }}"
+                title="Change Status">
+            &#8942;
+        </button>
+
+        {{-- View --}}
+        <a href="{{ route('admin.orders.show', $order->id) }}"
+           class="btn btn-light action-icon"
+           title="View Order">
+            👁
+        </a>
+
+        {{-- Payment (COD only, pending only) --}}
+        @if($order->payment_method === 'cod' && $order->payment_status === 'pending')
+            <form action="{{ route('admin.orders.payment.paid', $order->id) }}"
+                  method="POST"
+                  onsubmit="return confirm('Confirm cash payment received?')">
+                @csrf
+                @method('PATCH')
+
+                <button class="btn btn-light action-icon"
+                        title="Mark Payment as Paid">
+                    💰
+                </button>
+            </form>
+        @endif
+
+    </div>
+</td>
+
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="12" class="text-center text-muted">
-                            No orders found
-                        </td>
+                        <td colspan="12" class="text-center text-muted">No orders found</td>
                     </tr>
                 @endforelse
                 </tbody>
@@ -181,20 +197,101 @@
 
 </div>
 
+{{-- ================= STATUS MODAL ================= --}}
+<div id="statusModal" class="custom-modal d-none">
+    <div class="custom-modal-content">
+        <h5 class="mb-3">Update Order Status</h5>
+
+        <form id="statusForm" method="POST">
+            @csrf
+            @method('PATCH')
+
+            <input type="hidden" name="order_status" id="selectedStatus">
+
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-warning status-option" data-status="pending">Pending</button>
+                <button type="button" class="btn btn-outline-info status-option" data-status="cooking">Cooking</button>
+                <button type="button" class="btn btn-outline-success status-option" data-status="delivered">Delivered</button>
+                <button type="button" class="btn btn-outline-danger status-option" data-status="cancelled">Cancelled</button>
+            </div>
+
+            <div class="mt-3 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" id="closeModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ================= CSS ================= --}}
+<style>
+.action-icon {
+    font-size: 18px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    line-height: 1;
+}
+
+
+.action-dot {
+    font-size: 30px;
+    line-height: 1;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+.action-icon {
+    font-size: 18px;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+.custom-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.custom-modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 320px;
+}
+</style>
+
+{{-- ================= JS ================= --}}
+<script>
+const modal = document.getElementById('statusModal');
+const closeBtn = document.getElementById('closeModal');
+const statusForm = document.getElementById('statusForm');
+const statusInput = document.getElementById('selectedStatus');
+
+document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        statusForm.action = `/admin/orders/${btn.dataset.orderId}/status`;
+        modal.classList.remove('d-none');
+    });
+});
+
+document.querySelectorAll('.status-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+        statusInput.value = btn.dataset.status;
+        document.querySelectorAll('.status-option').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+closeBtn.addEventListener('click', () => modal.classList.add('d-none'));
+modal.addEventListener('click', e => e.target === modal && modal.classList.add('d-none'));
+</script>
+
 {{-- ================= Flatpickr JS ================= --}}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    const fromPicker = flatpickr("#from_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        onChange(_, d){ toPicker.set("minDate", d); }
-    });
-
-    const toPicker = flatpickr("#to_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        onChange(_, d){ fromPicker.set("maxDate", d); }
-    });
+flatpickr("#from_date",{dateFormat:"Y-m-d",maxDate:"today"});
+flatpickr("#to_date",{dateFormat:"Y-m-d",maxDate:"today"});
 </script>
 
 @endsection

@@ -188,4 +188,49 @@ if ($request->filled('order_number')) {
 
         return view('backend.pages.orders.show', compact('order'));
     }
+
+
+    public function updateStatus(Request $request, Order $order)
+{
+    // allowed statuses
+    $allowedStatuses = ['pending', 'cooking', 'delivered', 'cancelled'];
+
+    // validation
+    $request->validate([
+        'order_status' => 'required|in:' . implode(',', $allowedStatuses),
+    ]);
+
+    // lock delivered orders
+    if ($order->order_status === 'delivered') {
+        return back()->with('error', 'Delivered order cannot be changed.');
+    }
+
+    // update status
+    $order->order_status = $request->order_status;
+    $order->save();
+
+    return back()->with('success', 'Order status updated successfully.');
+}
+
+
+
+public function markPaymentPaid(Order $order)
+{
+    // only COD orders allowed
+    if ($order->payment_method !== 'cod') {
+        return back()->with('error', 'Only COD payments can be marked as paid.');
+    }
+
+    // already paid protection
+    if ($order->payment_status === 'paid') {
+        return back()->with('info', 'Payment already marked as paid.');
+    }
+
+    // mark as paid
+    $order->payment_status = 'paid';
+    $order->save();
+
+    return back()->with('success', 'COD payment marked as paid successfully.');
+}
+
 }

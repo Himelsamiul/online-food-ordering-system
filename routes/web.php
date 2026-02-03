@@ -98,12 +98,15 @@ Route::delete('/units/{id}/delete', [UnitController::class, 'delete'])->name('un
 
 
 // Inactive foods page
-Route::get('/foods/inactive', [FoodController::class, 'inactive'])
-    ->name('foods.inactive');
+Route::get('/foods/inactive', [FoodController::class, 'inactive'])->name('foods.inactive');
 
 // Activate inactive food
-Route::patch('/foods/{id}/activate', [FoodController::class, 'activate'])
-    ->name('foods.activate');
+Route::patch('/foods/{id}/activate', [FoodController::class, 'activate'])->name('foods.activate');
+
+//order status update
+Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+// order payment update
+Route::patch('/orders/{order}/payment-paid', [OrderController::class, 'markPaymentPaid'])->name('orders.payment.paid');
 
 /* Food */
 Route::get('/foods', [FoodController::class, 'index'])->name('foods.index');
