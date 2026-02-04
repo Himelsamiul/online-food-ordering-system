@@ -4,6 +4,7 @@ namespace App\Providers;
 use App\Models\Category;
 use Illuminate\Support\Facades\View;
 use App\Models\Food;
+use Illuminate\Support\Facades\URL;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
 public function boot(): void
 {
+        // Only force HTTPS when using ngrok
+    //if (str_contains(config('app.url'), 'ngrok')) {
+        //URL::forceScheme('https');
+    //}
+
     View::composer('frontend.partials.header', function ($view) {
         $view->with(
             'categories',
