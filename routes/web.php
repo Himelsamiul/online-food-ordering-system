@@ -15,7 +15,7 @@ use App\Http\Controllers\Frontend\MenuController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Backend\DeliveryManController;
-
+use App\Http\Controllers\Backend\DeliveryRunController;
 
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -129,6 +129,20 @@ Route::get('/delivery-men/{deliveryMan}/edit', [DeliveryManController::class, 'e
 Route::put('/delivery-men/{deliveryMan}', [DeliveryManController::class, 'update'])->name('delivery-men.update');
 Route::delete('/delivery-men/{deliveryMan}/delete', [DeliveryManController::class, 'destroy'])->name('delivery-men.delete');
 Route::patch('/delivery-men/{deliveryMan}/status', [DeliveryManController::class, 'toggleStatus'])->name('delivery-men.status');
+
+// Delivery Run
+Route::get('/delivery-runs', [DeliveryRunController::class, 'index'])->name('delivery-runs.index');
+Route::get('/delivery-runs/create', [DeliveryRunController::class, 'create'])->name('delivery-runs.create');
+Route::post('/delivery-runs/store', [DeliveryRunController::class, 'store'])->name('delivery-runs.store');
+
+Route::get('/delivery-runs/{id}/edit', [DeliveryRunController::class, 'edit'])->name('delivery-runs.edit');
+Route::put('/delivery-runs/{id}', [DeliveryRunController::class, 'update'])->name('delivery-runs.update');
+
+Route::patch('/delivery-runs/{id}/complete', [DeliveryRunController::class, 'complete'])->name('delivery-runs.complete');
+Route::delete('/delivery-runs/{id}/delete', [DeliveryRunController::class, 'destroy'])->name('delivery-runs.delete');
+
+Route::post('/delivery-runs/order-details', [DeliveryRunController::class, 'orderDetails'])
+    ->name('delivery-runs.order.details');
 
 
 });
