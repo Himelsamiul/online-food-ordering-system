@@ -30,9 +30,9 @@ class DeliveryRunController extends Controller
     {
         $deliveryMen = DeliveryMan::where('status', 1)->get();
 
-        $orders = Order::where('order_status', 'pending')
-            ->whereNull('delivery_run_id')
-            ->get();
+$orders = Order::whereIn('order_status', ['pending', 'cooking'])
+    ->whereNull('delivery_run_id')
+    ->get();
 
         return view('backend.pages.delivery-runs.create', compact('deliveryMen', 'orders'));
     }
@@ -114,7 +114,7 @@ public function orderDetails(Request $request)
 
         Order::whereIn('id', $request->order_ids)->update([
             'delivery_run_id' => $run->id,
-            'order_status'    => 'on_the_way',
+            'order_status'    => 'out_for_delivery',
         ]);
 
         return redirect()
@@ -177,19 +177,19 @@ public function orderDetails(Request $request)
     /**
      * Delete delivery run
      */
-    public function destroy($id)
-    {
-        $run = DeliveryRun::findOrFail($id);
+  public function destroy($id)
+{
+    $run = DeliveryRun::findOrFail($id);
 
-        if ($run->status !== 'completed') {
-            Order::whereIn('id', $run->order_ids)->update([
-                'delivery_run_id' => null,
-                'order_status'    => 'pending',
-            ]);
-        }
+    // 🔥 ALWAYS rollback orders when a delivery run is deleted
+    Order::whereIn('id', $run->order_ids)->update([
+        'delivery_run_id' => null,
+        'order_status'    => 'pending',
+    ]);
 
-        $run->delete();
+    $run->delete();
 
-        return back()->with('success', 'Delivery run deleted successfully.');
-    }
+    return back()->with('success', 'Delivery run deleted successfully.');
+}
+
 }

@@ -127,16 +127,15 @@
                             @endif
                         </td>
 
-                        {{-- ORDER STATUS (READ ONLY) --}}
                         <td>
                             @if($order->order_status === 'pending')
                                 <span class="badge bg-warning text-dark">Pending</span>
                             @elseif($order->order_status === 'cooking')
                                 <span class="badge bg-info text-dark">Cooking</span>
-                            @elseif($order->order_status === 'delivered')
-                                <span class="badge bg-success">Delivered</span>
                             @elseif($order->order_status === 'out_for_delivery')
                                 <span class="badge bg-primary">Out for Delivery</span>
+                            @elseif($order->order_status === 'delivered')
+                                <span class="badge bg-success">Delivered</span>
                             @else
                                 <span class="badge bg-danger">Cancelled</span>
                             @endif
@@ -145,42 +144,43 @@
                         <td>{{ $order->created_at->format('d M Y, h:i A') }}</td>
 
                         {{-- ACTION --}}
-<td class="text-center">
-    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center align-items-center gap-2">
 
-        {{-- Status change --}}
-        <button type="button"
-                class="btn btn-light action-btn action-dot"
-                data-order-id="{{ $order->id }}"
-                title="Change Status">
-            &#8942;
-        </button>
+                                {{-- Status change (ONLY if not assigned to delivery run) --}}
+                                @if(is_null($order->delivery_run_id))
+                                    <button type="button"
+                                            class="btn btn-light action-btn action-dot"
+                                            data-order-id="{{ $order->id }}"
+                                            title="Change Status">
+                                        &#8942;
+                                    </button>
+                                @endif
 
-        {{-- View --}}
-        <a href="{{ route('admin.orders.show', $order->id) }}"
-           class="btn btn-light action-icon"
-           title="View Order">
-            👁
-        </a>
+                                {{-- View --}}
+                                <a href="{{ route('admin.orders.show', $order->id) }}"
+                                   class="btn btn-light action-icon"
+                                   title="View Order">
+                                    👁
+                                </a>
 
-        {{-- Payment (COD only, pending only) --}}
-        @if($order->payment_method === 'cod' && $order->payment_status === 'pending')
-            <form action="{{ route('admin.orders.payment.paid', $order->id) }}"
-                  method="POST"
-                  onsubmit="return confirm('Confirm cash payment received?')">
-                @csrf
-                @method('PATCH')
+                                {{-- Payment (COD only, pending only) --}}
+                                @if($order->payment_method === 'cod' && $order->payment_status === 'pending')
+                                    <form action="{{ route('admin.orders.payment.paid', $order->id) }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Confirm cash payment received?')">
+                                        @csrf
+                                        @method('PATCH')
 
-                <button class="btn btn-light action-icon"
-                        title="Mark Payment as Paid">
-                    💰
-                </button>
-            </form>
-        @endif
+                                        <button class="btn btn-light action-icon"
+                                                title="Mark Payment as Paid">
+                                            💰
+                                        </button>
+                                    </form>
+                                @endif
 
-    </div>
-</td>
-
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
@@ -213,8 +213,6 @@
             <div class="d-grid gap-2">
                 <button type="button" class="btn btn-outline-warning status-option" data-status="pending">Pending</button>
                 <button type="button" class="btn btn-outline-info status-option" data-status="cooking">Cooking</button>
-                <button type="button" class="btn btn-outline-success status-option" data-status="out_for_delivery">Out for Delivery</button>
-                <button type="button" class="btn btn-outline-success status-option" data-status="delivered">Delivered</button>
                 <button type="button" class="btn btn-outline-danger status-option" data-status="cancelled">Cancelled</button>
             </div>
 
@@ -234,16 +232,9 @@
     border-radius: 8px;
     line-height: 1;
 }
-
-
 .action-dot {
     font-size: 30px;
     line-height: 1;
-    padding: 6px 10px;
-    border-radius: 8px;
-}
-.action-icon {
-    font-size: 18px;
     padding: 6px 10px;
     border-radius: 8px;
 }

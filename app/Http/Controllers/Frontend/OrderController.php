@@ -192,25 +192,31 @@ if ($request->filled('order_number')) {
 
     public function updateStatus(Request $request, Order $order)
 {
-    // allowed statuses
-    $allowedStatuses = ['pending', 'cooking', 'delivered', 'cancelled', 'out_for_delivery'];
+    // 🚫 If order already assigned to delivery run
+    if ($order->delivery_run_id) {
+        return back()->with(
+            'error',
+            'This order is already assigned to a delivery run.'
+        );
+    }
 
-    // validation
+    $allowedStatuses = ['pending', 'cooking', 'cancelled'];
+
     $request->validate([
         'order_status' => 'required|in:' . implode(',', $allowedStatuses),
     ]);
 
-    // lock delivered orders
+    // delivered protection (already done, still ok)
     if ($order->order_status === 'delivered') {
         return back()->with('error', 'Delivered order cannot be changed.');
     }
 
-    // update status
     $order->order_status = $request->order_status;
     $order->save();
 
     return back()->with('success', 'Order status updated successfully.');
 }
+
 
 
 
