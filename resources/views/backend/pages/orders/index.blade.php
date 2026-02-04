@@ -57,6 +57,39 @@
                     </div>
 
                     <div class="col-md-2">
+    <label class="form-label">Order Status</label>
+    <select name="order_status" class="form-select">
+        <option value="">All</option>
+        <option value="pending" {{ request('order_status')=='pending'?'selected':'' }}>Pending</option>
+        <option value="cooking" {{ request('order_status')=='cooking'?'selected':'' }}>Cooking</option>
+        <option value="out_for_delivery" {{ request('order_status')=='out_for_delivery'?'selected':'' }}>
+            Out for Delivery
+        </option>
+        <option value="delivered" {{ request('order_status')=='delivered'?'selected':'' }}>Delivered</option>
+        <option value="cancelled" {{ request('order_status')=='cancelled'?'selected':'' }}>Cancelled</option>
+    </select>
+</div>
+
+
+
+{{-- Delivery Man --}}
+<div class="col-md-3">
+    <label class="form-label">Delivery Man</label>
+    <select name="delivery_man_id" class="form-select">
+        <option value="">All Delivery Men</option>
+        @foreach($deliveryMen as $man)
+            <option value="{{ $man->id }}"
+                {{ request('delivery_man_id') == $man->id ? 'selected' : '' }}>
+                {{ $man->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+
+
+
+                    <div class="col-md-2">
                         <label class="form-label">From Date</label>
                         <input type="text" id="from_date" name="from_date"
                                value="{{ request('from_date') }}"
@@ -91,6 +124,7 @@
                     <th>Order No</th>
                     <th>Transaction No</th>
                     <th>Customer</th>
+                    <th>Delivery Man</th>
                     <th>Phone</th>
                     <th>Address</th>
                     <th>Total (৳)</th>
@@ -109,6 +143,16 @@
                         <td class="fw-semibold">{{ $order->order_number }}</td>
                         <td class="text-muted">{{ $order->transaction_number ?? '-' }}</td>
                         <td>{{ $order->name }}</td>
+                        <td>
+    @if($order->deliveryRun && $order->deliveryRun->deliveryMan)
+        <span class="fw-semibold text-primary">
+            {{ $order->deliveryRun->deliveryMan->name }}
+        </span>
+    @else
+        <span class="text-muted">Not Assigned</span>
+    @endif
+</td>
+
                         <td>{{ $order->phone }}</td>
                         <td>{{ $order->address }}</td>
                         <td>{{ number_format($order->total_amount, 2) }}</td>

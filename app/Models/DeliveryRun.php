@@ -31,4 +31,11 @@ class DeliveryRun extends Model
     {
         return $this->belongsTo(DeliveryMan::class);
     }
+
+
+    public function orders()
+{
+    return $this->hasMany(Order::class);
+}
+
 }

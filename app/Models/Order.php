@@ -22,4 +22,10 @@ class Order extends Model
     {
         return $this->belongsTo(Registration::class, 'user_id');
     }
+
+    public function deliveryRun()
+{
+    return $this->belongsTo(DeliveryRun::class);
+}
+
 }

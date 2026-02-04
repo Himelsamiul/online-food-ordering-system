@@ -14,14 +14,50 @@ class DeliveryRunController extends Controller
     /**
      * List all delivery runs
      */
-    public function index()
-    {
-        $runs = DeliveryRun::with('deliveryMan')
-            ->latest()
-            ->paginate(10);
+public function index(Request $request)
+{
+    $query = DeliveryRun::with('deliveryMan');
 
-        return view('backend.pages.delivery-runs.index', compact('runs'));
+    // 🔍 Filter: Delivery Man (dropdown)
+    if ($request->filled('delivery_man_id')) {
+        $query->where('delivery_man_id', $request->delivery_man_id);
     }
+
+    // 📞 Filter: Customer phone
+    if ($request->filled('phone')) {
+        $query->whereHas('orders', function ($q) use ($request) {
+            $q->where('phone', 'like', '%' . $request->phone . '%');
+        });
+    }
+
+    // ⚡ Filter: Status
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // 📅 Filter: From date
+    if ($request->filled('from_date')) {
+        $query->whereDate('departed_at', '>=', $request->from_date);
+    }
+
+    // 📅 Filter: To date
+    if ($request->filled('to_date')) {
+        $query->whereDate('departed_at', '<=', $request->to_date);
+    }
+
+    $runs = $query
+        ->latest()
+        ->paginate(10)
+        ->withQueryString(); // 🔥 filter retain during pagination
+
+    // 🔽 Filter dropdown data
+    $deliveryMen = DeliveryMan::orderBy('name')->get();
+
+    return view(
+        'backend.pages.delivery-runs.index',
+        compact('runs', 'deliveryMen')
+    );
+}
 
     /**
      * Show create delivery run form
@@ -190,6 +226,23 @@ public function orderDetails(Request $request)
     $run->delete();
 
     return back()->with('success', 'Delivery run deleted successfully.');
+}
+
+    /**
+     * Show delivery run details
+     */ 
+public function show($id)
+{
+    $run = DeliveryRun::with('deliveryMan')->findOrFail($id);
+
+    $orders = Order::with(['items.food'])
+        ->whereIn('id', $run->order_ids)
+        ->get();
+
+    return view(
+        'backend.pages.delivery-runs.show',
+        compact('run', 'orders')
+    );
 }
 
 }

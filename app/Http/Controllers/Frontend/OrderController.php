@@ -9,6 +9,7 @@ use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Models\DeliveryMan;
 class OrderController extends Controller
 {
     /**
@@ -137,15 +138,18 @@ public function store(Request $request)
 
 
     
+
 // Admin: all orders list with filters
 public function adminIndex(Request $request)
 {
-    $query = Order::query();
+    // 🔥 eager load (delivery man name show করার জন্য)
+    $query = Order::with(['deliveryRun.deliveryMan']);
 
     // Order number
-if ($request->filled('order_number')) {
-    $query->where('order_number', trim($request->order_number));
-}
+    if ($request->filled('order_number')) {
+        $query->where('order_number', trim($request->order_number));
+    }
+
     // Customer name
     if ($request->filled('customer_name')) {
         $query->where('name', $request->customer_name);
@@ -161,7 +165,19 @@ if ($request->filled('order_number')) {
         $query->where('payment_status', $request->payment_status);
     }
 
-    // Date range
+    // ✅ NEW: Order status
+    if ($request->filled('order_status')) {
+        $query->where('order_status', $request->order_status);
+    }
+
+    // ✅ NEW: Delivery man filter
+    if ($request->filled('delivery_man_id')) {
+        $query->whereHas('deliveryRun', function ($q) use ($request) {
+            $q->where('delivery_man_id', $request->delivery_man_id);
+        });
+    }
+
+    // Date range (flatpickr)
     if ($request->filled('from_date') && $request->filled('to_date')) {
         $query->whereBetween('created_at', [
             $request->from_date . ' 00:00:00',
@@ -169,13 +185,25 @@ if ($request->filled('order_number')) {
         ]);
     }
 
-    $orders = $query->latest()->paginate(15)->withQueryString();
+    $orders = $query
+        ->latest()
+        ->paginate(15)
+        ->withQueryString();
 
-    // customer dropdown list
-    $customers = Order::select('name')->distinct()->orderBy('name')->get();
+    // 🔽 Dropdown data
+    $customers = Order::select('name')
+        ->distinct()
+        ->orderBy('name')
+        ->get();
 
-    return view('backend.pages.orders.index', compact('orders', 'customers'));
+    $deliveryMen = DeliveryMan::orderBy('name')->get();
+
+    return view(
+        'backend.pages.orders.index',
+        compact('orders', 'customers', 'deliveryMen')
+    );
 }
+
 
 
     // Admin: single order details

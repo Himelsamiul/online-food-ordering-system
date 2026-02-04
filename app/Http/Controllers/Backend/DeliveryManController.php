@@ -40,10 +40,11 @@ class DeliveryManController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $deliveryMen = $query
-            ->latest()
-            ->paginate(10)
-            ->withQueryString(); // pagination e filter retain
+    $deliveryMen = $query
+        ->with('deliveryRuns.orders')
+        ->latest()
+        ->paginate(10)
+        ->withQueryString(); // pagination e filter retain
 
         return view('backend.pages.delivery_man.index', compact('deliveryMen'));
     }
@@ -147,18 +148,33 @@ class DeliveryManController extends Controller
     /**
      * Remove the specified delivery man
      */
-    public function destroy(DeliveryMan $deliveryMan)
-    {
-        if ($deliveryMan->photo && Storage::disk('public')->exists($deliveryMan->photo)) {
-            Storage::disk('public')->delete($deliveryMan->photo);
-        }
+public function destroy(DeliveryMan $deliveryMan)
+{
+    // 🔒 Check if delivery man is used anywhere
+    $isUsed = $deliveryMan
+        ->deliveryRuns()
+        ->whereHas('orders')
+        ->exists();
 
-        $deliveryMan->delete();
-
+    if ($isUsed) {
         return redirect()
-            ->route('admin.delivery-men.index')
-            ->with('success', 'Delivery man deleted successfully');
+            ->back()
+            ->with('error', 'This delivery man is already used in orders and cannot be deleted.');
     }
+
+    // 🧹 Delete photo if exists
+    if ($deliveryMan->photo && Storage::disk('public')->exists($deliveryMan->photo)) {
+        Storage::disk('public')->delete($deliveryMan->photo);
+    }
+
+    $deliveryMan->delete();
+
+    return redirect()
+        ->route('admin.delivery-men.index')
+        ->with('success', 'Delivery man deleted successfully');
+}
+
+
 
     public function toggleStatus(DeliveryMan $deliveryMan)
 {

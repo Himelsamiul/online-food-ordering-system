@@ -134,15 +134,11 @@ Route::patch('/delivery-men/{deliveryMan}/status', [DeliveryManController::class
 Route::get('/delivery-runs', [DeliveryRunController::class, 'index'])->name('delivery-runs.index');
 Route::get('/delivery-runs/create', [DeliveryRunController::class, 'create'])->name('delivery-runs.create');
 Route::post('/delivery-runs/store', [DeliveryRunController::class, 'store'])->name('delivery-runs.store');
-
 Route::get('/delivery-runs/{id}/edit', [DeliveryRunController::class, 'edit'])->name('delivery-runs.edit');
 Route::put('/delivery-runs/{id}', [DeliveryRunController::class, 'update'])->name('delivery-runs.update');
-
 Route::patch('/delivery-runs/{id}/complete', [DeliveryRunController::class, 'complete'])->name('delivery-runs.complete');
 Route::delete('/delivery-runs/{id}/delete', [DeliveryRunController::class, 'destroy'])->name('delivery-runs.delete');
-
-Route::post('/delivery-runs/order-details', [DeliveryRunController::class, 'orderDetails'])
-    ->name('delivery-runs.order.details');
-
+Route::post('/delivery-runs/order-details', [DeliveryRunController::class, 'orderDetails'])->name('delivery-runs.order.details');
+Route::get('/delivery-runs/{id}',[DeliveryRunController::class, 'show'])->name('delivery-runs.show');
 
 });

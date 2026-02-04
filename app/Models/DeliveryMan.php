@@ -25,4 +25,11 @@ class DeliveryMan extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
+
+ 
+public function deliveryRuns()
+{
+    return $this->hasMany(DeliveryRun::class);
+}
+
 }

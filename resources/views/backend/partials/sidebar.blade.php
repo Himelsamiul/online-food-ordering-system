@@ -152,11 +152,11 @@
                     </ul>
                 </li>
 
-                {{-- Orders --}}
+                {{-- deliver --}}
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
-                            <i class="feather-shopping-cart"></i>
+                            <i class="feather-truck"></i>
                         </span>
                         <span class="nxl-mtext">Delivery Man</span>
                         <span class="nxl-arrow">
@@ -167,6 +167,33 @@
                         <li class="nxl-item">
                             <a class="nxl-link" href="{{ route('admin.delivery-men.index') }}">
                                 DeliveryMan Index
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                {{-- deliver --}}
+                <li class="nxl-item nxl-hasmenu">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-map"></i>
+                        </span>
+                        <span class="nxl-mtext">Delivery Assignment</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item">
+                            <a class="nxl-link" href="{{ route('admin.delivery-runs.create') }}">
+                                Delivery create
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item">
+                            <a class="nxl-link" href="{{ route('admin.delivery-runs.index') }}">
+                                Delivery Index
                             </a>
                         </li>
                     </ul>
