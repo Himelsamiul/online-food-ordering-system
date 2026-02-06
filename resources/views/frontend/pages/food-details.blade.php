@@ -4,7 +4,7 @@
 
 <style>
     .food-details-box {
-        background: rgba(15,15,15,0.95); /* 🔥 solid dark */
+        background: rgba(15,15,15,0.95);
         border-radius: 20px;
         padding: 30px;
         color: #eaeaea;
@@ -51,6 +51,7 @@
         border-radius: 30px;
         font-weight: 600;
         transition: .25s;
+        border: none;
     }
 
     .add-cart-btn:hover {
@@ -65,9 +66,8 @@
         font-weight: 600;
     }
 
-    /* BARCODE FIX */
     .barcode-wrapper {
-        background: #ffffff;        /* 🔥 real barcode bg */
+        background: #ffffff;
         border-radius: 12px;
         padding: 16px;
         display: inline-block;
@@ -94,6 +94,10 @@
         $discountAmount = 0;
         $finalPrice = $price;
     }
+
+    // ✅ CART CHECK (same as listing page)
+    $cart = session('cart', []);
+    $alreadyInCart = isset($cart[$food->id]);
 @endphp
 
 <div class="container py-5">
@@ -187,24 +191,35 @@
                     @endif
                 </div>
 
-                {{-- CART --}}
-{{-- CART --}}
-<div class="mt-4">
-    @if ($food->quantity > 0)
-        <form action="{{ route('cart.add', $food->id) }}" method="POST">
-            @csrf
-            <button type="submit" class="add-cart-btn">
-                <i class="fa fa-shopping-cart me-2"></i>
-                Add to Cart
-            </button>
-        </form>
-    @else
-        <button class="btn btn-secondary" disabled>
-            Out of Stock
-        </button>
-    @endif
-</div>
+                {{-- CART ACTION --}}
+                <div class="mt-4">
 
+                    @if ($alreadyInCart)
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fa fa-check me-2"></i>
+                            Already in Cart
+                        </button>
+
+                        <small class="d-block text-warning mt-2">
+                            Please update quantity from cart
+                        </small>
+
+                    @elseif ($food->quantity > 0)
+                        <form action="{{ route('cart.add', $food->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="add-cart-btn">
+                                <i class="fa fa-shopping-cart me-2"></i>
+                                Add to Cart
+                            </button>
+                        </form>
+
+                    @else
+                        <button class="btn btn-secondary" disabled>
+                            Out of Stock
+                        </button>
+                    @endif
+
+                </div>
 
             </div>
         </div>
