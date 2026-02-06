@@ -56,7 +56,7 @@
                                   placeholder="Your comment or query..."></textarea>
                     </div>
 
-                    <button class="btn btn-success w-100">
+                    <button class="btn btn-outline-light mt-2 w-100">
                         Send Message
                     </button>
                 </form>
