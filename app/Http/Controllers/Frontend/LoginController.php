@@ -214,4 +214,18 @@ public function loginHistory(Request $request)
 
     return view('backend.pages.loginhistory', compact('histories'));
 }
+
+// bulk delete login histories (admin)
+public function bulkDelete(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array',
+        'ids.*' => 'exists:login_histories,id',
+    ]);
+
+    LoginHistory::whereIn('id', $request->ids)->delete();
+
+    return back()->with('success', 'Selected login histories deleted successfully');
+}
+
 }

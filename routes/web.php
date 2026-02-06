@@ -82,6 +82,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
       
         // Login history
         Route::get('/login-history', [LoginController::class, 'loginHistory'])->name('login.history');
+        Route::post('/login-history/bulk-delete', [LoginController::class, 'bulkDelete'])
+    ->name('login.history.bulk.delete');
+
 
         // Subcategory Module
 Route::get('/subcategories', [SubcategoryController::class, 'index'])->name('subcategory.index');
