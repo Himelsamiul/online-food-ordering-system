@@ -20,6 +20,9 @@ use App\Http\Controllers\Backend\DeliveryRunController;
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'Aboutus'])->name('about');
+Route::get('/contact-us', [HomeController::class, 'contactPage'])->name('contact.page');
+Route::post('/contact-us', [HomeController::class, 'contactStore'])->name('contact.store');
+
 //menu routes
 Route::get('/category/{id}', [MenuController::class, 'show'])->name('category.show');
 Route::get('/menu/{subcategory}', [MenuController::class, 'foods'])->name('menu.foods');
@@ -143,5 +146,10 @@ Route::patch('/delivery-runs/{id}/complete', [DeliveryRunController::class, 'com
 Route::delete('/delivery-runs/{id}/delete', [DeliveryRunController::class, 'destroy'])->name('delivery-runs.delete');
 Route::post('/delivery-runs/order-details', [DeliveryRunController::class, 'orderDetails'])->name('delivery-runs.order.details');
 Route::get('/delivery-runs/{id}',[DeliveryRunController::class, 'show'])->name('delivery-runs.show');
+
+
+//contact messages
+
+Route::get('/about-us', [HomeController::class, 'adminContactList'])->name('aboutus.index');
 
 });

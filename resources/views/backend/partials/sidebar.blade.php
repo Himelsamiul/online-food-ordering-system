@@ -166,7 +166,7 @@
                     <ul class="nxl-submenu">
                         <li class="nxl-item">
                             <a class="nxl-link" href="{{ route('admin.delivery-men.index') }}">
-                                DeliveryMan Index
+                                Delivery Man Index
                             </a>
                         </li>
                     </ul>
@@ -178,7 +178,7 @@
                         <span class="nxl-micon">
                             <i class="feather-map"></i>
                         </span>
-                        <span class="nxl-mtext">Delivery Assignment</span>
+                        <span class="nxl-mtext">Delivery Assign</span>
                         <span class="nxl-arrow">
                             <i class="feather-chevron-right"></i>
                         </span>
@@ -266,7 +266,7 @@
                     </a>
                     <ul class="nxl-submenu">
                         <li class="nxl-item">
-                            <a class="nxl-link" href="#">
+                            <a class="nxl-link" href="{{ route('admin.aboutus.index') }}">
                                 Messages
                             </a>
                         </li>

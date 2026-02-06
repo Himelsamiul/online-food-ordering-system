@@ -59,7 +59,7 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="#">Contact us</a>
+            <a class="nav-link" href="{{ route('contact.page') }}">Contact us</a>
           </li>
 
           {{-- AUTH SECTION (GUARD BASED – CORRECTED) --}}
