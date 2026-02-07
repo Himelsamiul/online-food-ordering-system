@@ -199,29 +199,6 @@
                     </ul>
                 </li>
 
-                {{-- Payment --}}
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-dollar-sign"></i>
-                        </span>
-                        <span class="nxl-mtext">Payment</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="payment.html">Payment</a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="invoice-view.html">Invoice View</a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="invoice-create.html">Invoice Create</a>
-                        </li>
-                    </ul>
-                </li>
 
                 {{-- Customers --}}
                 <li class="nxl-item nxl-hasmenu">
@@ -243,11 +220,6 @@
                         <li class="nxl-item">
                             <a class="nxl-link" href="{{ route('admin.login.history') }}">
                                 Customers Login History
-                            </a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="customers-create.html">
-                                Customers Create
                             </a>
                         </li>
                     </ul>

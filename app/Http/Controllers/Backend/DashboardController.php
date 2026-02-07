@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Food;
 use App\Models\Subcategory;
@@ -10,6 +11,8 @@ use App\Models\Unit;
 use App\Models\Registration;
 use App\Models\DeliveryMan;
 use App\Models\DeliveryRun;
+use App\Models\ContactMessage;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -57,7 +60,10 @@ class DashboardController extends Controller
         $totalFoods         = Food::count();
         $totalSubcategories = Subcategory::count();
         $totalUnits         = Unit::count();
+        $totalcontactmessage= ContactMessage::count();
+        $totalcategory         = Category::count();
 
+        
         /* ================= DELIVERY ================= */
         $totalDeliveryMen = DeliveryMan::count();
         $totalDeliveryRuns = DeliveryRun::count();
@@ -85,7 +91,9 @@ class DashboardController extends Controller
             'totalDeliveryMen',
             'totalDeliveryRuns',
             'activeDeliveryRuns',
-            'completedDeliveryRuns'
+            'completedDeliveryRuns',
+            'totalcontactmessage',
+            'totalcategory'
         ));
     }
 }

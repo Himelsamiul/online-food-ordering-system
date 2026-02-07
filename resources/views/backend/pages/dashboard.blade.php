@@ -4,7 +4,6 @@
 
 <div class="page-header mb-4">
     <h4 class="fw-bold">Admin Dashboard</h4>
-    <small class="text-muted">System summary & operational insights</small>
 </div>
 
 <div class="container-fluid">
@@ -106,6 +105,8 @@
                 ['title'=>'Total Foods','value'=>$totalFoods,'icon'=>'grid','bg'=>'bg-teal'],
                 ['title'=>'Subcategories','value'=>$totalSubcategories,'icon'=>'layers','bg'=>'bg-orange'],
                 ['title'=>'Units','value'=>$totalUnits,'icon'=>'box','bg'=>'bg-indigo'],
+                ['title'=>'Contact Messages','value'=>$totalcontactmessage,'icon'=>'message-square','bg'=>'bg-red'],
+                ['title'=>'Categories','value'=>$totalcategory,'icon'=>'tag','bg'=>'bg-yellow'],
             ];
         @endphp
 
