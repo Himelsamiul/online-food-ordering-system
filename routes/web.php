@@ -16,6 +16,7 @@ use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Backend\DeliveryManController;
 use App\Http\Controllers\Backend\DeliveryRunController;
+use App\Http\Controllers\Backend\OrderExportController;
 
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -109,7 +110,8 @@ Route::get('/foods/inactive', [FoodController::class, 'inactive'])->name('foods.
 
 // Activate inactive food
 Route::patch('/foods/{id}/activate', [FoodController::class, 'activate'])->name('foods.activate');
-
+Route::get('/orders/export', [OrderExportController::class, 'export'])
+    ->name('orders.export');
 //order status update
 Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
 // order payment update
@@ -151,5 +153,5 @@ Route::get('/delivery-runs/{id}',[DeliveryRunController::class, 'show'])->name('
 //contact messages
 
 Route::get('/about-us', [HomeController::class, 'adminContactList'])->name('aboutus.index');
-
+;
 });

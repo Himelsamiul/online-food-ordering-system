@@ -103,10 +103,22 @@
                                class="form-control" placeholder="YYYY-MM-DD">
                     </div>
 
-                    <div class="col-md-12 d-flex gap-2">
-                        <button class="btn btn-primary">🔍 Search</button>
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">Reset</a>
-                    </div>
+<div class="col-md-12 d-flex gap-2">
+    <button class="btn btn-primary">🔍 Search</button>
+
+    <a href="{{ route('admin.orders.index') }}"
+       class="btn btn-outline-secondary">
+        Reset
+    </a>
+
+    {{-- ✅ EXPORT EXCEL --}}
+<a href="{{ route('admin.orders.export', request()->query()) }}"
+   class="btn btn-success">
+    📥 Export Excel
+</a>
+
+</div>
+
 
                 </div>
             </form>
