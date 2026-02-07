@@ -153,5 +153,5 @@ Route::get('/delivery-runs/{id}',[DeliveryRunController::class, 'show'])->name('
 //contact messages
 
 Route::get('/about-us', [HomeController::class, 'adminContactList'])->name('aboutus.index');
-;
+Route::delete('/about-us/{id}/delete', [HomeController::class, 'adminContactDelete'])->name('aboutus.delete');
 });

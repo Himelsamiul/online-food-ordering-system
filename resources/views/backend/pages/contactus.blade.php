@@ -15,6 +15,7 @@
                     <th>Phone</th>
                     <th>Message</th>
                     <th>Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -28,6 +29,12 @@
                             {{ $msg->message ?? '-' }}
                         </td>
                         <td>{{ $msg->created_at->format('d M Y') }}</td>
+                        <td>
+                            <form action="{{ route('admin.aboutus.delete', $msg->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this message?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
                     </tr>
                 @empty
                     <tr>

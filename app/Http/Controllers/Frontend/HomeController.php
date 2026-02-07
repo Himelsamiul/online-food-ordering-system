@@ -51,4 +51,12 @@ public function adminContactList()
     return view('backend.pages.contactus', compact('messages'));
 }
 
+
+public function adminContactDelete($id)
+{
+    $message = ContactMessage::findOrFail($id);
+    $message->delete();
+
+    return back()->with('success', 'Contact message deleted successfully.');
+}
 }
