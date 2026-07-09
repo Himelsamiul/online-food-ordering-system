@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Support\Otp;
 
 
 class RegistrationController extends Controller
@@ -17,6 +18,10 @@ class RegistrationController extends Controller
         return view('frontend.pages.registration.form');
     }
 
+    /**
+     * Step 1: validate the form, stash it in the session, and email a
+     * verification code. The account is NOT created yet.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -34,12 +39,13 @@ class RegistrationController extends Controller
             'image'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
+        // Store the image now; keep only the path in the session.
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('registrations', 'public');
         }
 
-        Registration::create([
+        session()->put('pending_registration', [
             'full_name' => $request->full_name,
             'username'  => $request->username,
             'phone'     => $request->phone,
@@ -50,9 +56,104 @@ class RegistrationController extends Controller
             'image'     => $imagePath,
         ]);
 
-       return redirect()->route('login')
-    ->with('success', 'Registration successful');
+        $this->sendRegistrationOtp($request->email);
 
+        return redirect()->route('register.verify')
+            ->with('success', 'We sent a 6-digit verification code to your email.');
+    }
+
+    /**
+     * Step 2 (GET): show the code-entry page.
+     */
+    public function showVerify()
+    {
+        $pending = session('pending_registration');
+
+        if (!$pending) {
+            return redirect()->route('register')
+                ->with('error', 'Please fill the registration form first.');
+        }
+
+        return view('frontend.pages.registration.verify', [
+            'email' => $pending['email'],
+        ]);
+    }
+
+    /**
+     * Step 2 (POST): check the code and finally create the account.
+     */
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|digits:6',
+        ]);
+
+        $pending = session('pending_registration');
+        $otp     = session('pending_registration_otp');
+
+        if (!$pending || !$otp) {
+            return redirect()->route('register')
+                ->with('error', 'Your session expired. Please register again.');
+        }
+
+        if (now()->timestamp > $otp['expires']) {
+            return back()->with('error', 'The code has expired. Please resend a new code.');
+        }
+
+        if (!Hash::check($request->code, $otp['hash'])) {
+            return back()->with('error', 'Invalid verification code.');
+        }
+
+        $user = Registration::create([
+            'full_name'         => $pending['full_name'],
+            'username'          => $pending['username'],
+            'phone'             => $pending['phone'],
+            'email'             => $pending['email'],
+            'dob'               => $pending['dob'],
+            'address'           => $pending['address'],
+            'password'          => $pending['password'], // already hashed
+            'image'             => $pending['image'],
+            'email_verified_at' => now(),
+        ]);
+
+        session()->forget(['pending_registration', 'pending_registration_otp']);
+
+        Auth::guard('frontend')->login($user);
+
+        return redirect()->route('profile')
+            ->with('success', 'Email verified — welcome!');
+    }
+
+    /**
+     * Resend a fresh code for the pending registration.
+     */
+    public function resendOtp()
+    {
+        $pending = session('pending_registration');
+
+        if (!$pending) {
+            return redirect()->route('register')
+                ->with('error', 'Please fill the registration form first.');
+        }
+
+        $this->sendRegistrationOtp($pending['email']);
+
+        return back()->with('success', 'A new verification code has been sent.');
+    }
+
+    /**
+     * Generate + store (hashed) + deliver a registration OTP.
+     */
+    private function sendRegistrationOtp(string $email): void
+    {
+        $code = Otp::generate();
+
+        session()->put('pending_registration_otp', [
+            'hash'    => Hash::make($code),
+            'expires' => now()->addMinutes(Otp::EXPIRES_MINUTES)->timestamp,
+        ]);
+
+        Otp::deliver($email, $code, 'register');
     }
 
     public function registrations()

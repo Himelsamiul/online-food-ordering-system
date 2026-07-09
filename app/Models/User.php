@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'role',
     ];
 
     /**
@@ -43,6 +45,34 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Permissions granted directly to this admin.
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
+
+    public function isSuperadmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    /**
+     * Superadmin can do everything; a normal admin only what was granted.
+     */
+    public function hasPermission(string $name): bool
+    {
+        if ($this->isSuperadmin()) {
+            return true;
+        }
+
+        // Uses the loaded relation (cached after first access) to avoid
+        // a query per check when the sidebar asks about many permissions.
+        return $this->permissions->contains('name', $name);
     }
 }

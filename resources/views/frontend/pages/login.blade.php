@@ -51,6 +51,10 @@
                                 Login
                             </button>
                         </div>
+
+                        <div class="text-center mt-3">
+                            <a href="{{ route('password.request') }}" class="text-light">Forgot password?</a>
+                        </div>
                     </form>
 
                 </div>

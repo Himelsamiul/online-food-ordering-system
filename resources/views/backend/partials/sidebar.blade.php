@@ -41,7 +41,35 @@
                     </a>
                 </li>
 
+                {{-- POS --}}
+                @can('pos')
+                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.pos.*') ? 'active nxl-trigger' : '' }}">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-shopping-cart"></i>
+                        </span>
+                        <span class="nxl-mtext">POS Billing</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item {{ request()->routeIs('admin.pos.index') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.pos.index') }}">
+                                New Sale
+                            </a>
+                        </li>
+                        <li class="nxl-item {{ request()->routeIs('admin.pos.sales') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.pos.sales') }}">
+                                Sales History
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endcan
+
                 {{-- Category --}}
+                @can('categories')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -60,8 +88,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
                 {{-- Sub Category --}}
+                @can('subcategories')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -80,8 +110,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
                 {{-- Units --}}
+                @can('units')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -100,8 +132,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
                 {{-- Food --}}
+                @can('foods')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -119,7 +153,6 @@
                             </a>
                         </li>
                         <li class="nxl-item">
-                        <li class="nxl-item">
                             <a class="nxl-link" href="{{ route('admin.foods.inactive') }}">
                                 Inactive Foods
                             </a>
@@ -131,8 +164,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
                 {{-- Orders --}}
+                @can('orders')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -151,8 +186,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
-                {{-- deliver --}}
+                {{-- Delivery Man --}}
+                @can('delivery_men')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -171,8 +208,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
-                {{-- deliver --}}
+                {{-- Delivery Assign --}}
+                @can('delivery_runs')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -198,9 +237,11 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
 
                 {{-- Customers --}}
+                @can('customers')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -224,8 +265,10 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
 
                 {{-- Contact Messages --}}
+                @can('contact_messages')
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon">
@@ -244,6 +287,34 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
+
+                {{-- Admin Users & Roles (superadmin only) --}}
+                @can('manage-admins')
+                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.admin-users.*') ? 'active nxl-trigger' : '' }}">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-shield"></i>
+                        </span>
+                        <span class="nxl-mtext">Admin Users</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item {{ request()->routeIs('admin.admin-users.index') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.admin-users.index') }}">
+                                Manage Admins
+                            </a>
+                        </li>
+                        <li class="nxl-item {{ request()->routeIs('admin.admin-users.create') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.admin-users.create') }}">
+                                Add Admin
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endcan
 
                 {{-- Logout --}}
                 <li class="nxl-item">
