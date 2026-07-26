@@ -23,6 +23,11 @@
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}" />
+
+    <!-- Design refresh (loaded last so it wins over the vendor theme) -->
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-refresh.css') }}" />
+
+    @stack('styles')
 </head>
 
 <body>
@@ -140,6 +145,10 @@
 
         });
     </script>
+
+    <script src="{{ asset('assets/js/admin-refresh.js') }}"></script>
+
+    @stack('scripts')
 
 </body>
 </html>

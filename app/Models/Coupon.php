@@ -127,8 +127,12 @@ class Coupon extends Model
      */
     public function getOfferLabelAttribute(): string
     {
+        // Drop trailing zeros but never the value itself: ৳100.50 must not
+        // round to ৳101, and 20.00% should read as 20%.
+        $value = rtrim(rtrim(number_format((float) $this->value, 2, '.', ''), '0'), '.');
+
         return $this->type === 'percent'
-            ? rtrim(rtrim(number_format((float) $this->value, 2), '0'), '.') . '% off'
-            : '৳' . number_format((float) $this->value, 0) . ' off';
+            ? $value . '% off'
+            : '৳' . $value . ' off';
     }
 }

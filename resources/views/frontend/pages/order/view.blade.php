@@ -227,8 +227,10 @@
             @php $sub=0; $disc=0; @endphp
             @foreach($order->items as $k=>$item)
                 @php
-                    $price=$item->food->price;
+                    // Food may have been deleted since the order was placed
                     $d=$item->food->discount ?? 0;
+                    $price=$item->food->price
+                        ?? ($d > 0 ? $item->price / (1 - $d/100) : $item->price);
                     $dAmt=($price*$d)/100;
                     $final=$price-$dAmt;
                     $line=$final*$item->quantity;
@@ -237,7 +239,7 @@
                 @endphp
                 <tr>
                     <td>{{ $k+1 }}</td>
-                    <td>{{ $item->food->name }}</td>
+                    <td>{{ $item->food->name ?? 'Deleted item' }}</td>
                     <td>{{ number_format($price,2) }} ৳</td>
                     <td>{{ $d }}%</td>
                     <td>{{ number_format($final,2) }} ৳</td>

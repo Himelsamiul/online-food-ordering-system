@@ -1,0 +1,218 @@
+/* =====================================================================
+   Storefront design refresh
+   Sits on top of the Feane template. Loaded last from the master layout
+   so every customer-facing page picks it up without markup changes.
+   ===================================================================== */
+
+:root {
+    --sf-accent:      #f1b816;
+    --sf-accent-dark: #d9a412;
+    --sf-green:       #1dbf73;
+    --sf-green-dark:  #157347;
+    --sf-danger:      #e74c3c;
+    --sf-ink:         #ffffff;
+    --sf-muted:       rgba(255, 255, 255, .62);
+    --sf-glass:       rgba(255, 255, 255, .08);
+    --sf-glass-line:  rgba(255, 255, 255, .16);
+    --sf-panel:       rgba(0, 0, 0, .88);
+    --sf-radius:      18px;
+    --sf-shadow:      0 14px 34px rgba(0, 0, 0, .38);
+}
+
+/* ---------- typography ---------- */
+body { -webkit-font-smoothing: antialiased; }
+
+h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }
+
+/* ---------- glass panels ---------- */
+.glass-card {
+    background: var(--sf-glass) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--sf-glass-line) !important;
+    border-radius: var(--sf-radius) !important;
+    box-shadow: var(--sf-shadow);
+}
+
+/* ---------- header ---------- */
+.header_section .nav-link {
+    font-weight: 600;
+    position: relative;
+    transition: color .18s;
+}
+
+.header_section .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--sf-accent);
+    transform: scaleX(0);
+    transition: transform .22s ease;
+}
+
+.header_section .nav-link:hover::after { transform: scaleX(1); }
+
+.cart_link { transition: transform .18s; }
+.cart_link:hover { transform: scale(1.08); }
+
+/* ---------- buttons ---------- */
+.btn-success,
+.cart-summary .btn-success {
+    background: linear-gradient(135deg, var(--sf-green-dark), var(--sf-green));
+    border: none;
+    font-weight: 700;
+    border-radius: 30px;
+    transition: transform .18s, box-shadow .18s;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(29, 191, 115, .45);
+}
+
+.btn-success:disabled { opacity: .55; transform: none; box-shadow: none; }
+
+/* ---------- forms ---------- */
+.form-control,
+textarea.form-control,
+select.form-control {
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid var(--sf-glass-line);
+    color: var(--sf-ink);
+    border-radius: 12px;
+    padding: 11px 16px;
+    transition: border-color .18s, box-shadow .18s, background-color .18s;
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, .14);
+    border-color: var(--sf-accent);
+    box-shadow: 0 0 0 3px rgba(241, 184, 22, .18);
+    color: var(--sf-ink);
+}
+
+.form-control::placeholder { color: rgba(255, 255, 255, .38); }
+
+.form-control:read-only,
+.form-control[readonly] {
+    background: rgba(255, 255, 255, .045);
+    cursor: not-allowed;
+}
+
+label { font-weight: 600; color: rgba(255, 255, 255, .82); }
+
+/* ---------- tables inside glass panels ---------- */
+.glass-card .table { color: var(--sf-ink); border-color: var(--sf-glass-line); }
+
+.glass-card .table thead th {
+    background: rgba(255, 255, 255, .1);
+    color: rgba(255, 255, 255, .8);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-color: var(--sf-glass-line);
+    white-space: nowrap;
+}
+
+.glass-card .table tbody td {
+    border-color: rgba(255, 255, 255, .09);
+    vertical-align: middle;
+}
+
+/* ---------- skeleton shimmer for AJAX loads ---------- */
+@keyframes sf-shimmer {
+    0%   { background-position: -420px 0; }
+    100% { background-position: 420px 0; }
+}
+
+.sf-skeleton {
+    background: linear-gradient(90deg,
+        rgba(255,255,255,.05) 25%,
+        rgba(255,255,255,.13) 50%,
+        rgba(255,255,255,.05) 75%);
+    background-size: 840px 100%;
+    animation: sf-shimmer 1.3s infinite linear;
+    border-radius: var(--sf-radius);
+}
+
+/* ---------- reveal on scroll (added by storefront-refresh.js) ---------- */
+.sf-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .5s ease, transform .5s ease;
+}
+
+.sf-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sf-reveal { opacity: 1; transform: none; transition: none; }
+    .food-box:hover, .cat-card:hover, .btn-success:hover { transform: none; }
+}
+
+/* ---------- back to top ---------- */
+.sf-top {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 50%;
+    background: var(--sf-accent);
+    color: #1c1c1c;
+    font-size: 19px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .45);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity .25s, transform .25s;
+    z-index: 999;
+}
+
+.sf-top.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+
+/* =====================================================================
+   Responsive
+   ===================================================================== */
+@media (max-width: 991.98px) {
+    .header_section .navbar-nav { padding: 10px 0; }
+    .header_section .nav-link::after { display: none; }
+    .user_option { justify-content: flex-start; gap: 14px; }
+}
+
+@media (max-width: 767.98px) {
+    .glass-card { padding: 18px !important; }
+
+    /* Cart rows stack instead of squeezing into 5 columns */
+    .cart-item .col-md-2,
+    .cart-item .col-md-3 {
+        width: 100%;
+        text-align: left !important;
+        margin-bottom: 10px;
+    }
+
+    .cart-item .cart-img { width: 72px; height: 72px; }
+
+    .cart-summary { text-align: center; }
+
+    /* Order tables scroll rather than overflow the page */
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+}
+
+@media (max-width: 575.98px) {
+    .food-img { height: 150px; }
+    .price-now { font-size: 16px; }
+    .cat-card-body h6 { font-size: 13px; }
+    .sf-top { right: 14px; bottom: 14px; }
+}
+
+/* The page body must never scroll sideways */
+html, body { overflow-x: hidden; }

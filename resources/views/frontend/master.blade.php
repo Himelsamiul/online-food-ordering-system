@@ -34,6 +34,9 @@
 <link rel="stylesheet" href="{{ asset('feane-1.0.0/css/style.css') }}">
 <link rel="stylesheet" href="{{ asset('feane-1.0.0/css/responsive.css') }}">
 
+<!-- Design refresh (loaded last so it wins over the template css) -->
+<link rel="stylesheet" href="{{ asset('assets/css/storefront-refresh.css') }}">
+
 @stack('styles')
 
 </head>
@@ -157,6 +160,8 @@
   });
 </script>
 @endif
+
+<script src="{{ asset('assets/js/storefront-refresh.js') }}"></script>
 
 @stack('scripts')
 

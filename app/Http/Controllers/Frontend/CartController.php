@@ -15,11 +15,34 @@ class CartController extends Controller
      */
     public function index()
     {
-        $cart = session()->get('cart', []);
+        $cart = $this->refreshStock(session()->get('cart', []));
 
         $totals = CartTotals::fromSession(Auth::guard('frontend')->id());
 
         return view('frontend.pages.cart', compact('cart', 'totals'));
+    }
+
+    /**
+     * The cart stores a stock snapshot from when the item was added. Re-read
+     * it so the page shows what is really available and the +/- buttons cap
+     * at the right number.
+     */
+    private function refreshStock(array $cart): array
+    {
+        if (!$cart) {
+            return $cart;
+        }
+
+        $live = Food::whereIn('id', array_column($cart, 'food_id'))
+            ->pluck('quantity', 'id');
+
+        foreach ($cart as $id => $item) {
+            $cart[$id]['stock'] = (int) ($live[$item['food_id']] ?? 0);
+        }
+
+        session()->put('cart', $cart);
+
+        return $cart;
     }
 
     /**

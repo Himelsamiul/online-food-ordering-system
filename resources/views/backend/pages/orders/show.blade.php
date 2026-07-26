@@ -156,8 +156,14 @@
 
             @foreach($order->items as $key => $item)
                 @php
-                    $originalPrice = $item->food->price;
+                    // The food row can be gone (deleted from the catalogue);
+                    // fall back to what the order itself recorded.
                     $discountPercent = $item->food->discount ?? 0;
+                    $originalPrice   = $item->food->price
+                        ?? ($discountPercent > 0
+                            ? $item->price / (1 - $discountPercent / 100)
+                            : $item->price);
+
                     $discountAmount = ($originalPrice * $discountPercent) / 100;
                     $finalPrice = $originalPrice - $discountAmount;
 
@@ -169,7 +175,7 @@
 
                 <tr>
                     <td>{{ $key + 1 }}</td>
-                    <td>{{ $item->food->name }}</td>
+                    <td>{{ $item->food->name ?? 'Deleted item' }}</td>
                     <td>{{ number_format($originalPrice, 2) }} ৳</td>
                     <td>{{ $discountPercent }}%</td>
                     <td>{{ number_format($discountAmount, 2) }} ৳</td>

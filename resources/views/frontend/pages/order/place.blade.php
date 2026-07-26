@@ -82,12 +82,12 @@
             </div>
         @endforeach
 
-    </div>
-
-    {{-- ================= COUPON + TOTALS ================= --}}
-    {{-- Kept outside the order form — nesting forms is invalid HTML --}}
-    <div class="mb-4">
-        @include('frontend.partials.coupon-box', ['totals' => $totals])
+        {{-- The coupon box carries the subtotal / discount / payable rows, so
+             it sits inside this card. Keeping it in a separate card below made
+             the item list look like the amount being charged. --}}
+        <div class="mt-3">
+            @include('frontend.partials.coupon-box', ['totals' => $totals])
+        </div>
     </div>
 
     {{-- ================= PLACE ORDER FORM ================= --}}

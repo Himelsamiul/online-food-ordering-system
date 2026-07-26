@@ -69,8 +69,11 @@ public function index(Request $request)
             'subcategory_id' => 'required|exists:subcategories,id',
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:1',
-            'discount' => 'nullable|numeric|min:0|lte:price',
-            'quantity' => 'required|integer|min:1',
+            // discount is a PERCENTAGE everywhere it is used, so it is capped
+            // at 100 — not at the price, which let 200% through and produced
+            // negative selling prices.
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'quantity' => 'required|integer|min:0',
             'low_stock_alert' => 'nullable|integer|min:0|lte:quantity',
             'barcode' => 'nullable|string|max:50',
 
@@ -133,8 +136,11 @@ public function index(Request $request)
             'subcategory_id' => 'required|exists:subcategories,id',
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:1',
-            'discount' => 'nullable|numeric|min:0|lte:price',
-            'quantity' => 'required|integer|min:1',
+            // discount is a PERCENTAGE everywhere it is used, so it is capped
+            // at 100 — not at the price, which let 200% through and produced
+            // negative selling prices.
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'quantity' => 'required|integer|min:0',
             'low_stock_alert' => 'nullable|integer|min:0|lte:quantity',
             'barcode' => 'nullable|string|max:50',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',

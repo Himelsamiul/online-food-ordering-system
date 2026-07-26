@@ -72,6 +72,14 @@ public function store(Request $request)
         return redirect()->route('login');
     }
 
+    // ================= STOCK RE-CHECK =================
+    // The cart holds a snapshot taken when the item was added. Stock can have
+    // moved since (another order, an admin edit), so it is re-read here —
+    // otherwise decrement() below can drive quantity negative.
+    if ($problem = $this->stockProblem($cart)) {
+        return redirect()->route('cart.index')->with('error', $problem);
+    }
+
     // ================= TOTALS (re-validates any applied coupon) =================
     $totals = CartTotals::fromSession($user->id);
 
@@ -236,6 +244,30 @@ public function store(Request $request)
     }
 
     /**
+     * First reason the cart cannot be fulfilled right now, or null if it can.
+     */
+    private function stockProblem(array $cart): ?string
+    {
+        $foods = Food::whereIn('id', array_column($cart, 'food_id'))->get()->keyBy('id');
+
+        foreach ($cart as $item) {
+            $food = $foods->get($item['food_id']);
+
+            if (!$food || $food->status != 1) {
+                return "\"{$item['name']}\" is no longer available. Please remove it from your cart.";
+            }
+
+            if ($food->quantity < $item['quantity']) {
+                return $food->quantity < 1
+                    ? "\"{$food->name}\" just went out of stock. Please remove it from your cart."
+                    : "Only {$food->quantity} left of \"{$food->name}\". Please lower the quantity.";
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Deduct the ordered quantities from food stock.
      */
     private function reduceStock(Order $order): void
@@ -383,11 +415,39 @@ public function adminIndex(Request $request)
         return back()->with('error', 'Delivered order cannot be changed.');
     }
 
-    $order->order_status = $request->order_status;
-    $order->save();
+    $previous = $order->order_status;
+
+    DB::transaction(function () use ($order, $request, $previous) {
+        // COD takes stock as soon as the order is placed; a Stripe order only
+        // takes it once the payment clears. An unpaid Stripe order therefore
+        // never took any and must not be handed any back.
+        $stockWasTaken = $order->payment_method === 'cod'
+            || $order->payment_status === 'paid';
+
+        $isBeingCancelled = $request->order_status === 'cancelled'
+            && $previous !== 'cancelled';
+
+        $order->order_status = $request->order_status;
+        $order->save();
+
+        if ($isBeingCancelled && $stockWasTaken) {
+            $this->restoreStock($order);
+        }
+    });
 
     return back()->with('success', 'Order status updated successfully.');
 }
+
+    /**
+     * Put an order's quantities back into food stock.
+     */
+    private function restoreStock(Order $order): void
+    {
+        foreach ($order->items()->get() as $item) {
+            Food::where('id', $item->food_id)
+                ->increment('quantity', $item->quantity);
+        }
+    }
 
 
 
