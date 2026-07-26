@@ -83,6 +83,20 @@
                         <strong>{{ $order->transaction_number }}</strong>
                     </div>
 
+                    @if ($order->discount_amount > 0)
+                        <div>
+                            <span>Subtotal</span>
+                            <strong>৳{{ number_format($order->subtotal, 2) }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Coupon ({{ $order->coupon_code }})</span>
+                            <strong class="text-success">
+                                − ৳{{ number_format($order->discount_amount, 2) }}
+                            </strong>
+                        </div>
+                    @endif
+
                     <div>
                         <span>Total Amount</span>
                         <strong>

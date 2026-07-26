@@ -20,6 +20,10 @@
             <a class="nav-link" href="{{ route('home') }}">Home</a>
           </li>
 
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('menu.index') }}">Menu</a>
+          </li>
+
 <li class="nav-item dropdown">
     <a
         class="nav-link dropdown-toggle"
@@ -39,7 +43,7 @@
         @forelse (($categories ?? []) as $category)
             <a
                 class="dropdown-item"
-                href="{{ route('category.show', $category->id) }}"
+                href="{{ route('menu.index', ['category' => $category->id]) }}"
             >
                 {{ $category->name }}
             </a>
@@ -137,15 +141,16 @@
     </svg>
 
     {{-- CART COUNT BADGE --}}
-    @if ($cartCount > 0)
-        <span class="cart-count-badge">
-            {{ $cartCount }}
-        </span>
-    @endif
+    <span class="cart-count-badge" id="cartCount"
+          style="{{ $cartCount > 0 ? '' : 'display:none;' }}">
+        {{ $cartCount }}
+    </span>
 </a>
 
 
-          <form class="form-inline">
+          <form class="form-inline nav-search-form" action="{{ route('menu.index') }}" method="GET">
+            <input type="text" name="q" class="nav-search-input"
+                   value="{{ request('q') }}" placeholder="Search food...">
             <button class="btn my-2 my-sm-0 nav_search-btn" type="submit">
               <i class="fa fa-search" aria-hidden="true"></i>
             </button>
@@ -170,6 +175,31 @@
     min-width: 18px;
     text-align: center;
     line-height: 1;
+}
+
+.nav-search-input {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 30px;
+    color: #fff;
+    padding: 6px 16px;
+    width: 150px;
+    outline: none;
+    transition: width .25s, border-color .2s;
+}
+
+.nav-search-input:focus {
+    width: 210px;
+    border-color: #f1b816;
+}
+
+.nav-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 991px) {
+    .nav-search-input { width: 100%; }
+    .nav-search-input:focus { width: 100%; }
 }
 
 </style>

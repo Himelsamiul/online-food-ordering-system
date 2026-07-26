@@ -22,6 +22,13 @@ protected $table = 'foods';
         'image',
         'description',
         'status',
+        'is_featured',
+        'is_popular',
+    ];
+
+    protected $casts = [
+        'is_featured' => 'boolean',
+        'is_popular'  => 'boolean',
     ];
 
     public function subcategory()

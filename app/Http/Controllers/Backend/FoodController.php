@@ -79,6 +79,10 @@ public function index(Request $request)
 
             'description' => 'nullable|string',
             'status' => 'required|in:0,1',
+
+            // storefront highlight flags — both admin controlled
+            'is_featured' => 'nullable|boolean',
+            'is_popular'  => 'nullable|boolean',
         ]);
 
         $subcategory = Subcategory::findOrFail($request->subcategory_id);
@@ -103,6 +107,8 @@ public function index(Request $request)
             'image' => $imagePath,
             'description' => $request->description,
             'status' => $request->status,
+            'is_featured' => $request->boolean('is_featured'),
+            'is_popular'  => $request->boolean('is_popular'),
         ]);
 
         return redirect()->route('admin.foods.index')
@@ -134,6 +140,8 @@ public function index(Request $request)
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'description' => 'nullable|string',
             'status' => 'required|in:0,1',
+            'is_featured' => 'nullable|boolean',
+            'is_popular'  => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('image')) {
@@ -154,7 +162,11 @@ public function index(Request $request)
             'barcode',
             'description',
             'status',
-        ]));
+        ]) + [
+            // unchecked boxes never reach the request, so set them explicitly
+            'is_featured' => $request->boolean('is_featured'),
+            'is_popular'  => $request->boolean('is_popular'),
+        ]);
 
         return redirect()->route('admin.foods.index')
             ->with('success', 'Food updated successfully');

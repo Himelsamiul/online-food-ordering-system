@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Models\Coupon;
 use App\Support\Otp;
 
 
@@ -191,7 +192,16 @@ public function profile()
         ->latest()
         ->get();
 
-    return view('frontend.pages.profile', compact('user', 'orders'));
+    // Offers this customer can still use — coupons they have already used
+    // up to their personal limit are filtered out.
+    $offers = Coupon::currentlyRunning()
+        ->withCount(['usages' => fn ($q) => $q->where('registration_id', $user->id)])
+        ->orderBy('expires_at')
+        ->get()
+        ->filter(fn ($c) => $c->per_user_limit === null || $c->usages_count < $c->per_user_limit)
+        ->values();
+
+    return view('frontend.pages.profile', compact('user', 'orders', 'offers'));
 }
 
 // Show edit profile form

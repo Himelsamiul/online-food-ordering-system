@@ -34,6 +34,7 @@
 <link rel="stylesheet" href="{{ asset('feane-1.0.0/css/style.css') }}">
 <link rel="stylesheet" href="{{ asset('feane-1.0.0/css/responsive.css') }}">
 
+@stack('styles')
 
 </head>
 
@@ -145,6 +146,19 @@
   });
 </script>
 @endif
+
+@if(session('info'))
+<script>
+  Swal.fire({
+    icon: 'info',
+    title: 'Notice',
+    text: "{{ session('info') }}",
+    confirmButtonColor: '#f1b816'
+  });
+</script>
+@endif
+
+@stack('scripts')
 
 </body>
 

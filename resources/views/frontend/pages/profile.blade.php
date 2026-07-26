@@ -1,5 +1,78 @@
 @extends('frontend.master')
 
+@push('styles')
+<style>
+    .offer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        border: 1px dashed rgba(241,184,22,.45);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        background: rgba(241,184,22,.06);
+    }
+
+    .offer-code {
+        background: transparent;
+        border: 2px dashed #f1b816;
+        color: #f1b816;
+        font-family: monospace;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        border-radius: 8px;
+        padding: 5px 14px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .offer-code:hover { background: #f1b816; color: #1c1c1c; }
+
+    .offer-value {
+        margin-left: 10px;
+        font-weight: 800;
+        color: #2ecc71;
+    }
+
+    .offer-terms {
+        color: rgba(255,255,255,.65);
+        font-size: 13px;
+        line-height: 1.6;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+$(function () {
+    $('.js-copy-code').on('click', function () {
+        const code = $(this).data('code');
+
+        const done = () => Swal.fire({
+            icon: 'success',
+            title: 'Code copied',
+            text: code + ' — paste it in your cart to get the discount.',
+            timer: 1800,
+            showConfirmButton: false,
+        });
+
+        // navigator.clipboard needs HTTPS or localhost; fall back for plain http
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(done);
+        } else {
+            const tmp = $('<textarea>').val(code).css({position:'fixed', opacity:0}).appendTo('body');
+            tmp[0].select();
+            document.execCommand('copy');
+            tmp.remove();
+            done();
+        }
+    });
+});
+</script>
+@endpush
+
 @section('content')
 
 <section class="profile-section py-5">
@@ -52,6 +125,57 @@
                     <strong>+880-1234-567890</strong>.
                     Eligible payments will be refunded according to our
                     <strong>order cancellation & refund policy</strong>.
+                </div>
+            </div>
+        </div>
+
+        {{-- MY OFFERS --}}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card glass-card shadow-lg p-4">
+
+                    <h4 class="mb-3">🎟️ My Offers</h4>
+
+                    @forelse ($offers as $offer)
+                        <div class="offer-row">
+                            <div>
+                                <button type="button" class="offer-code js-copy-code"
+                                        data-code="{{ $offer->code }}"
+                                        title="Click to copy">
+                                    <i class="fa fa-clone"></i> {{ $offer->code }}
+                                </button>
+
+                                <span class="offer-value">{{ $offer->offer_label }}</span>
+
+                                @if ($offer->description)
+                                    <small class="d-block text-white-50 mt-1">{{ $offer->description }}</small>
+                                @endif
+                            </div>
+
+                            <div class="offer-terms text-end">
+                                @if ($offer->min_order_amount)
+                                    <div>Min order ৳{{ number_format($offer->min_order_amount, 0) }}</div>
+                                @else
+                                    <div>No minimum order</div>
+                                @endif
+
+                                @if ($offer->type === 'percent' && $offer->max_discount)
+                                    <div>Up to ৳{{ number_format($offer->max_discount, 0) }}</div>
+                                @endif
+
+                                <div>
+                                    {{ $offer->expires_at
+                                        ? 'Valid till ' . $offer->expires_at->format('d M Y')
+                                        : 'No expiry' }}
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-white-50 mb-0">
+                            No offers available for you right now. Check back soon!
+                        </p>
+                    @endforelse
+
                 </div>
             </div>
         </div>

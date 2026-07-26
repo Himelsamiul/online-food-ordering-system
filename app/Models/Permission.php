@@ -28,6 +28,10 @@ class Permission extends Model
         'Sales' => [
             'orders' => 'Orders',
         ],
+        'Marketing' => [
+            'coupons'    => 'Coupons & Offers',
+            'promotions' => 'Promo Banners',
+        ],
         'Delivery' => [
             'delivery_men'  => 'Delivery Men',
             'delivery_runs' => 'Delivery Runs',

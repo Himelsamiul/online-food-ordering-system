@@ -15,11 +15,14 @@ use App\Http\Controllers\Backend\FoodController;
 use App\Http\Controllers\Frontend\MenuController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\OrderController;
+use App\Http\Controllers\Frontend\CouponController as FrontendCouponController;
 use App\Http\Controllers\Backend\DeliveryManController;
 use App\Http\Controllers\Backend\DeliveryRunController;
 use App\Http\Controllers\Backend\OrderExportController;
 use App\Http\Controllers\Backend\PosController;
 use App\Http\Controllers\Backend\AdminUserController;
+use App\Http\Controllers\Backend\CouponController;
+use App\Http\Controllers\Backend\PromotionController;
 
 // frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -28,9 +31,12 @@ Route::get('/contact-us', [HomeController::class, 'contactPage'])->name('contact
 Route::post('/contact-us', [HomeController::class, 'contactStore'])->name('contact.store');
 
 //menu routes
+Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
+Route::get('/food/{food}', [MenuController::class, 'foodDetails'])->name('food.details');
+
+// legacy drill-down urls — both redirect into /menu with the filter pre-applied
 Route::get('/category/{id}', [MenuController::class, 'show'])->name('category.show');
 Route::get('/menu/{subcategory}', [MenuController::class, 'foods'])->name('menu.foods');
-Route::get('/food/{food}', [MenuController::class, 'foodDetails'])->name('food.details');
 
 //registration and login routes
 Route::get('/register', [RegistrationController::class, 'create'])->name('register');
@@ -61,17 +67,25 @@ Route::middleware('auth:frontend')->group(function () {
     Route::post('/profile/update', [RegistrationController::class, 'updateProfile'])->name('profile.update');
     
 // cart routes
-    Route::post('/cart/add/{food}', [MenuController::class, 'addToCart'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add/{food}', [CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/update/{food}', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/remove/{food}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
+// coupon routes
+    Route::post('/coupon/apply', [FrontendCouponController::class, 'apply'])->name('coupon.apply');
+    Route::post('/coupon/remove', [FrontendCouponController::class, 'remove'])->name('coupon.remove');
+
 // order routes
     Route::get('/order/place', [OrderController::class, 'create'])->name('order.place');
     Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
     Route::get('/order/success/{order}', [OrderController::class, 'success'])->name('order.success');
+
+    // stripe hosted checkout return urls
+    Route::get('/order/payment/return/{order}', [OrderController::class, 'stripeReturn'])->name('order.payment.return');
+    Route::get('/order/payment/cancel/{order}', [OrderController::class, 'stripeCancel'])->name('order.payment.cancel');
+
     Route::get('/profile/order/{order}', [RegistrationController::class, 'viewOrder'])->name('profile.order.view');
 });
 
@@ -114,6 +128,24 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/subcategories/{subcategory}/edit', [SubcategoryController::class, 'edit'])->name('subcategory.edit');
         Route::post('/subcategories/{subcategory}/update', [SubcategoryController::class, 'update'])->name('subcategory.update');
         Route::delete('/subcategories/{subcategory}/delete', [SubcategoryController::class, 'destroy'])->name('subcategory.delete');
+    });
+
+    // ================= Coupons ================= (permission: coupons)
+    Route::middleware('can:coupons')->group(function () {
+        Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index');
+        Route::post('/coupons', [CouponController::class, 'store'])->name('coupons.store');
+        Route::get('/coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
+        Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
+        Route::delete('/coupons/{coupon}/delete', [CouponController::class, 'destroy'])->name('coupons.delete');
+    });
+
+    // ================= Promo Banners ================= (permission: promotions)
+    Route::middleware('can:promotions')->group(function () {
+        Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+        Route::get('/promotions/{promotion}/edit', [PromotionController::class, 'edit'])->name('promotions.edit');
+        Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
+        Route::delete('/promotions/{promotion}/delete', [PromotionController::class, 'destroy'])->name('promotions.delete');
     });
 
     // ================= Units ================= (permission: units)

@@ -188,6 +188,50 @@
                 </li>
                 @endcan
 
+                {{-- Coupons --}}
+                @can('coupons')
+                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.coupons.*') ? 'active nxl-trigger' : '' }}">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-gift"></i>
+                        </span>
+                        <span class="nxl-mtext">Coupons</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item {{ request()->routeIs('admin.coupons.index') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.coupons.index') }}">
+                                Coupons & Offers
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endcan
+
+                {{-- Promo Banners --}}
+                @can('promotions')
+                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.promotions.*') ? 'active nxl-trigger' : '' }}">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-micon">
+                            <i class="feather-image"></i>
+                        </span>
+                        <span class="nxl-mtext">Promo Banners</span>
+                        <span class="nxl-arrow">
+                            <i class="feather-chevron-right"></i>
+                        </span>
+                    </a>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item {{ request()->routeIs('admin.promotions.index') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('admin.promotions.index') }}">
+                                Banner List
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endcan
+
                 {{-- Delivery Man --}}
                 @can('delivery_men')
                 <li class="nxl-item nxl-hasmenu">

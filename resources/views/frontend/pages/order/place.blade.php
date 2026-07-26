@@ -65,13 +65,8 @@
     <div class="glass-card p-4 mb-4">
         <div class="glass-header">Order Summary</div>
 
-        @php $grandTotal = 0; @endphp
-
         @foreach ($cart as $item)
-            @php
-                $itemTotal = $item['price'] * $item['quantity'];
-                $grandTotal += $itemTotal;
-            @endphp
+            @php $itemTotal = $item['price'] * $item['quantity']; @endphp
 
             <div class="d-flex justify-content-between border-bottom py-2">
                 <div>
@@ -87,12 +82,12 @@
             </div>
         @endforeach
 
-        <div class="d-flex justify-content-between mt-3">
-            <h5 class="fw-bold">Total</h5>
-            <h5 class="fw-bold text-success">
-                ৳{{ number_format($grandTotal, 2) }}
-            </h5>
-        </div>
+    </div>
+
+    {{-- ================= COUPON + TOTALS ================= --}}
+    {{-- Kept outside the order form — nesting forms is invalid HTML --}}
+    <div class="mb-4">
+        @include('frontend.partials.coupon-box', ['totals' => $totals])
     </div>
 
     {{-- ================= PLACE ORDER FORM ================= --}}
@@ -150,9 +145,13 @@
                 <input type="radio"
                        name="payment_method"
                        value="stripe">
-                💳 Pay with Stripe  
+                💳 Pay with Card (Stripe)
                 <small class="d-block text-muted">
-                    Card / Online payment (auto-paid)
+                    You'll be redirected to Stripe's secure payment page
+                </small>
+                <small class="d-block text-warning mt-1">
+                    Test mode — use card <code>4242 4242 4242 4242</code>,
+                    any future expiry, any CVC.
                 </small>
             </label>
         </div>

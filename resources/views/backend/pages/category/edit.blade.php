@@ -35,7 +35,9 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.category.update', $category->id) }}" method="POST">
+                <form action="{{ route('admin.category.update', $category->id) }}"
+                      method="POST"
+                      enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
@@ -56,6 +58,22 @@
                             class="form-control"
                             rows="3"
                         >{{ old('description', $category->description) }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Category Image</label>
+
+                        @if($category->image)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/'.$category->image) }}"
+                                     width="120" class="rounded border">
+                            </div>
+                        @endif
+
+                        <input type="file" name="image" class="form-control">
+                        <small class="text-muted">
+                            Shown on the storefront category cards. Leave empty to keep the current image.
+                        </small>
                     </div>
 
                     <div class="mb-3">

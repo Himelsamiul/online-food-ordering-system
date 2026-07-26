@@ -88,6 +88,32 @@
             <label>Description</label>
             <textarea name="description" class="form-control mb-3"></textarea>
 
+            {{-- ================= STOREFRONT HIGHLIGHTS ================= --}}
+            <label class="d-block">Storefront Highlights</label>
+            <div class="d-flex gap-4 mb-3">
+                <div class="form-check">
+                    <input type="hidden" name="is_featured" value="0">
+                    <input class="form-check-input" type="checkbox"
+                           name="is_featured" value="1" id="isFeatured"
+                           {{ old('is_featured') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="isFeatured">
+                        Featured Item
+                        <small class="d-block text-muted">Shows in the "Featured" row on the home page</small>
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input type="hidden" name="is_popular" value="0">
+                    <input class="form-check-input" type="checkbox"
+                           name="is_popular" value="1" id="isPopular"
+                           {{ old('is_popular') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="isPopular">
+                        Most Popular
+                        <small class="d-block text-muted">Shows in the "Most Popular" row on the home page</small>
+                    </label>
+                </div>
+            </div>
+
             <button class="btn btn-primary">Create</button>
             <a href="{{ route('admin.foods.index') }}" class="btn btn-secondary">Back</a>
         </form>

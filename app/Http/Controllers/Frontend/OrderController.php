@@ -6,8 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Food;
+use App\Models\Coupon;
+use App\Models\CouponUsage;
+use App\Services\StripeGateway;
+use App\Support\CartTotals;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\DeliveryMan;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -30,14 +35,19 @@ public function create()
     // ✅ LOGIN USER (Laravel way)
     $user = Auth::guard('frontend')->user();
 
-    return view('frontend.pages.order.place', compact('cart', 'user'));
+    $totals = CartTotals::fromSession($user?->id);
+
+    return view('frontend.pages.order.place', compact('cart', 'user', 'totals'));
 }
 
     /**
-     * Store Order (COD for now)
+     * Store Order
+     *
+     * COD  -> order is confirmed straight away (no gateway involved)
+     * Stripe -> order is parked as unpaid and the customer is sent to
+     *           Stripe Hosted Checkout; it only becomes "paid" once we
+     *           verify the session on the way back.
      */
-
-
 public function store(Request $request)
 {
     // ================= CART CHECK =================
@@ -62,68 +72,199 @@ public function store(Request $request)
         return redirect()->route('login');
     }
 
-    // ================= TOTAL CALCULATION =================
-    $grandTotal = 0;
-
-    foreach ($cart as $item) {
-        $grandTotal += $item['price'] * $item['quantity'];
-    }
+    // ================= TOTALS (re-validates any applied coupon) =================
+    $totals = CartTotals::fromSession($user->id);
 
     // ================= ORDER NUMBER =================
     $orderNumber = 'ORD-' . now()->format('ymd') . '-' . rand(1000, 9999);
 
-    // ================= PAYMENT LOGIC =================
     $paymentMethod = $request->payment_method;
-
-    if ($paymentMethod === 'stripe') {
-
-        // future real stripe transaction id
-        $paymentStatus = 'paid';
-        $transactionNumber = 'STRIPE-' . strtoupper(Str::random(12));
-
-    } else {
-        // COD
-        $paymentStatus = 'pending';
-        $transactionNumber = 'COD-' . strtoupper(Str::random(12));
-    }
+    $isCod         = $paymentMethod === 'cod';
 
     // ================= CREATE ORDER =================
-    $order = Order::create([
-        'order_number'       => $orderNumber,
-        'user_id'            => $user->id,
-        'name'               => $user->full_name,
-        'phone'              => $request->phone,
-        'address'            => $request->address,
-        'total_amount'       => $grandTotal,
-        'payment_method'     => $paymentMethod,
-        'payment_status'     => $paymentStatus,
-        'transaction_number' => $transactionNumber,
-        'order_status'       => 'pending',
-    ]);
-
-    // ================= ORDER ITEMS + STOCK REDUCE =================
-    foreach ($cart as $item) {
-
-        // save order items (relation)
-        $order->items()->create([
-            'food_id'  => $item['food_id'],
-            'price'    => $item['price'], // discounted price
-            'quantity' => $item['quantity'],
-            'total'    => $item['price'] * $item['quantity'],
+    $order = DB::transaction(function () use (
+        $cart, $user, $request, $totals, $orderNumber, $paymentMethod, $isCod
+    ) {
+        $order = Order::create([
+            'order_number'       => $orderNumber,
+            'user_id'            => $user->id,
+            'name'               => $user->full_name,
+            'phone'              => $request->phone,
+            'address'            => $request->address,
+            'subtotal'           => $totals->subtotal,
+            'coupon_id'          => $totals->coupon?->id,
+            'coupon_code'        => $totals->coupon?->code,
+            'discount_amount'    => $totals->discount,
+            'total_amount'       => $totals->total(),
+            'payment_method'     => $paymentMethod,
+            'payment_status'     => 'pending',
+            // Stripe fills this in with the real payment intent id once paid
+            'transaction_number' => $isCod
+                ? 'COD-' . strtoupper(Str::random(12))
+                : null,
+            'order_status'       => 'pending',
         ]);
 
-        // reduce food stock
-        Food::where('id', $item['food_id'])
-            ->decrement('quantity', $item['quantity']);
+        foreach ($cart as $item) {
+            $order->items()->create([
+                'food_id'  => $item['food_id'],
+                'price'    => $item['price'], // discounted price
+                'quantity' => $item['quantity'],
+                'total'    => $item['price'] * $item['quantity'],
+            ]);
+        }
+
+        // COD reduces stock immediately; a Stripe order has not been
+        // paid for yet, so its stock is held back until the payment clears.
+        // The coupon is redeemed on the same schedule, for the same reason.
+        if ($isCod) {
+            $this->reduceStock($order);
+            $this->redeemCoupon($order);
+        }
+
+        return $order;
+    });
+
+    // ================= COD: DONE =================
+    if ($isCod) {
+        session()->forget('cart');
+        session()->forget(CartTotals::SESSION_KEY);
+
+        return redirect()->route('order.success', $order->id)
+            ->with('success', 'Order placed successfully');
     }
 
-    // ================= CLEAR CART =================
-    session()->forget('cart');
+    // ================= STRIPE: HAND OFF TO CHECKOUT =================
+    try {
+        $session = app(StripeGateway::class)
+            ->createCheckoutSession($order, $cart, $user->email, $totals->discount);
+    } catch (\Throwable $e) {
+        report($e);
 
-    // ================= REDIRECT =================
-    return redirect()->route('order.success', $order->id)
-        ->with('success', 'Order placed successfully');
+        $order->update(['order_status' => 'cancelled']);
+
+        return back()->with(
+            'error',
+            'Could not start the Stripe payment: ' . $e->getMessage()
+        );
+    }
+
+    // Cart stays in the session until Stripe confirms the payment,
+    // so a cancelled checkout does not lose the customer's items.
+    return redirect()->away($session->url);
 }
+
+
+    /**
+     * Stripe success_url — verify the session before trusting it.
+     */
+    public function stripeReturn(Request $request, Order $order)
+    {
+        $user = Auth::guard('frontend')->user();
+
+        abort_unless($order->user_id === $user->id, 403);
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('order.success', $order->id);
+        }
+
+        $sessionId = $request->query('session_id');
+
+        if (!$sessionId) {
+            return redirect()->route('order.place')
+                ->with('error', 'Missing Stripe session reference.');
+        }
+
+        try {
+            $session = app(StripeGateway::class)->retrieveSession($sessionId);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('order.place')
+                ->with('error', 'Could not verify the Stripe payment. Please try again.');
+        }
+
+        // The session must belong to *this* order and must actually be paid.
+        // Without this check anyone could hit the success URL by hand.
+        $belongsToOrder = (string) ($session->metadata->order_id ?? '') === (string) $order->id;
+
+        if (!$belongsToOrder || $session->payment_status !== 'paid') {
+            return redirect()->route('order.place')
+                ->with('error', 'Payment was not completed.');
+        }
+
+        DB::transaction(function () use ($order, $session) {
+            // Lock in case the customer refreshes the return URL twice,
+            // otherwise stock would be decremented more than once.
+            $locked = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            if ($locked->payment_status === 'paid') {
+                return;
+            }
+
+            $locked->update([
+                'payment_status'     => 'paid',
+                'transaction_number' => $session->payment_intent ?? $session->id,
+            ]);
+
+            $this->reduceStock($locked);
+            $this->redeemCoupon($locked);
+        });
+
+        session()->forget('cart');
+        session()->forget(CartTotals::SESSION_KEY);
+
+        return redirect()->route('order.success', $order->id)
+            ->with('success', 'Payment successful. Your order has been placed.');
+    }
+
+    /**
+     * Stripe cancel_url — customer backed out of the payment page.
+     */
+    public function stripeCancel(Order $order)
+    {
+        $user = Auth::guard('frontend')->user();
+
+        abort_unless($order->user_id === $user->id, 403);
+
+        if ($order->payment_status !== 'paid') {
+            $order->update(['order_status' => 'cancelled']);
+        }
+
+        return redirect()->route('order.place')
+            ->with('info', 'Payment cancelled. Your cart is still saved.');
+    }
+
+    /**
+     * Deduct the ordered quantities from food stock.
+     */
+    private function reduceStock(Order $order): void
+    {
+        foreach ($order->items()->get() as $item) {
+            Food::where('id', $item->food_id)
+                ->decrement('quantity', $item->quantity);
+        }
+    }
+
+    /**
+     * Bank the coupon against this order — bumps the global counter and
+     * writes the row that per-customer limits are counted from.
+     */
+    private function redeemCoupon(Order $order): void
+    {
+        if (!$order->coupon_id) {
+            return;
+        }
+
+        CouponUsage::create([
+            'coupon_id'       => $order->coupon_id,
+            'registration_id' => $order->user_id,
+            'order_id'        => $order->id,
+            'discount_amount' => $order->discount_amount,
+        ]);
+
+        Coupon::whereKey($order->coupon_id)->increment('used_count');
+    }
 
 
     /**

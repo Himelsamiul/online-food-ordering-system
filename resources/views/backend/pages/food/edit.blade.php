@@ -140,6 +140,32 @@
                           rows="3">{{ $food->description }}</textarea>
             </div>
 
+            {{-- ================= STOREFRONT HIGHLIGHTS ================= --}}
+            <div class="mb-3">
+                <label class="d-block">Storefront Highlights</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               name="is_featured" value="1" id="isFeatured"
+                               {{ old('is_featured', $food->is_featured) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="isFeatured">
+                            Featured Item
+                            <small class="d-block text-muted">Shows in the "Featured" row on the home page</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               name="is_popular" value="1" id="isPopular"
+                               {{ old('is_popular', $food->is_popular) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="isPopular">
+                            Most Popular
+                            <small class="d-block text-muted">Shows in the "Most Popular" row on the home page</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             {{-- ================= IMAGE ================= --}}
             <div class="mb-3">
                 <label>Food Image</label>

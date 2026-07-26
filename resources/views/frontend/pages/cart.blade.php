@@ -289,23 +289,35 @@
 
         </div>
 
-        {{-- ================= SUMMARY (OUTSIDE CART BOX) ================= --}}
-        <div class="cart-summary d-flex justify-content-between align-items-center">
+        {{-- ================= COUPON + SUMMARY ================= --}}
+        <div class="row mt-4">
 
-            <div>
-                <h4 class="fw-bold mb-1">
-                    Total: ৳{{ number_format($grandTotal, 2) }}
-                </h4>
-                <small class="text-muted">
-                    Calculated using discounted prices
-                </small>
+            <div class="col-lg-6 mb-4">
+                @include('frontend.partials.coupon-box', ['totals' => $totals])
             </div>
 
-<a href="{{ route('order.place') }}"
-   class="btn btn-success px-4 py-2 fw-bold">
-    ✅ Proceed to Checkout
-</a>
+            <div class="col-lg-6">
+                <div class="cart-summary h-100 d-flex flex-column justify-content-center text-center">
+                    <h4 class="fw-bold mb-1">
+                        Payable: ৳{{ number_format($totals->total(), 2) }}
+                    </h4>
 
+                    <small class="text-muted mb-3">
+                        @if ($totals->hasCoupon())
+                            You saved ৳{{ number_format($totals->discount, 2) }} with {{ $totals->coupon->code }}
+                        @else
+                            Calculated using discounted prices
+                        @endif
+                    </small>
+
+                    <div>
+                        <a href="{{ route('order.place') }}"
+                           class="btn btn-success px-4 py-2 fw-bold">
+                            ✅ Proceed to Checkout
+                        </a>
+                    </div>
+                </div>
+            </div>
 
         </div>
 

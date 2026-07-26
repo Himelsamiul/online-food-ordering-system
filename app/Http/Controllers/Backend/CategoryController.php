@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\SubCategory;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -45,6 +46,7 @@ public function index(Request $request)
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|boolean'
         ]);
     $exists = Category::where('name', $request->name)->exists();
@@ -55,7 +57,13 @@ public function index(Request $request)
             ->with('error', 'This category already exists.');
     }
 
-        Category::create($request->only('name','description','status'));
+        $data = $request->only('name','description','status');
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        Category::create($data);
 
         return redirect()->route('admin.category.index')
             ->with('success','Category created successfully');
@@ -72,6 +80,7 @@ public function index(Request $request)
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|boolean'
         ]);
 
@@ -86,9 +95,19 @@ public function index(Request $request)
             ->with('error', 'This category name already exists.');
     }
 
+        $category = Category::findOrFail($id);
 
-        Category::findOrFail($id)
-            ->update($request->only('name','description','status'));
+        $data = $request->only('name','description','status');
+
+        if ($request->hasFile('image')) {
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        $category->update($data);
 
         return redirect()->route('admin.category.index')
             ->with('success','Category updated successfully');
@@ -104,7 +123,13 @@ public function destroy($id)
             ->with('error', 'This category has subcategories. Delete them first.');
     }
 
-    Category::findOrFail($id)->delete();
+    $category = Category::findOrFail($id);
+
+    if ($category->image && Storage::disk('public')->exists($category->image)) {
+        Storage::disk('public')->delete($category->image);
+    }
+
+    $category->delete();
 
     return redirect()->route('admin.category.index')
         ->with('success', 'Category deleted successfully');

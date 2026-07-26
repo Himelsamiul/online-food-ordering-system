@@ -8,9 +8,15 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number','user_id','name','phone','address',
+        'subtotal','coupon_id','coupon_code','discount_amount',
         'total_amount','payment_method','payment_status',
         'transaction_number','order_status'
     ];
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
 
     public function items()
     {

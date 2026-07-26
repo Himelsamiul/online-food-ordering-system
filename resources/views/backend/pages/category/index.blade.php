@@ -75,7 +75,9 @@
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
-                <form action="{{ route('admin.category.store') }}" method="POST">
+                <form action="{{ route('admin.category.store') }}"
+                      method="POST"
+                      enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
@@ -90,6 +92,14 @@
                         <textarea name="description" class="form-control"
                                   rows="3"
                                   placeholder="Optional description">{{ old('description') }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Category Image</label>
+                        <input type="file" name="image" class="form-control">
+                        <small class="text-muted">
+                            Shown on the storefront category cards.
+                        </small>
                     </div>
 
                     <div class="mb-3">
@@ -181,6 +191,7 @@
                         <thead>
                         <tr>
                             <th style="width:60px;">SL</th>
+                            <th style="width:80px;">Image</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Create Time</th>
@@ -197,6 +208,14 @@
 
                             <tr>
                                 <td>{{ $categories->firstItem() + $key }}</td>
+                                <td>
+                                    @if($category->image)
+                                        <img src="{{ asset('storage/'.$category->image) }}"
+                                             width="50" class="rounded">
+                                    @else
+                                        <i class="fa fa-image text-muted"></i>
+                                    @endif
+                                </td>
                                 <td>{{ $category->name }}</td>
                                 <td>{{ $category->description }}</td>
                                 <td>{{ $category->created_at->format('d M Y h:i A') }}</td>
@@ -243,7 +262,7 @@
 
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">
+                                <td colspan="7" class="text-center text-muted">
                                     No categories found
                                 </td>
                             </tr>

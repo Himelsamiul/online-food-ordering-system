@@ -1,4 +1,44 @@
-@extends('frontend.master')
+﻿@extends('frontend.master')
+
+@push('styles')
+@include('frontend.partials.food-card-styles')
+@include('frontend.partials.category-card-styles')
+<style>
+    .section-head {
+        text-align: center;
+        margin-bottom: 26px;
+    }
+
+    .section-head h2 {
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .section-head p {
+        color: rgba(255,255,255,.6);
+        margin-bottom: 0;
+    }
+
+    .view-menu-btn {
+        display: inline-block;
+        background: #f1b816;
+        color: #1c1c1c;
+        font-weight: 700;
+        border-radius: 30px;
+        padding: 13px 45px;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+    .view-menu-btn:hover {
+        background: #d9a412;
+        color: #1c1c1c;
+        text-decoration: none;
+    }
+</style>
+@endpush
+
 @section('content')
     <!-- slider section -->
     <section class="slider_section ">
@@ -236,119 +276,72 @@
 
 <section class="food_section layout_padding-bottom">
   <div class="container">
-    <div class="heading_container heading_center">
-      <h2>Our Menu</h2>
-    </div>
 
-    <ul class="filters_menu">
-      <li class="active" data-filter="*">All</li>
-      <li data-filter=".burger">Burger</li>
-      <li data-filter=".pizza">Pizza</li>
-      <li data-filter=".pasta">Pasta</li>
-      <li data-filter=".fries">Fries</li>
-    </ul>
-
-    <div class="filters-content">
-      <div class="row grid">
-
-        <!-- ITEM -->
-        <div class="col-sm-6 col-lg-4 all pizza">
-          <div class="box">
-            <div class="img-box">
-              <img src="images/f1.png" alt="">
-            </div>
-
-            <div class="detail-box">
-              <h5>Delicious Pizza</h5>
-              <p>
-                Veniam debitis quaerat officiis quasi cupiditate quo, quisquam velit.
-              </p>
-
-              <div class="options">
-                <h6>$20</h6>
-
-                <a href="#" class="add-cart-btn" title="Add to cart">
-                  <i class="fa fa-shopping-cart"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ITEM -->
-        <div class="col-sm-6 col-lg-4 all burger">
-          <div class="box">
-            <div class="img-box">
-              <img src="images/f2.png" alt="">
-            </div>
-
-            <div class="detail-box">
-              <h5>Delicious Burger</h5>
-              <p>
-                Veniam debitis quaerat officiis quasi cupiditate quo, quisquam velit.
-              </p>
-
-              <div class="options">
-                <h6>$15</h6>
-
-                <a href="#" class="add-cart-btn" title="Add to cart">
-                  <i class="fa fa-shopping-cart"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ITEM -->
-        <div class="col-sm-6 col-lg-4 all pasta">
-          <div class="box">
-            <div class="img-box">
-              <img src="images/f4.png" alt="">
-            </div>
-
-            <div class="detail-box">
-              <h5>Delicious Pasta</h5>
-              <p>
-                Veniam debitis quaerat officiis quasi cupiditate quo, quisquam velit.
-              </p>
-
-              <div class="options">
-                <h6>$18</h6>
-
-                <a href="#" class="add-cart-btn" title="Add to cart">
-                  <i class="fa fa-shopping-cart"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ITEM -->
-        <div class="col-sm-6 col-lg-4 all fries">
-          <div class="box">
-            <div class="img-box">
-              <img src="images/f5.png" alt="">
-            </div>
-
-            <div class="detail-box">
-              <h5>French Fries</h5>
-              <p>
-                Veniam debitis quaerat officiis quasi cupiditate quo, quisquam velit.
-              </p>
-
-              <div class="options">
-                <h6>$10</h6>
-
-                <a href="#" class="add-cart-btn" title="Add to cart">
-                  <i class="fa fa-shopping-cart"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    {{-- ================= PROMO BANNERS / OFFERS ================= --}}
+    @if (($promotions ?? collect())->count())
+      <div class="section-head">
+        <h2>Running Offers</h2>
+        <p>Tap a code to copy it, then paste it in your cart.</p>
       </div>
+
+      <div class="mb-5">
+        @include('frontend.partials.promo-banners', ['promotions' => $promotions])
+      </div>
+    @endif
+
+    {{-- ================= BROWSE BY CATEGORY ================= --}}
+    <div class="section-head">
+      <h2>Browse by Category</h2>
+      <p>Pick a category to jump straight into the menu.</p>
     </div>
+
+    <div class="mb-5">
+      @include('frontend.partials.category-cards', ['categories' => $categories])
+    </div>
+
+    {{-- ================= FEATURED ================= --}}
+    @if (($featuredFoods ?? collect())->count())
+      <div class="section-head">
+        <h2>⭐ Featured Items</h2>
+        <p>Hand-picked by our kitchen.</p>
+      </div>
+
+      <div class="row mb-5">
+        @foreach ($featuredFoods as $food)
+          @include('frontend.partials.food-card', ['food' => $food])
+        @endforeach
+      </div>
+    @endif
+
+    {{-- ================= MOST POPULAR ================= --}}
+    @if (($popularFoods ?? collect())->count())
+      <div class="section-head">
+        <h2>🔥 Most Popular</h2>
+        <p>What everyone keeps ordering.</p>
+      </div>
+
+      <div class="row mb-4">
+        @foreach ($popularFoods as $food)
+          @include('frontend.partials.food-card', ['food' => $food])
+        @endforeach
+      </div>
+    @endif
+
+    @if (!($featuredFoods ?? collect())->count() && !($popularFoods ?? collect())->count())
+      <div class="text-center text-white-50 py-4">
+        <h5>No highlighted dishes yet.</h5>
+        <p class="mb-0">
+          Tick "Featured Item" or "Most Popular" on a food in the admin panel to fill these rows.
+        </p>
+      </div>
+    @endif
+
+    <div class="text-center mt-4">
+      <a href="{{ route('menu.index') }}" class="view-menu-btn">
+        View Full Menu
+      </a>
+    </div>
+
   </div>
 </section>
 

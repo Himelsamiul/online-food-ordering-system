@@ -183,9 +183,12 @@
 
     {{-- ===== SUMMARY ===== --}}
     @php
-        $payableAmount = $subTotal - $totalDiscount;
+        // Whatever the line items add up to, the order row records what was
+        // actually charged — coupon included — so trust that for payable.
+        $couponDiscount = (float) $order->discount_amount;
+        $payableAmount  = (float) $order->total_amount;
 
-        if ($order->payment_method === 'stripe') {
+        if ($order->payment_status === 'paid') {
             $paidAmount = $payableAmount;
             $dueAmount  = 0;
         } else {
@@ -201,9 +204,15 @@
                 <td>{{ number_format($subTotal, 2) }} ৳</td>
             </tr>
             <tr>
-                <th>Total Discount</th>
+                <th>Item Discount</th>
                 <td>- {{ number_format($totalDiscount, 2) }} ৳</td>
             </tr>
+            @if($couponDiscount > 0)
+            <tr>
+                <th>Coupon ({{ $order->coupon_code }})</th>
+                <td class="text-success">- {{ number_format($couponDiscount, 2) }} ৳</td>
+            </tr>
+            @endif
             <tr>
                 <th>Payable Amount</th>
                 <td class="fw-bold">{{ number_format($payableAmount, 2) }} ৳</td>

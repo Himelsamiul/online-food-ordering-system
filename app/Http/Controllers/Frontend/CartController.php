@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Food;
+use App\Support\CartTotals;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -15,7 +17,9 @@ class CartController extends Controller
     {
         $cart = session()->get('cart', []);
 
-        return view('frontend.pages.cart', compact('cart'));
+        $totals = CartTotals::fromSession(Auth::guard('frontend')->id());
+
+        return view('frontend.pages.cart', compact('cart', 'totals'));
     }
 
     /**
@@ -25,19 +29,19 @@ class CartController extends Controller
     {
         // Active check
         if ($food->status != 1) {
-            return back()->with('error', 'This item is not available.');
+            return $this->addResponse($request, 'error', 'This item is not available.');
         }
 
         // Stock check
         if ($food->quantity < 1) {
-            return back()->with('error', 'This item is out of stock.');
+            return $this->addResponse($request, 'error', 'This item is out of stock.');
         }
 
         $cart = session()->get('cart', []);
 
         // Already exists
         if (isset($cart[$food->id])) {
-            return back()->with('info', 'Item already in cart.');
+            return $this->addResponse($request, 'info', 'Item already in cart.');
         }
 
         // Price calculation
@@ -59,7 +63,24 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        return back()->with('success', 'Item added to cart.');
+        return $this->addResponse($request, 'success', 'Item added to cart.');
+    }
+
+    /**
+     * The menu page adds to the cart over AJAX so its filters and scroll
+     * position survive; every other page still gets the usual redirect.
+     */
+    private function addResponse(Request $request, string $status, string $message)
+    {
+        if ($request->ajax()) {
+            return response()->json([
+                'status'     => $status,
+                'message'    => $message,
+                'cart_count' => count(session()->get('cart', [])),
+            ]);
+        }
+
+        return back()->with($status, $message);
     }
 
     /**
