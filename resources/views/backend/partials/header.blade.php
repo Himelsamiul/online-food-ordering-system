@@ -1,343 +1,193 @@
-    <header class="nxl-header">
-        <div class="header-wrapper">
-            <!--! [Start] Header Left !-->
-            <div class="header-left d-flex align-items-center gap-4">
-                <!--! [Start] nxl-head-mobile-toggler !-->
-                <a href="javascript:void(0);" class="nxl-head-mobile-toggler" id="mobile-collapse">
-                    <div class="hamburger hamburger--arrowturn">
-                        <div class="hamburger-box">
-                            <div class="hamburger-inner"></div>
-                        </div>
+@php
+    /** @var array{items: \Illuminate\Support\Collection, total: int, unread: int} $notifications */
+    $feed   = $notifications ?? ['items' => collect(), 'total' => 0, 'unread' => 0];
+    $admin  = auth()->user();
+    $unread = $feed['unread'];
+@endphp
+
+<header class="nxl-header">
+    <div class="header-wrapper">
+
+        {{-- ============================ LEFT ============================ --}}
+        <div class="header-left d-flex align-items-center gap-3">
+            <a href="javascript:void(0);" class="nxl-head-mobile-toggler" id="mobile-collapse">
+                <div class="hamburger hamburger--arrowturn">
+                    <div class="hamburger-box">
+                        <div class="hamburger-inner"></div>
                     </div>
+                </div>
+            </a>
+
+            <div class="nxl-navigation-toggle">
+                <a href="javascript:void(0);" id="menu-mini-button" title="Collapse menu">
+                    <i class="feather-align-left"></i>
                 </a>
-                
-                <!--! [Start] nxl-head-mobile-toggler !-->
-                <!--! [Start] nxl-navigation-toggle !-->
-                <div class="nxl-navigation-toggle">
-                    <a href="javascript:void(0);" id="menu-mini-button">
-                        <i class="feather-align-left"></i>
-                    </a>
-                    <a href="javascript:void(0);" id="menu-expend-button" style="display: none">
-                        <i class="feather-arrow-right"></i>
-                    </a>
-                </div>
-                <!--! [End] nxl-navigation-toggle !-->
-                <!--! [Start] nxl-lavel-mega-menu-toggle !-->
-                <div class="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
-                    <a href="javascript:void(0);" id="nxl-lavel-mega-menu-open">
-                        <i class="feather-align-left"></i>
-                    </a>
-                </div>
-                <!--! [End] nxl-lavel-mega-menu-toggle !-->
-                <!--! [Start] nxl-lavel-mega-menu !-->
-                <div class="nxl-drp-link nxl-lavel-mega-menu">
-                    <div class="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
-                        <a href="javascript:void(0)" id="nxl-lavel-mega-menu-hide">
-                            <i class="feather-arrow-left me-2"></i>
-                            <span>Back</span>
-                        </a>
-                    </div>
-                    <!--! [Start] nxl-lavel-mega-menu-wrapper !-->
-                    <div class="nxl-lavel-mega-menu-wrapper d-flex gap-3">
-                        <!--! [Start] nxl-lavel-menu !-->
-                        <div class="dropdown nxl-h-item nxl-lavel-menu">
-                            <a href="javascript:void(0);" class="avatar-text avatar-md bg-primary text-white" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                <i class="feather-plus"></i>
-                            </a>
-
-                        </div>
-                    </div>
-                    <!--! [End] nxl-lavel-mega-menu-wrapper !-->
-                </div>
-                <!--! [End] nxl-lavel-mega-menu !-->
+                <a href="javascript:void(0);" id="menu-expend-button" style="display: none" title="Expand menu">
+                    <i class="feather-arrow-right"></i>
+                </a>
             </div>
-            <!--! [End] Header Left !-->
-            <!--! [Start] Header Right !-->
-            <div class="header-right ms-auto">
-                <div class="d-flex align-items-center">
 
-                    <div class="dropdown nxl-h-item nxl-header-language d-none d-sm-flex">
-                        <a href="javascript:void(0);" class="nxl-head-link me-0 nxl-language-link" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                            <img src="assets/vendors/img/flags/4x3/us.svg" alt="" class="img-fluid wd-20" />
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-language-dropdown">
-                            <div class="dropdown-divider mt-0"></div>
-                            <div class="language-items-wrapper">
-                                <div class="select-language px-4 py-2 hstack justify-content-between gap-4">
-                                    <div class="lh-lg">
-                                        <h6 class="mb-0">Select Language</h6>
-                                        <p class="fs-11 text-muted mb-0">12 languages avaiable!</p>
-                                    </div>
-                                    <a href="javascript:void(0);" class="avatar-text avatar-md" data-bs-toggle="tooltip" title="Add Language">
-                                        <i class="feather-plus"></i>
-                                    </a>
-                                </div>
-                                <div class="dropdown-divider"></div>
-                                <div class="row px-4 pt-3">
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/sa.svg" alt="" class="img-fluid" /></div>
-                                            <span>Arabic</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/bd.svg" alt="" class="img-fluid" /></div>
-                                            <span>Bengali</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/ch.svg" alt="" class="img-fluid" /></div>
-                                            <span>Chinese</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/nl.svg" alt="" class="img-fluid" /></div>
-                                            <span>Dutch</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select active">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/us.svg" alt="" class="img-fluid" /></div>
-                                            <span>English</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/fr.svg" alt="" class="img-fluid" /></div>
-                                            <span>French</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/de.svg" alt="" class="img-fluid" /></div>
-                                            <span>German</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/in.svg" alt="" class="img-fluid" /></div>
-                                            <span>Hindi</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/ru.svg" alt="" class="img-fluid" /></div>
-                                            <span>Russian</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/es.svg" alt="" class="img-fluid" /></div>
-                                            <span>Spanish</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/tr.svg" alt="" class="img-fluid" /></div>
-                                            <span>Turkish</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-4 col-6 language_select">
-                                        <a href="javascript:void(0);" class="d-flex align-items-center gap-2">
-                                            <div class="avatar-image avatar-sm"><img src="assets/vendors/img/flags/1x1/pk.svg" alt="" class="img-fluid" /></div>
-                                            <span>Urdo</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="nxl-h-item d-none d-sm-flex">
-                        <div class="full-screen-switcher">
-                            <a href="javascript:void(0);" class="nxl-head-link me-0" onclick="$('body').fullScreenHelper('toggle');">
-                                <i class="feather-maximize maximize"></i>
-                                <i class="feather-minimize minimize"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="nxl-h-item dark-light-theme">
-                        <a href="javascript:void(0);" class="nxl-head-link me-0 dark-button">
-                            <i class="feather-moon"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="nxl-head-link me-0 light-button" style="display: none">
-                            <i class="feather-sun"></i>
-                        </a>
-                    </div>
-                    <div class="dropdown nxl-h-item">
-                        <a href="javascript:void(0);" class="nxl-head-link me-0" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
-                            <i class="feather-clock"></i>
-                            <span class="badge bg-success nxl-h-badge">2</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-timesheets-menu">
-                            <div class="d-flex justify-content-between align-items-center timesheets-head">
-                                <h6 class="fw-bold text-dark mb-0">Timesheets</h6>
-                                <a href="javascript:void(0);" class="fs-11 text-success text-end ms-auto" data-bs-toggle="tooltip" title="Upcomming Timers">
-                                    <i class="feather-clock"></i>
-                                    <span>3 Upcomming</span>
-                                </a>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center flex-column timesheets-body">
-                                <i class="feather-clock fs-1 mb-4"></i>
-                                <p class="text-muted">No started timers found yes!</p>
-                                <a href="javascript:void(0);" class="btn btn-sm btn-primary">Started Timer</a>
-                            </div>
-                            <div class="text-center timesheets-footer">
-                                <a href="javascript:void(0);" class="fs-13 fw-semibold text-dark">Alls Timesheets</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dropdown nxl-h-item">
-    <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button" data-bs-auto-close="outside">
-        <i class="feather-bell"></i>
-
-        {{-- BADGE --}}
-        @if($lowStockFoods->count() > 0)
-            <span class="badge bg-danger nxl-h-badge">
-                {{ $lowStockFoods->count() }}
-            </span>
-        @endif
-    </a>
-
-    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-notifications-menu">
-
-        {{-- HEADER --}}
-        <div class="d-flex justify-content-between align-items-center notifications-head">
-            <h6 class="fw-bold text-dark mb-0">Low Stock Alerts</h6>
+            {{-- Global search jumps straight into the food catalogue, which is
+                 the only list big enough to need one. --}}
+            @can('foods.view')
+                <form class="header-search d-none d-md-flex" action="{{ route('admin.foods.index') }}" method="GET">
+                    <i class="feather-search"></i>
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Search foods…" aria-label="Search foods">
+                </form>
+            @endcan
         </div>
 
-        {{-- BODY --}}
-        <div class="notifications-body" style="max-height:300px; overflow:auto">
+        {{-- =========================== RIGHT =========================== --}}
+        <div class="header-right ms-auto">
+            <div class="d-flex align-items-center gap-2">
 
-            @forelse($lowStockFoods as $food)
-                <div class="notification-item d-flex align-items-start gap-2 p-2 border-bottom">
-
-                    <div class="text-warning fs-16 mt-1">
-                        <i class="feather-alert-triangle"></i>
-                    </div>
-
-                    <div class="flex-grow-1">
-                        <p class="mb-1 fw-semibold text-dark">
-                            {{ $food->name }}
-                        </p>
-                        <small class="text-muted">
-                            Limit:
-                            <strong>{{ $food->low_stock_alert }}</strong>
-                            |
-                            Left:
-                            <span class="text-danger fw-bold">
-                                {{ $food->quantity }}
-                            </span>
-                        </small>
-                    </div>
-
+                {{-- Full screen --}}
+                <div class="nxl-h-item d-none d-sm-flex">
+                    <a href="javascript:void(0);" class="nxl-head-link me-0"
+                       onclick="$('body').fullScreenHelper('toggle');" title="Toggle full screen">
+                        <i class="feather-maximize maximize"></i>
+                        <i class="feather-minimize minimize"></i>
+                    </a>
                 </div>
-            @empty
-                <div class="text-center text-muted py-3">
-                    No low stock warnings 🎉
-                </div>
-            @endforelse
 
-        </div>
+                {{-- Dark / light --}}
+                <button type="button" class="theme-toggle" data-theme-toggle
+                        aria-pressed="false" title="Switch to dark mode">
+                    <i class="feather-moon icon-moon"></i>
+                    <i class="feather-sun icon-sun"></i>
+                </button>
 
-    </div>
-</div>
+                {{-- ===================== NOTIFICATIONS ===================== --}}
+                <div class="dropdown nxl-h-item" data-notif-root
+                     data-notif-read-url="{{ route('admin.notifications.read') }}"
+                     data-notif-feed-url="{{ route('admin.notifications.feed') }}">
 
-                    <div class="dropdown nxl-h-item">
-                        <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
-                            <img src="{{ asset('assets/images/avatar/1.png') }}"
-     alt="user-image"
-     class="img-fluid user-avtar me-0" />
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown">
-                            <div class="dropdown-header">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ asset('assets/images/avatar/1.png') }}" alt="user-image" class="img-fluid user-avtar" />
-                                    <div>
-                                        <h6 class="text-dark mb-0">
-    {{ auth()->user()->name }}
-    <span class="badge bg-soft-success text-success ms-1">ADMIN</span>
-</h6>
-<span class="fs-12 fw-medium text-muted">
-    {{ auth()->user()->email }}
-</span>
+                    <a href="javascript:void(0);" class="nxl-head-link me-0 position-relative"
+                       data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside"
+                       aria-label="Notifications">
+                        <i class="feather-bell"></i>
+                        <span class="badge bg-danger nxl-h-badge" data-notif-badge
+                              style="{{ $unread > 0 ? '' : 'display:none;' }}">
+                            {{ $unread > 99 ? '99+' : $unread }}
+                        </span>
+                    </a>
 
+                    <div class="dropdown-menu dropdown-menu-end notif-menu">
+                        <div class="notif-head">
+                            <h6>
+                                Notifications
+                                @if ($feed['total'])
+                                    <span class="text-muted fw-normal">({{ $feed['total'] }})</span>
+                                @endif
+                            </h6>
+                            @if ($unread > 0)
+                                <button type="button" class="notif-clear" data-notif-clear>Mark all read</button>
+                            @endif
+                        </div>
 
-
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="dropdown">
-                                <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="dropdown">
-                                    <span class="hstack">
-                                        <i class="wd-10 ht-10 border border-2 border-gray-1 bg-success rounded-circle me-2"></i>
-                                        <span>Active</span>
+                        <div class="notif-body ar-scroll">
+                            @forelse ($feed['items'] as $item)
+                                <a href="{{ $item['url'] }}"
+                                   class="notif-item {{ $item['is_new'] ? 'is-new' : '' }}">
+                                    <span class="notif-icon tone-{{ $item['tone'] }}">
+                                        <i class="{{ $item['icon'] }}"></i>
                                     </span>
-                                    <i class="feather-chevron-right ms-auto me-0"></i>
+                                    <span class="notif-text">
+                                        <span class="notif-title d-block">{{ $item['title'] }}</span>
+                                        <span class="notif-sub d-block">{{ $item['body'] }}</span>
+                                        <span class="notif-time d-block">
+                                            {{ $item['time']?->diffForHumans() ?? '' }}
+                                        </span>
+                                    </span>
                                 </a>
-                                <div class="dropdown-menu">
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-warning rounded-circle me-2"></i>
-                                            <span>Always</span>
+                            @empty
+                                <div class="notif-empty">
+                                    <i class="feather-check-circle"></i>
+                                    Nothing needs your attention right now.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @can('activity_log.view')
+                            <div class="notif-foot">
+                                <a href="{{ route('admin.activity-log.index') }}">View full activity log</a>
+                            </div>
+                        @endcan
+                    </div>
+                </div>
+
+                {{-- ======================== PROFILE ======================== --}}
+                <div class="dropdown nxl-h-item">
+                    <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button"
+                       data-bs-auto-close="outside" class="d-flex align-items-center gap-2">
+                        <span class="avatar-initials sm">{{ Str::of($admin->name)->substr(0, 2) }}</span>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="avatar-initials">{{ Str::of($admin->name)->substr(0, 2) }}</span>
+                                <div class="min-w-0">
+                                    <h6 class="mb-0 text-ink">
+                                        {{ $admin->name }}
+                                        <span class="badge {{ $admin->isSuperadmin() ? 'bg-primary' : 'bg-secondary' }} ms-1">
+                                            {{ $admin->isSuperadmin() ? 'SUPER' : 'ADMIN' }}
                                         </span>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-success rounded-circle me-2"></i>
-                                            <span>Active</span>
-                                        </span>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-danger rounded-circle me-2"></i>
-                                            <span>Bussy</span>
-                                        </span>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-info rounded-circle me-2"></i>
-                                            <span>Inactive</span>
-                                        </span>
-                                    </a>
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-dark rounded-circle me-2"></i>
-                                            <span>Disabled</span>
-                                        </span>
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a href="javascript:void(0);" class="dropdown-item">
-                                        <span class="hstack">
-                                            <i class="wd-10 ht-10 border border-2 border-gray-1 bg-primary rounded-circle me-2"></i>
-                                            <span>Cutomization</span>
-                                        </span>
-                                    </a>
+                                    </h6>
+                                    <span class="fs-12 text-muted">{{ $admin->email }}</span>
                                 </div>
                             </div>
-                            <div class="dropdown-divider"></div>
-
-                            <div class="dropdown-divider"></div>
-                            <a href="javascript:void(0);" class="dropdown-item">
-                                <i class="feather-user"></i>
-                                <span>Profile Details</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <form action="{{ route('admin.logout') }}" method="POST" id="logout-form">
-    @csrf
-    <a href="javascript:void(0);"
-       class="dropdown-item"
-       onclick="document.getElementById('logout-form').submit();">
-        <i class="feather-log-out"></i>
-        <span>Logout</span>
-    </a>
-</form>
                         </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
+                            <i class="feather-home"></i><span>Dashboard</span>
+                        </a>
+
+                        @can('manage-admins')
+                            <a href="{{ route('admin.admin-users.edit', $admin->id) }}" class="dropdown-item">
+                                <i class="feather-user"></i><span>My account &amp; password</span>
+                            </a>
+                        @endcan
+
+                        @can('admin_login_history.view')
+                            <a href="{{ route('admin.admin-login-history.index') }}" class="dropdown-item">
+                                <i class="feather-shield"></i><span>My sign-in history</span>
+                            </a>
+                        @endcan
+
+                        <a href="javascript:void(0);" class="dropdown-item" data-theme-toggle>
+                            <i class="feather-moon"></i><span>Toggle dark mode</span>
+                        </a>
+
+                        <div class="dropdown-divider"></div>
+
+                        <form action="{{ route('admin.logout') }}" method="POST" class="logout-form">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger w-100 border-0 bg-transparent">
+                                <i class="feather-log-out"></i><span>Log out</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-            <!--! [End] Header Right !-->
         </div>
-    </header>
+    </div>
+</header>
+
+<style>
+    .nxl-header .dropdown-header { padding: 14px 12px 10px; }
+    .nxl-header .min-w-0 { min-width: 0; }
+    .nxl-header .nxl-user-dropdown { width: 272px; }
+    .nxl-header .nxl-user-dropdown h6 { font-size: 14px; font-weight: 700; }
+    .nxl-header .nxl-user-dropdown .fs-12 {
+        font-size: 12px;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nxl-header .header-wrapper { gap: 12px; }
+</style>

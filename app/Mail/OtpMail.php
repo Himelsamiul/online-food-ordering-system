@@ -3,31 +3,28 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class OtpMail extends Mailable
+class OtpMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public string $code;
-    public string $purpose;      // "register" | "reset"
-    public int $expiresMinutes;
-
-    public function __construct(string $code, string $purpose, int $expiresMinutes = 10)
-    {
-        $this->code = $code;
-        $this->purpose = $purpose;
-        $this->expiresMinutes = $expiresMinutes;
+    /** @param string $purpose "register" | "password_reset" */
+    public function __construct(
+        public string $code,
+        public string $purpose,
+        public int $expiresMinutes = 10,
+    ) {
     }
 
     public function build()
     {
-        $subject = $this->purpose === 'reset'
-            ? 'Your password reset code'
-            : 'Verify your email address';
+        $subject = $this->purpose === 'register'
+            ? 'Verify your email address'
+            : 'Your password reset code';
 
-        return $this->subject($subject)
-            ->view('emails.otp');
+        return $this->subject($subject)->view('emails.otp');
     }
 }

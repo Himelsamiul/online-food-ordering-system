@@ -1,45 +1,305 @@
 @extends('frontend.master')
+@section('title', 'My Account')
+
+@php
+    /*
+        Everything below is derived from the collection the controller already
+        loaded — no extra queries, no lazy loads.
+    */
+    $totalOrders = $orders->count();
+    $inProgress  = $orders->whereNotIn('order_status', ['delivered', 'cancelled'])->count();
+    $delivered   = $orders->where('order_status', 'delivered')->count();
+    $paidTotal   = $orders->where('payment_status', 'paid')->sum('total_amount');
+
+    $orderTone = [
+        'pending'          => 'pending',
+        'cooking'          => 'progress',
+        'out_for_delivery' => 'progress',
+        'delivered'        => 'done',
+        'cancelled'        => 'cancel',
+    ];
+
+    $payTone = [
+        'paid'      => 'done',
+        'pending'   => 'pending',
+        'failed'    => 'cancel',
+        'cancelled' => 'cancel',
+    ];
+@endphp
 
 @push('styles')
 <style>
+    .sf-page-head { margin-bottom: 26px; }
+
+    .sf-page-head h2 {
+        color: var(--sf-ink);
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .sf-page-head p {
+        color: var(--sf-muted);
+        margin-bottom: 0;
+    }
+
+    .sf-card-title {
+        color: var(--sf-ink);
+        font-weight: 700;
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .sf-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .sf-card-head .sf-count {
+        color: var(--sf-muted);
+        font-size: 13px;
+    }
+
+    /* ============ IDENTITY CARD ============ */
+    .sf-id-avatar {
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+        color: rgba(0, 0, 0, .8);
+        font-size: 42px;
+        font-weight: 800;
+        text-transform: uppercase;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, .4);
+    }
+
+    .sf-id-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .sf-id-name {
+        color: var(--sf-ink);
+        font-weight: 700;
+        font-size: 21px;
+        margin: 0;
+    }
+
+    /* `.glass-card small` in the design layer is more specific than a bare
+       class, so these two are scoped to win it back. */
+    .glass-card .sf-id-handle {
+        color: var(--sf-muted);
+        font-size: 13.5px;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .sf-id-list {
+        list-style: none;
+        padding: 0;
+        margin: 18px 0 0;
+    }
+
+    .sf-id-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 14px;
+        padding: 11px 0;
+        border-top: 1px solid rgba(255, 255, 255, .09);
+        font-size: 13.5px;
+    }
+
+    .sf-id-list li > span { color: var(--sf-muted); white-space: nowrap; }
+
+    .sf-id-list li > strong {
+        color: var(--sf-ink);
+        font-weight: 600;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    /* ============ BADGES ============ */
+    .sf-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 30px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .sf-badge-pending  { background: rgba(241, 184, 22, .14); color: var(--sf-accent); border-color: rgba(241, 184, 22, .38); }
+    .sf-badge-progress { background: rgba(255, 255, 255, .09); color: var(--sf-ink);    border-color: var(--sf-glass-line); }
+    .sf-badge-done     { background: rgba(29, 191, 115, .16); color: var(--sf-green);  border-color: rgba(29, 191, 115, .42); }
+    .sf-badge-cancel   { background: rgba(231, 76, 60, .16);  color: var(--sf-danger); border-color: rgba(231, 76, 60, .42); }
+
+    /* ============ STAT TILES ============ */
+    .sf-stat {
+        height: 100%;
+        padding: 15px 12px;
+        text-align: center;
+        border: 1px solid var(--sf-glass-line);
+        border-radius: var(--sf-radius-sm);
+        background: rgba(255, 255, 255, .05);
+    }
+
+    .sf-stat strong {
+        display: block;
+        color: var(--sf-ink);
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .sf-stat span {
+        display: block;
+        margin-top: 3px;
+        color: var(--sf-muted);
+        font-size: 11.5px;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    /* A running total is longer than an order count — give it room. */
+    .sf-stat-money strong { font-size: 17px; word-break: break-all; }
+
+    /* ============ ORDER LIST ============ */
+    .sf-order-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        border: 1px solid var(--sf-glass-line);
+        border-radius: var(--sf-radius-sm);
+        background: rgba(0, 0, 0, .22);
+        transition: border-color .18s, transform .18s, background-color .18s;
+    }
+
+    .sf-order-row:last-child { margin-bottom: 0; }
+
+    .sf-order-row:hover {
+        border-color: rgba(241, 184, 22, .45);
+        background: rgba(0, 0, 0, .3);
+        transform: translateY(-2px);
+    }
+
+    .sf-order-main { flex: 1 1 240px; min-width: 0; }
+
+    .sf-order-no {
+        color: var(--sf-ink);
+        font-weight: 700;
+        font-size: 15px;
+        word-break: break-all;
+    }
+
+    .sf-order-meta {
+        color: var(--sf-muted);
+        font-size: 12.5px;
+        margin-top: 5px;
+    }
+
+    .sf-order-meta i { width: 14px; }
+
+    .sf-order-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        flex: 0 1 auto;
+    }
+
+    .sf-order-total {
+        color: var(--sf-accent);
+        font-weight: 800;
+        font-size: 17px;
+        white-space: nowrap;
+        margin-left: auto;
+    }
+
+    .sf-order-row .btn { flex-shrink: 0; }
+
+    /* ============ OFFERS ============ */
     .offer-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 16px;
         flex-wrap: wrap;
-        border: 1px dashed rgba(241,184,22,.45);
-        border-radius: 14px;
+        border: 1px dashed rgba(241, 184, 22, .45);
+        border-radius: var(--sf-radius-sm);
         padding: 14px 18px;
         margin-bottom: 12px;
-        background: rgba(241,184,22,.06);
+        background: rgba(241, 184, 22, .06);
     }
+
+    .offer-row:last-child { margin-bottom: 0; }
 
     .offer-code {
         background: transparent;
-        border: 2px dashed #f1b816;
-        color: #f1b816;
-        font-family: monospace;
+        border: 2px dashed var(--sf-accent);
+        color: var(--sf-accent);
+        font-family: 'Courier New', Courier, monospace;
         font-weight: 800;
         letter-spacing: 1.2px;
         border-radius: 8px;
         padding: 5px 14px;
         cursor: pointer;
-        transition: .2s;
+        transition: background-color .2s, color .2s;
     }
 
-    .offer-code:hover { background: #f1b816; color: #1c1c1c; }
+    .offer-code:hover { background: var(--sf-accent); color: rgba(0, 0, 0, .82); }
 
     .offer-value {
         margin-left: 10px;
         font-weight: 800;
-        color: #2ecc71;
+        color: var(--sf-green);
+    }
+
+    .glass-card .offer-note {
+        display: block;
+        margin-top: 6px;
+        color: var(--sf-muted);
+        font-size: 13px;
     }
 
     .offer-terms {
-        color: rgba(255,255,255,.65);
-        font-size: 13px;
-        line-height: 1.6;
+        color: var(--sf-muted);
+        font-size: 12.5px;
+        line-height: 1.7;
+    }
+
+    /* ============ SUPPORT NOTE + EMPTY STATE ============ */
+    .sf-note {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        padding: 16px 18px;
+        border-radius: var(--sf-radius-sm);
+        border: 1px solid rgba(29, 191, 115, .35);
+        background: rgba(29, 191, 115, .1);
+    }
+
+    .sf-note i { color: var(--sf-green); font-size: 18px; margin-top: 2px; }
+    .sf-note strong { display: block; color: var(--sf-ink); font-size: 14px; margin-bottom: 4px; }
+    .sf-note p { color: var(--sf-muted); font-size: 13px; margin: 0; line-height: 1.6; }
+
+    .sf-empty { text-align: center; padding: 32px 16px; }
+    .sf-empty i { font-size: 42px; color: var(--sf-faint); }
+    .sf-empty p { color: var(--sf-muted); margin: 14px 0 18px; }
+
+    @media (max-width: 575.98px) {
+        .sf-order-total { margin-left: 0; }
+        .sf-order-row .btn { width: 100%; }
     }
 </style>
 @endpush
@@ -75,66 +335,143 @@ $(function () {
 
 @section('content')
 
-<section class="profile-section py-5">
+<section class="profile-section layout_padding">
     <div class="container">
 
-        {{-- PROFILE CARD (CENTERED) --}}
-        <div class="row justify-content-center mb-5">
-            <div class="col-lg-5 col-md-7 col-sm-10">
-                <div class="card glass-card shadow-lg p-4 text-center">
+        <div class="sf-page-head text-center">
+            <h2>My Account</h2>
+            <p>Your details, your orders and the offers you can use right now.</p>
+        </div>
 
-                    {{-- USER IMAGE / ICON --}}
-                    <div class="mb-3">
-                        @if($user->image && file_exists(public_path('storage/'.$user->image)))
-                            <img src="{{ asset('storage/'.$user->image) }}"
-                                 class="rounded-circle mb-2"
-                                 width="130"
-                                 height="130"
-                                 style="object-fit: cover;">
+        <div class="row">
+
+            {{-- ============ IDENTITY ============ --}}
+            <div class="col-lg-4 mb-4">
+                <div class="glass-card p-4">
+
+                    <div class="text-center">
+                        <div class="sf-id-avatar">
+                            @if ($user->image && file_exists(public_path('storage/'.$user->image)))
+                                <img src="{{ asset('storage/'.$user->image) }}"
+                                     alt="{{ $user->full_name }}">
+                            @else
+                                {{ \Illuminate\Support\Str::of($user->full_name)->substr(0, 1) }}
+                            @endif
+                        </div>
+
+                        <h3 class="sf-id-name">{{ $user->full_name }}</h3>
+                        <small class="sf-id-handle">{{ '@'.$user->username }}</small>
+
+                        @if ($user->isActive())
+                            <span class="sf-badge sf-badge-done">Active account</span>
                         @else
-                            <i class="fa fa-user-circle text-secondary"
-                               style="font-size:130px;"></i>
+                            <span class="sf-badge sf-badge-cancel">Deactivated</span>
                         @endif
                     </div>
 
-                    <h4 class="mb-0">{{ $user->full_name }}</h4>
-                    <small class="text-muted">{{ '@'.$user->username }}</small>
+                    <ul class="sf-id-list">
+                        <li>
+                            <span>Email</span>
+                            <strong>{{ $user->email }}</strong>
+                        </li>
+                        <li>
+                            <span>Phone</span>
+                            <strong>{{ $user->phone }}</strong>
+                        </li>
+                        <li>
+                            <span>Address</span>
+                            <strong>{{ $user->address ?: 'Not added yet' }}</strong>
+                        </li>
+                        <li>
+                            <span>Date of birth</span>
+                            <strong>
+                                {{ $user->dob
+                                    ? \Illuminate\Support\Carbon::parse($user->dob)->format('d M Y')
+                                    : 'Not added yet' }}
+                            </strong>
+                        </li>
+                        <li>
+                            <span>Member since</span>
+                            <strong>{{ optional($user->created_at)->format('M Y') ?: '—' }}</strong>
+                        </li>
+                    </ul>
 
-                    <hr>
-
-                    <p class="mb-1"><strong>Email:</strong> {{ $user->email }}</p>
-                    <p class="mb-1"><strong>Phone:</strong> {{ $user->phone }}</p>
-                    <p class="mb-1"><strong>Address:</strong> {{ $user->address }}</p>
-                    <p class="mb-0"><strong>DOB:</strong> {{ $user->dob }}</p>
-
-                    {{-- EDIT BUTTON --}}
-                    <hr>
-                    <a href="{{ route('profile.edit') }}" class="btn btn-outline-light mt-2">
+                    <a href="{{ route('profile.edit') }}" class="btn btn-warning btn-block mt-4">
                         Edit Profile
                     </a>
+
+                    @unless ($user->isActive())
+                        <div class="sf-help-box">
+                            <p>
+                                <strong>This account is switched off.</strong>
+                                An administrator has to turn it back on before you can order again.
+                            </p>
+                            <a class="btn btn-warning"
+                               href="{{ route('account.help', ['type' => 'activation', 'email' => $user->email]) }}">
+                                Request reactivation
+                            </a>
+                        </div>
+                    @endunless
+
+                    <div class="text-center mt-3">
+                        <a href="{{ route('account.help', ['type' => 'password', 'email' => $user->email]) }}"
+                           class="sf-link-muted">
+                            Trouble with your password? Ask an admin
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sf-note mt-4">
+                    <i class="fa fa-phone" aria-hidden="true"></i>
+                    <div>
+                        <strong>Need to cancel an order?</strong>
+                        <p>
+                            Call our support team on +880-1234-567890. Eligible payments are refunded
+                            under our order cancellation and refund policy.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- 🔔 ORDER CANCELLATION NOTICE --}}
-        <div class="row justify-content-center mb-4">
-            <div class="col-lg-10">
-                <div class="order-note">
-                    📞 <strong>Order Cancellation Notice:</strong><br>
-                    If you wish to cancel any order, please contact our support team at
-                    <strong>+880-1234-567890</strong>.
-                    Eligible payments will be refunded according to our
-                    <strong>order cancellation & refund policy</strong>.
+            {{-- ============ ORDERS + OFFERS ============ --}}
+            <div class="col-lg-8">
+
+                {{-- summary tiles --}}
+                <div class="row mb-2">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="sf-stat">
+                            <strong>{{ $totalOrders }}</strong>
+                            <span>Orders</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="sf-stat">
+                            <strong>{{ $inProgress }}</strong>
+                            <span>On the way</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="sf-stat">
+                            <strong>{{ $delivered }}</strong>
+                            <span>Delivered</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="sf-stat sf-stat-money">
+                            <strong>৳{{ number_format($paidTotal, 2) }}</strong>
+                            <span>Paid so far</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- MY OFFERS --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card glass-card shadow-lg p-4">
-
-                    <h4 class="mb-3">🎟️ My Offers</h4>
+                {{-- offers --}}
+                <div class="glass-card p-4 mb-4">
+                    <div class="sf-card-head">
+                        <h4 class="sf-card-title">My Offers</h4>
+                        @if ($offers->count())
+                            <span class="sf-count">Tap a code to copy it</span>
+                        @endif
+                    </div>
 
                     @forelse ($offers as $offer)
                         <div class="offer-row">
@@ -142,17 +479,17 @@ $(function () {
                                 <button type="button" class="offer-code js-copy-code"
                                         data-code="{{ $offer->code }}"
                                         title="Click to copy">
-                                    <i class="fa fa-clone"></i> {{ $offer->code }}
+                                    <i class="fa fa-clone" aria-hidden="true"></i> {{ $offer->code }}
                                 </button>
 
                                 <span class="offer-value">{{ $offer->offer_label }}</span>
 
                                 @if ($offer->description)
-                                    <small class="d-block text-white-50 mt-1">{{ $offer->description }}</small>
+                                    <small class="offer-note">{{ $offer->description }}</small>
                                 @endif
                             </div>
 
-                            <div class="offer-terms text-end">
+                            <div class="offer-terms text-right">
                                 @if ($offer->min_order_amount)
                                     <div>Min order ৳{{ number_format($offer->min_order_amount, 0) }}</div>
                                 @else
@@ -171,127 +508,72 @@ $(function () {
                             </div>
                         </div>
                     @empty
-                        <p class="text-white-50 mb-0">
-                            No offers available for you right now. Check back soon!
-                        </p>
+                        <div class="sf-empty">
+                            <i class="fa fa-tag" aria-hidden="true"></i>
+                            <p>No offers for you at the moment — we add new ones regularly.</p>
+                            <a href="{{ route('menu.index') }}" class="btn btn-outline-light">Browse the menu</a>
+                        </div>
                     @endforelse
-
                 </div>
-            </div>
-        </div>
 
-        {{-- ORDER HISTORY (FULL WIDTH BELOW PROFILE) --}}
-        <div class="row">
-            <div class="col-12">
-                <div class="card glass-card shadow-lg p-4">
-
-                    <h4 class="mb-3">Order History</h4>
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Order No</th>
-                                    <th>Transaction No</th>
-                                    <th>Customer</th>
-                                    <th>Phone</th>
-                                    <th>Address</th>
-                                    <th>Total (৳)</th>
-                                    <th>Payment</th>
-                                    <th>Payment Status</th>
-                                    <th>Order Status</th>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($orders as $index => $order)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $order->order_number }}</td>
-                                        <td>{{ $order->transaction_number }}</td>
-                                        <td>{{ $order->name }}</td>
-                                        <td>{{ $order->phone }}</td>
-                                        <td>{{ $order->address }}</td>
-                                        <td>{{ number_format($order->total_amount, 2) }}</td>
-                                        <td>{{ strtoupper($order->payment_method) }}</td>
-
-                                        <td>
-                                            <span class="badge bg-warning text-dark">
-                                                {{ ucfirst($order->payment_status) }}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <span class="badge bg-warning text-dark">
-                                                {{ ucfirst($order->order_status) }}
-                                            </span>
-                                        </td>
-
-                                        <td>{{ $order->created_at->format('d M Y') }}</td>
-
-                                        <td>
-                                            <a href="{{ route('profile.order.view', $order->id) }}"
-                                               class="btn btn-sm btn-primary">
-                                                View
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="12" class="text-center text-muted">
-                                            You have not placed any orders yet.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                {{-- order history --}}
+                <div class="glass-card p-4">
+                    <div class="sf-card-head">
+                        <h4 class="sf-card-title">Order History</h4>
+                        @if ($totalOrders)
+                            <span class="sf-count">
+                                {{ $totalOrders }} {{ \Illuminate\Support\Str::plural('order', $totalOrders) }}, newest first
+                            </span>
+                        @endif
                     </div>
 
-                    <small class="text-muted">
-                        * Order history is demo data for future implementation.
-                    </small>
+                    @forelse ($orders as $order)
+                        @php
+                            $oTone = $orderTone[$order->order_status] ?? 'progress';
+                            $pTone = $payTone[$order->payment_status] ?? 'progress';
+                        @endphp
+
+                        <div class="sf-order-row">
+                            <div class="sf-order-main">
+                                <div class="sf-order-no">#{{ $order->order_number }}</div>
+                                <div class="sf-order-meta">
+                                    {{ $order->created_at->format('d M Y, g:i a') }}
+                                    &middot; {{ strtoupper($order->payment_method) }}
+                                    @if ($order->transaction_number)
+                                        &middot; Txn {{ $order->transaction_number }}
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="sf-order-tags">
+                                <span class="sf-badge sf-badge-{{ $oTone }}">
+                                    {{ ucfirst(str_replace('_', ' ', $order->order_status)) }}
+                                </span>
+                                <span class="sf-badge sf-badge-{{ $pTone }}">
+                                    Payment {{ $order->payment_status }}
+                                </span>
+                            </div>
+
+                            <div class="sf-order-total">৳{{ number_format($order->total_amount, 2) }}</div>
+
+                            <a href="{{ route('profile.order.view', $order->id) }}"
+                               class="btn btn-sm btn-outline-light">
+                                View
+                            </a>
+                        </div>
+                    @empty
+                        <div class="sf-empty">
+                            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                            <p>You have not placed an order yet — have a look at the menu.</p>
+                            <a href="{{ route('menu.index') }}" class="btn btn-warning">Start an order</a>
+                        </div>
+                    @endforelse
                 </div>
+
             </div>
         </div>
 
     </div>
 </section>
-
-{{-- PAGE-ONLY STYLE --}}
-<style>
-.order-note{
-    background: linear-gradient(
-        135deg,
-        rgba(93, 226, 119, 0.25),
-        rgba(255,193,7,0.05)
-    );
-    border: 1px solid rgba(12, 171, 137, 0.45);
-    border-radius: 16px;
-    padding: 18px 22px;
-    text-align: center;
-    color: #16a43a;
-    font-weight: 600;
-    box-shadow: 0 8px 25px rgba(67, 215, 126, 0.25);
-    animation: fadeSlide 0.8s ease;
-}
-
-.order-note:hover{
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(47, 148, 76, 0.35);
-}
-
-@keyframes fadeSlide {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
 
 @endsection

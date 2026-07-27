@@ -6,30 +6,73 @@
 
     $cart          = session('cart', []);
     $alreadyInCart = isset($cart[$food->id]);
+
+    $stock      = (int) ($food->quantity ?? 0);
+    $lowMark    = (int) ($food->low_stock_alert ?? 0);
+    $outOfStock = $stock < 1;
+    $lowStock   = !$outOfStock && $lowMark > 0 && $stock <= $lowMark;
+
+    // Nothing can be added twice, and nothing sold out can be added at all —
+    // the cart controller rejects both, so the button says so up front.
+    $locked = $alreadyInCart || $outOfStock;
+
+    /*
+     * The parent category is only shown when the caller eager-loaded it.
+     * The menu page loads `subcategory.category`; the home page loads
+     * `subcategory` alone, and touching ->category there would fire one
+     * extra query per card.
+     */
+    $subcategory  = $food->subcategory;
+    $categoryName = $subcategory && $subcategory->relationLoaded('category')
+        ? optional($subcategory->category)->name
+        : null;
 @endphp
 
 <div class="col-6 col-lg-4 col-xl-3 mb-4">
-    <div class="food-box position-relative" data-food-id="{{ $food->id }}">
+    <div class="food-box position-relative {{ $outOfStock ? 'is-out' : '' }}" data-food-id="{{ $food->id }}">
 
-        @if ($discountPercent > 0)
-            <span class="discount-badge">-{{ (int) $discountPercent }}%</span>
-        @endif
+        <div class="food-media">
+            @if ($discountPercent > 0 && !$outOfStock)
+                <span class="discount-badge">-{{ (int) $discountPercent }}%</span>
+            @endif
 
-        <a href="{{ route('food.details', $food->id) }}" class="details-link">
-            <div class="food-img">
-                @if ($food->image)
-                    <img src="{{ asset('storage/'.$food->image) }}" alt="{{ $food->name }}" loading="lazy">
-                @else
-                    <i class="fa fa-cutlery fa-3x text-light opacity-50"></i>
-                @endif
-            </div>
-        </a>
+            @if ($outOfStock)
+                <span class="stock-flag is-out">
+                    <i class="fa fa-ban" aria-hidden="true"></i> Sold out
+                </span>
+            @elseif ($lowStock)
+                <span class="stock-flag">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i> Only {{ $stock }} left
+                </span>
+            @endif
+
+            {{-- Second link to the same place: hidden from keyboard and screen
+                 readers so the dish is a single stop, not two. --}}
+            <a href="{{ route('food.details', $food->id) }}" class="details-link"
+               tabindex="-1" aria-hidden="true">
+                <div class="food-img">
+                    @if ($food->image)
+                        <img src="{{ asset('storage/'.$food->image) }}" alt="{{ $food->name }}" loading="lazy">
+                    @else
+                        <i class="fa fa-cutlery fa-3x" aria-hidden="true"></i>
+                    @endif
+                </div>
+            </a>
+        </div>
 
         <div class="food-details">
 
             <div>
-                @if ($food->subcategory)
-                    <span class="food-tag">{{ $food->subcategory->name }}</span>
+                @if ($categoryName || $subcategory)
+                    <div class="food-meta">
+                        @if ($categoryName)
+                            <span class="food-tag is-parent">{{ $categoryName }}</span>
+                        @endif
+
+                        @if ($subcategory)
+                            <span class="food-tag">{{ $subcategory->name }}</span>
+                        @endif
+                    </div>
                 @endif
 
                 <a href="{{ route('food.details', $food->id) }}" class="details-link">
@@ -37,11 +80,11 @@
                 </a>
 
                 @if ($food->description)
-                    <p class="food-desc">{{ Str::limit($food->description, 55) }}</p>
+                    <p class="food-desc">{{ Str::limit($food->description, 60) }}</p>
                 @endif
             </div>
 
-            <div class="d-flex justify-content-between align-items-end mt-2">
+            <div class="food-foot">
                 <div class="price-block">
                     <span class="price-now">৳{{ number_format($finalPrice, 2) }}</span>
                     @if ($discountPercent > 0)
@@ -49,14 +92,19 @@
                     @endif
                 </div>
 
-                {{-- Submitted over AJAX so filters and scroll position survive --}}
+                {{-- Submitted over AJAX on the menu page so filters and scroll
+                     position survive; a plain POST everywhere else. --}}
                 <form action="{{ route('cart.add', $food->id) }}" method="POST" class="add-cart-form m-0">
                     @csrf
                     <button type="submit"
-                            class="add-cart-btn {{ $alreadyInCart ? 'disabled-btn' : '' }}"
-                            title="{{ $alreadyInCart ? 'Already in cart' : 'Add to cart' }}"
-                            {{ $alreadyInCart ? 'disabled' : '' }}>
-                        <i class="fa {{ $alreadyInCart ? 'fa-check' : 'fa-shopping-cart' }}"></i>
+                            class="add-cart-btn {{ $locked ? 'disabled-btn' : '' }}"
+                            title="{{ $outOfStock ? 'Out of stock' : ($alreadyInCart ? 'Already in cart' : 'Add to cart') }}"
+                            {{ $locked ? 'disabled' : '' }}>
+                        <i class="fa {{ $alreadyInCart ? 'fa-check' : ($outOfStock ? 'fa-ban' : 'fa-shopping-cart') }}"
+                           aria-hidden="true"></i>
+                        <span class="add-cart-label">
+                            {{ $outOfStock ? 'Sold out' : ($alreadyInCart ? 'In cart' : 'Add') }}
+                        </span>
                     </button>
                 </form>
             </div>

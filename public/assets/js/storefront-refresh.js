@@ -8,6 +8,23 @@
     document.addEventListener('DOMContentLoaded', function () {
 
         /* ---------------------------------------------------------------
+           Sticky header.
+           The band is transparent over the hero and gains a solid backdrop
+           once the page has scrolled past it, so the links stay legible
+           against whatever section is underneath.
+           --------------------------------------------------------------- */
+        var header = document.querySelector('.header_section');
+
+        if (header) {
+            var setStuck = function () {
+                header.classList.toggle('is-stuck', window.scrollY > 24);
+            };
+
+            setStuck();
+            window.addEventListener('scroll', setStuck, { passive: true });
+        }
+
+        /* ---------------------------------------------------------------
            Reveal cards as they scroll into view.
            Skipped entirely when the visitor asked for reduced motion.
            --------------------------------------------------------------- */

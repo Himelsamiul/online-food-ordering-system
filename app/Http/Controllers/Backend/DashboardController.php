@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountRequest;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Food;
@@ -13,6 +15,7 @@ use App\Models\DeliveryMan;
 use App\Models\DeliveryRun;
 use App\Models\ContactMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -70,7 +73,59 @@ class DashboardController extends Controller
         $activeDeliveryRuns = DeliveryRun::where('status', 'on_the_way')->count();
         $completedDeliveryRuns = DeliveryRun::where('status', 'completed')->count();
 
+        /* ================= CUSTOMER ACCOUNTS ================= */
+        $activeUsers   = Registration::where('is_active', true)->count();
+        $inactiveUsers = Registration::where('is_active', false)->count();
+
+        /* ================= REVENUE TREND (last 14 days) ================= */
+        // Charted on the dashboard. Built from a date range rather than the
+        // query result so days with no orders still show as zero instead of
+        // being silently skipped, which would distort the line.
+        $trend = collect();
+
+        for ($i = 13; $i >= 0; $i--) {
+            $day = Carbon::today()->subDays($i);
+
+            $trend->push([
+                'label'  => $day->format('d M'),
+                'orders' => Order::whereDate('created_at', $day)->count(),
+                'amount' => (float) Order::whereDate('created_at', $day)
+                    ->where('payment_status', 'paid')
+                    ->sum('total_amount'),
+            ]);
+        }
+
+        /* ================= LIVE PANELS (permission aware) ================= */
+        $admin = auth()->user();
+
+        $recentOrders = $admin->hasPermission('orders.view')
+            ? Order::latest()->limit(6)->get()
+            : collect();
+
+        $recentActivity = $admin->hasPermission('activity_log.view')
+            ? ActivityLog::latest('id')->limit(8)->get()
+            : collect();
+
+        $pendingRequests = $admin->hasPermission('account_requests.view')
+            ? AccountRequest::pending()->latest()->limit(5)->get()
+            : collect();
+
+        $lowStockFoods = $admin->hasPermission('foods.view')
+            ? Food::whereColumn('quantity', '<=', 'low_stock_alert')
+                ->where('status', 1)
+                ->orderBy('quantity')
+                ->limit(6)
+                ->get()
+            : collect();
+
         return view('backend.pages.dashboard', compact(
+            'trend',
+            'recentOrders',
+            'recentActivity',
+            'pendingRequests',
+            'lowStockFoods',
+            'activeUsers',
+            'inactiveUsers',
             'totalUsers',
             'totalOrders',
             'pendingOrders',

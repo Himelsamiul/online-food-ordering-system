@@ -1,18 +1,31 @@
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta name="description" content="Admin control panel" />
 
-    <title>Duralux || Dashboard</title>
+    <title>@yield('title', 'Dashboard') · Admin Panel</title>
 
-    <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon.ico') }}" />
+
+    {{--
+        Apply the saved theme before the first paint. Doing this in the body
+        or in a deferred script gives a white flash on every navigation for
+        anyone using dark mode.
+    --}}
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('app-skin') === 'app-skin-dark') {
+                    document.documentElement.classList.add('app-skin-dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
@@ -24,7 +37,7 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}" />
 
-    <!-- Design refresh (loaded last so it wins over the vendor theme) -->
+    <!-- Design system (loaded last so it wins over the vendor theme) -->
     <link rel="stylesheet" href="{{ asset('assets/css/admin-refresh.css') }}" />
 
     @stack('styles')
@@ -32,58 +45,36 @@
 
 <body>
 
-    <!-- ================= Sidebar ================= -->
     @include('backend.partials.sidebar')
-    <!-- ========================================== -->
-
-    <!-- ================= Header ================= -->
     @include('backend.partials.header')
-    <!-- ========================================== -->
 
-    <!-- ================= Main Content ================= -->
     <main class="nxl-container">
         <div class="nxl-content">
-
-            {{-- Page specific content --}}
             @yield('content')
-
         </div>
     </main>
-    <!-- =============================================== -->
-
-    <!-- ================= Theme Customizer ================= -->
-    @include('backend.partials.customizer')
-    <!-- =================================================== -->
 
     <!-- ================= Scripts ================= -->
-
-    <!-- Vendors JS -->
     <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
 
-    <!-- App Init -->
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
 
-    <!-- Theme Customizer -->
-   <!-- <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script> -->
-
-    {{-- Page specific scripts --}}
-
-    <!-- ================= SweetAlert2 ================= -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- ================= Global SweetAlert Messages ================= -->
+    {{-- Flash messages --}}
     @if (session('success'))
         <script>
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: "{{ session('success') }}",
-                timer: 2000,
-                showConfirmButton: false
+                text: @json(session('success')),
+                timer: 2600,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
             });
         </script>
     @endif
@@ -92,57 +83,92 @@
         <script>
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: "{{ session('error') }}"
+                title: 'Something went wrong',
+                text: @json(session('error'))
             });
         </script>
     @endif
 
-    <!-- ================= SweetAlert Confirmations ================= -->
+    @if (session('info'))
+        <script>
+            Swal.fire({
+                icon: 'info',
+                title: 'Notice',
+                text: @json(session('info')),
+                timer: 3500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        </script>
+    @endif
+
+    @if ($errors->any())
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Please check the form',
+                html: @json('<ul style="text-align:left;margin:0;padding-left:18px">' .
+                    collect($errors->all())->map(fn ($e) => '<li>' . e($e) . '</li>')->implode('') .
+                    '</ul>')
+            });
+        </script>
+    @endif
+
+    {{-- Confirmations --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            // 🔴 DELETE CONFIRM (any form with .delete-form)
-            document.querySelectorAll('.delete-form').forEach(form => {
+            // Any form with .delete-form asks first.
+            document.querySelectorAll('.delete-form').forEach(function (form) {
                 form.addEventListener('submit', function (e) {
+                    if (form.dataset.confirmed) {
+                        return;
+                    }
+
                     e.preventDefault();
 
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: "This action cannot be undone!",
+                        title: form.dataset.confirmTitle || 'Are you sure?',
+                        text: form.dataset.confirmText || 'This action cannot be undone.',
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: form.dataset.confirmButton || 'Yes, delete it'
+                    }).then(function (result) {
                         if (result.isConfirmed) {
+                            form.dataset.confirmed = '1';
                             form.submit();
                         }
                     });
                 });
             });
 
-            // 🔒 LOGOUT CONFIRM (sidebar logout)
-            document.querySelectorAll('.logout-form').forEach(form => {
+            // Sidebar / header logout.
+            document.querySelectorAll('.logout-form').forEach(function (form) {
                 form.addEventListener('submit', function (e) {
+                    if (form.dataset.confirmed) {
+                        return;
+                    }
+
                     e.preventDefault();
 
                     Swal.fire({
-                        title: 'Logout?',
-                        text: 'You will be logged out from admin panel',
-                        icon: 'warning',
+                        title: 'Log out?',
+                        text: 'You will be signed out of the admin panel.',
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Yes, Logout',
-                        cancelButtonText: 'Cancel'
-                    }).then((result) => {
+                        confirmButtonText: 'Yes, log out',
+                        cancelButtonText: 'Stay'
+                    }).then(function (result) {
                         if (result.isConfirmed) {
+                            form.dataset.confirmed = '1';
                             form.submit();
                         }
                     });
                 });
             });
-
         });
     </script>
 

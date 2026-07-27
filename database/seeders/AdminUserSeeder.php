@@ -23,27 +23,44 @@ class AdminUserSeeder extends Seeder
                 'role'        => 'superadmin',
                 'permissions' => [], // superadmin needs none — it has everything
             ],
-            // Sample limited admins.
+            // Sample limited admins. Permissions are granular — "<module>.<action>" —
+            // so these also demonstrate handing out view-only vs full control.
             [
                 'name'        => 'Admin Two',
                 'email'       => 'admin2@gmail.com',
                 'password'    => '2222',
                 'role'        => 'admin',
-                'permissions' => ['pos', 'orders'],
+                // Runs the till and works orders, but may not delete anything.
+                'permissions' => [
+                    'pos.view', 'pos.create',
+                    'orders.view', 'orders.edit',
+                ],
             ],
             [
                 'name'        => 'Admin Three',
                 'email'       => 'admin3@gmail.com',
                 'password'    => '3333',
                 'role'        => 'admin',
-                'permissions' => ['foods', 'categories', 'subcategories', 'units'],
+                // Full catalog control.
+                'permissions' => [
+                    'foods.view', 'foods.create', 'foods.edit', 'foods.delete',
+                    'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
+                    'subcategories.view', 'subcategories.create', 'subcategories.edit',
+                    'units.view', 'units.create', 'units.edit',
+                ],
             ],
             [
                 'name'        => 'Admin Four',
                 'email'       => 'admin4@gmail.com',
                 'password'    => '4444',
                 'role'        => 'admin',
-                'permissions' => ['delivery_men', 'delivery_runs'],
+                // Delivery desk plus the customer-support inbox.
+                'permissions' => [
+                    'delivery_men.view', 'delivery_men.create', 'delivery_men.edit',
+                    'delivery_runs.view', 'delivery_runs.create', 'delivery_runs.edit',
+                    'account_requests.view', 'account_requests.edit',
+                    'customers.view',
+                ],
             ],
             [
                 'name'        => 'Admin Five',

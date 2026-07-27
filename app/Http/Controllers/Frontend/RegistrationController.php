@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AccountStatusMail;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Order;
 use App\Models\Coupon;
-use App\Support\Otp;
+use App\Services\OtpService;
+use App\Support\AuditLogger;
 
 
 class RegistrationController extends Controller
@@ -57,10 +62,13 @@ class RegistrationController extends Controller
             'image'     => $imagePath,
         ]);
 
-        $this->sendRegistrationOtp($request->email);
+        if (!$this->sendRegistrationOtp($request->email)) {
+            return redirect()->route('register.verify')
+                ->with('info', 'A code was sent recently — check your inbox before asking for another.');
+        }
 
         return redirect()->route('register.verify')
-            ->with('success', 'We sent a 6-digit verification code to your email.');
+            ->with('success', 'We sent a verification code to your email.');
     }
 
     /**
@@ -76,7 +84,8 @@ class RegistrationController extends Controller
         }
 
         return view('frontend.pages.registration.verify', [
-            'email' => $pending['email'],
+            'email'          => $pending['email'],
+            'expiresMinutes' => app(OtpService::class)->expiryMinutes(),
         ]);
     }
 
@@ -86,38 +95,56 @@ class RegistrationController extends Controller
     public function verify(Request $request)
     {
         $request->validate([
-            'code' => 'required|digits:6',
+            'code' => 'required|digits:' . config('security.otp.length', 6),
         ]);
 
         $pending = session('pending_registration');
-        $otp     = session('pending_registration_otp');
 
-        if (!$pending || !$otp) {
+        if (!$pending) {
             return redirect()->route('register')
                 ->with('error', 'Your session expired. Please register again.');
         }
 
-        if (now()->timestamp > $otp['expires']) {
-            return back()->with('error', 'The code has expired. Please resend a new code.');
+        $otp    = app(OtpService::class);
+        $result = $otp->verifyAndConsume(
+            OtpService::GUARD_CUSTOMER,
+            OtpService::PURPOSE_REGISTER,
+            $pending['email'],
+            $request->code,
+        );
+
+        if ($result['status'] !== OtpService::OK) {
+            return back()->with('error', match ($result['status']) {
+                OtpService::EXPIRED   => 'That code has expired. Ask for a new one.',
+                OtpService::TOO_MANY  => 'Too many wrong attempts — that code has been cancelled. Request a new one.',
+                OtpService::NOT_FOUND => 'No active code for this address. Request a new one.',
+                default               => 'That code is not right. ' . $result['remaining'] . ' attempt(s) left.',
+            });
         }
 
-        if (!Hash::check($request->code, $otp['hash'])) {
-            return back()->with('error', 'Invalid verification code.');
-        }
+        $user = DB::transaction(function () use ($pending) {
+            return Registration::create([
+                'full_name'         => $pending['full_name'],
+                'username'          => $pending['username'],
+                'phone'             => $pending['phone'],
+                'email'             => $pending['email'],
+                'dob'               => $pending['dob'],
+                'address'           => $pending['address'],
+                'password'          => $pending['password'], // already hashed
+                'image'             => $pending['image'],
+                'is_active'         => true,
+                'email_verified_at' => now(),
+            ]);
+        });
 
-        $user = Registration::create([
-            'full_name'         => $pending['full_name'],
-            'username'          => $pending['username'],
-            'phone'             => $pending['phone'],
-            'email'             => $pending['email'],
-            'dob'               => $pending['dob'],
-            'address'           => $pending['address'],
-            'password'          => $pending['password'], // already hashed
-            'image'             => $pending['image'],
-            'email_verified_at' => now(),
-        ]);
+        AuditLogger::system(
+            AuditLogger::ACTION_CUSTOMER_CREATED,
+            'Customers',
+            'New customer registered: ' . $user->full_name . ' (' . $user->email . ')',
+            $user,
+        );
 
-        session()->forget(['pending_registration', 'pending_registration_otp']);
+        session()->forget('pending_registration');
 
         Auth::guard('frontend')->login($user);
 
@@ -137,36 +164,135 @@ class RegistrationController extends Controller
                 ->with('error', 'Please fill the registration form first.');
         }
 
-        $this->sendRegistrationOtp($pending['email']);
+        if (!$this->sendRegistrationOtp($pending['email'])) {
+            $wait = app(OtpService::class)->secondsUntilResend(
+                OtpService::GUARD_CUSTOMER,
+                OtpService::PURPOSE_REGISTER,
+                $pending['email'],
+            );
+
+            return back()->with('error', $wait > 0
+                ? "Please wait {$wait} seconds before asking for another code."
+                : 'Too many codes requested for this address. Try again later.');
+        }
 
         return back()->with('success', 'A new verification code has been sent.');
     }
 
     /**
-     * Generate + store (hashed) + deliver a registration OTP.
+     * Issue and deliver a registration code.
+     *
+     * Backed by otp_codes rather than the session, so the code survives a
+     * session regeneration and gets the same single-use, expiry and
+     * attempt-limit guarantees as every other OTP in the app.
+     *
+     * @return bool false when the caller is being throttled
      */
-    private function sendRegistrationOtp(string $email): void
+    private function sendRegistrationOtp(string $email): bool
     {
-        $code = Otp::generate();
-
-        session()->put('pending_registration_otp', [
-            'hash'    => Hash::make($code),
-            'expires' => now()->addMinutes(Otp::EXPIRES_MINUTES)->timestamp,
-        ]);
-
-        Otp::deliver($email, $code, 'register');
+        return app(OtpService::class)->issue(
+            OtpService::GUARD_CUSTOMER,
+            OtpService::PURPOSE_REGISTER,
+            $email,
+        ) !== null;
     }
 
-    public function registrations()
+    public function registrations(Request $request)
     {
-        $registrations = Registration::latest()->get();
-        return view('backend.pages.registrations.index', compact('registrations'));
+        $query = Registration::query();
+
+        if ($term = $request->query('q')) {
+            $query->where(function ($q) use ($term) {
+                $q->where('full_name', 'like', "%{$term}%")
+                    ->orWhere('username', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%")
+                    ->orWhere('phone', 'like', "%{$term}%");
+            });
+        }
+
+        if ($request->query('status') === 'active') {
+            $query->where('is_active', true);
+        } elseif ($request->query('status') === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $registrations = $query->withCount('orders')
+            ->latest()
+            ->paginate((int) $request->query('per_page', 20))
+            ->withQueryString();
+
+        $stats = [
+            'total'    => Registration::count(),
+            'active'   => Registration::where('is_active', true)->count(),
+            'inactive' => Registration::where('is_active', false)->count(),
+            'new'      => Registration::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
+
+        return view('backend.pages.registrations.index', compact('registrations', 'stats'));
+    }
+
+    /**
+     * Switch a customer account on or off.
+     *
+     * Deactivating tells them why on their next sign-in attempt and gives
+     * them the reactivation-request form; both directions send an email.
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        $user = Registration::findOrFail($id);
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $activating = !$user->isActive();
+
+        DB::transaction(function () use ($user, $data, $activating) {
+            $activating
+                ? $user->activate()
+                : $user->deactivate($data['reason'] ?? null);
+
+            AuditLogger::system(
+                $activating ? AuditLogger::ACTION_USER_ACTIVATED : AuditLogger::ACTION_USER_DEACTIVATED,
+                'Customers',
+                ($activating ? 'Activated' : 'Deactivated') . ' customer ' . $user->email
+                    . (!$activating && !empty($data['reason']) ? ' — ' . $data['reason'] : ''),
+                $user,
+                ['is_active' => !$activating],
+                ['is_active' => $activating],
+            );
+        });
+
+        $flash = $activating
+            ? $user->full_name . ' has been reactivated.'
+            : $user->full_name . ' has been deactivated and can no longer sign in.';
+
+        try {
+            Mail::to($user->email)->queue(new AccountStatusMail(
+                name:  $user->full_name,
+                email: $user->email,
+                state: $activating ? AccountStatusMail::ACTIVATED : AccountStatusMail::DEACTIVATED,
+                note:  $data['reason'] ?? null,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Account status mail failed: ' . $e->getMessage());
+            $flash .= ' (the notification email could not be sent)';
+        }
+
+        return back()->with('success', $flash);
     }
 
     //  Delete a registered user
     public function deleteRegistration($id)
     {
         $user = Registration::findOrFail($id);
+
+        AuditLogger::system(
+            AuditLogger::ACTION_CUSTOMER_REMOVED,
+            'Customers',
+            'Deleted customer ' . $user->full_name . ' (' . $user->email . ')',
+            $user,
+        );
 
         // delete image if exists
         if ($user->image && file_exists(public_path('storage/' . $user->image))) {

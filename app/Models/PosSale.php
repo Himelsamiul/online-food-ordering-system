@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class PosSale extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'invoice_no',
         'order_type',

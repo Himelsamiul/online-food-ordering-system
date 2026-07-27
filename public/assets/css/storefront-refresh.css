@@ -1,7 +1,7 @@
 /* =====================================================================
    Storefront design refresh
-   Sits on top of the Feane template. Loaded last from the master layout
-   so every customer-facing page picks it up without markup changes.
+   Sits on top of the Feane template (Bootstrap 4.3.1). Loaded last from the
+   master layout so every customer-facing page picks it up.
    ===================================================================== */
 
 :root {
@@ -12,19 +12,399 @@
     --sf-danger:      #e74c3c;
     --sf-ink:         #ffffff;
     --sf-muted:       rgba(255, 255, 255, .62);
+    --sf-faint:       rgba(255, 255, 255, .38);
     --sf-glass:       rgba(255, 255, 255, .08);
+    --sf-glass-2:     rgba(255, 255, 255, .13);
     --sf-glass-line:  rgba(255, 255, 255, .16);
-    --sf-panel:       rgba(0, 0, 0, .88);
+    --sf-panel:       rgba(18, 18, 22, .96);
     --sf-radius:      18px;
+    --sf-radius-sm:   12px;
     --sf-shadow:      0 14px 34px rgba(0, 0, 0, .38);
+    --sf-shadow-lg:   0 22px 60px rgba(0, 0, 0, .55);
+    --sf-header-h:    76px;
 }
 
 /* ---------- typography ---------- */
-body { -webkit-font-smoothing: antialiased; }
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* The template ships #ffffff here and relies on .bg-box to cover it. That
+       leaves a white flash before the image paints, and shows through anywhere
+       the image does not reach. */
+    background-color: #16161b;
+}
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }
 
-/* ---------- glass panels ---------- */
+/* ---------------------------------------------------------------------
+   Page background.
+   .bg-box was `position:absolute; height:100%` inside .hero_area, and
+   .hero_area is never closed — so the hero photo was being stretched over
+   the entire document height. Pinning it to the viewport keeps the crop
+   correct on every page and gives a steady backdrop while scrolling.
+   --------------------------------------------------------------------- */
+.hero_area { position: relative; }
+
+.hero_area > .bg-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.hero_area > .bg-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 10, 14, .72) 0%, rgba(10, 10, 14, .88) 100%);
+}
+
+.hero_area > .bg-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* =====================================================================
+   HEADER
+   ---------------------------------------------------------------------
+   The template shipped `.custom_nav-container .navbar-nav { padding-left: 18% }`.
+   Combined with `mx-auto` and eight nav items plus the search box, the row
+   overflowed and wrapped — the brand dropped onto its own line and the whole
+   band looked broken. The nav is now a real three-part flex row: brand,
+   centred links, utility cluster.
+   ===================================================================== */
+
+.header_section {
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    transition: background-color .28s ease, box-shadow .28s ease, padding .28s ease;
+}
+
+.header_section.is-stuck {
+    background: var(--sf-panel);
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .45);
+    border-bottom: 1px solid var(--sf-glass-line);
+}
+
+.header_section .custom_nav-container {
+    padding: 14px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: var(--sf-header-h);
+}
+
+/* Kill the template's hard indent — this is the actual break. */
+.custom_nav-container .navbar-nav,
+.header_section .navbar-nav {
+    padding-left: 0 !important;
+    align-items: center;
+}
+
+.header_section .navbar-brand {
+    margin-right: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.header_section .navbar-brand span {
+    font-size: 30px;
+    line-height: 1;
+}
+
+/* ---------- primary links ---------- */
+.sf-nav .nav-item { position: relative; }
+
+.header_section .sf-nav .nav-link {
+    padding: 8px 14px !important;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    position: relative;
+    transition: color .18s;
+}
+
+.header_section .sf-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--sf-accent);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform .22s ease;
+}
+
+.header_section .sf-nav .nav-link:hover::after,
+.header_section .sf-nav .nav-item.active .nav-link::after { transform: scaleX(1); }
+
+.header_section .sf-nav .nav-item.active .nav-link { color: var(--sf-accent); }
+
+/* Bootstrap 4 puts the caret as a border triangle; keep it subtle. */
+.header_section .dropdown-toggle::after { margin-left: 6px; opacity: .6; }
+
+/* ---------- dropdown panels ---------- */
+.sf-dropdown {
+    background: var(--sf-panel);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: 14px;
+    box-shadow: var(--sf-shadow-lg);
+    padding: 8px;
+    margin-top: 10px;
+    min-width: 210px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.sf-dropdown .dropdown-item {
+    color: rgba(255, 255, 255, .82);
+    border-radius: 9px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    transition: background-color .16s, color .16s;
+}
+
+.sf-dropdown .dropdown-item:hover,
+.sf-dropdown .dropdown-item:focus {
+    background: rgba(241, 184, 22, .16);
+    color: var(--sf-accent);
+}
+
+.sf-dropdown .dropdown-item.disabled { color: var(--sf-faint); background: none; }
+.sf-dropdown .dropdown-divider { border-color: var(--sf-glass-line); margin: 6px 4px; }
+
+.sf-dropdown-head {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--sf-glass-line);
+    margin-bottom: 6px;
+}
+
+.sf-dropdown-head strong {
+    display: block;
+    color: var(--sf-ink);
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.sf-dropdown-head span {
+    display: block;
+    color: var(--sf-muted);
+    font-size: 12px;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sf-dropdown .sf-logout {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: #ff8f80;
+}
+
+.sf-dropdown .sf-logout:hover { background: rgba(231, 76, 60, .16); color: #ff8f80; }
+
+/* ---------- utility cluster ---------- */
+.sf-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.sf-actions a { margin: 0; }
+
+.sf-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.sf-search i {
+    position: absolute;
+    left: 13px;
+    color: var(--sf-faint);
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.sf-search input {
+    background: var(--sf-glass);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: 30px;
+    color: var(--sf-ink);
+    padding: 8px 15px 8px 34px;
+    width: 168px;
+    font-size: 13.5px;
+    outline: none;
+    transition: width .25s ease, border-color .18s, background-color .18s;
+}
+
+.sf-search input::placeholder { color: var(--sf-faint); }
+
+.sf-search input:focus {
+    width: 224px;
+    border-color: var(--sf-accent);
+    background: var(--sf-glass-2);
+}
+
+.sf-icon-link {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sf-ink);
+    background: var(--sf-glass);
+    border: 1px solid var(--sf-glass-line);
+    transition: background-color .18s, color .18s, transform .18s;
+}
+
+.sf-icon-link:hover {
+    background: rgba(241, 184, 22, .18);
+    color: var(--sf-accent);
+    transform: translateY(-2px);
+}
+
+.cart-count-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    background: var(--sf-green);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid rgba(0, 0, 0, .55);
+}
+
+/* ---------- account chip ---------- */
+.sf-account-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 30px;
+    background: var(--sf-glass);
+    border: 1px solid var(--sf-glass-line);
+    color: var(--sf-ink);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: background-color .18s, border-color .18s;
+}
+
+.sf-account-toggle:hover,
+.sf-account-toggle:focus {
+    background: var(--sf-glass-2);
+    border-color: var(--sf-accent);
+    color: var(--sf-ink);
+    text-decoration: none;
+}
+
+.sf-account-toggle::after { display: none; }
+
+.sf-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+    color: #1c1c1c;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.sf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.sf-account-name {
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- header buttons ---------- */
+.sf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .18s, box-shadow .18s, background-color .18s, color .18s;
+}
+
+.sf-btn-ghost {
+    color: var(--sf-ink);
+    border: 1px solid var(--sf-glass-line);
+    background: var(--sf-glass);
+}
+
+.sf-btn-ghost:hover {
+    color: var(--sf-accent);
+    border-color: var(--sf-accent);
+    text-decoration: none;
+}
+
+.sf-btn-solid {
+    background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+    color: #1c1c1c;
+    border: 1px solid transparent;
+}
+
+.sf-btn-solid:hover {
+    color: #1c1c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(241, 184, 22, .38);
+    text-decoration: none;
+}
+
+/* ---------- burger ---------- */
+.header_section .navbar-toggler { outline: none; }
+.header_section .navbar-toggler:focus { box-shadow: 0 0 0 3px rgba(241, 184, 22, .25); }
+
+/* =====================================================================
+   Glass panels & shared surfaces
+   ===================================================================== */
+
 .glass-card {
     background: var(--sf-glass) !important;
     backdrop-filter: blur(14px);
@@ -34,30 +414,20 @@ h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }
     box-shadow: var(--sf-shadow);
 }
 
-/* ---------- header ---------- */
-.header_section .nav-link {
-    font-weight: 600;
-    position: relative;
-    transition: color .18s;
-}
+/* Carried over from the inline block that used to live in the master layout. */
+.footer_section { position: relative !important; margin-top: 0 !important; }
 
-.header_section .nav-link::after {
-    content: '';
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 4px;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--sf-accent);
-    transform: scaleX(0);
-    transition: transform .22s ease;
-}
+.glass-card h4,
+.glass-card h5,
+.glass-card h6 { color: var(--sf-ink); }
 
-.header_section .nav-link:hover::after { transform: scaleX(1); }
+.glass-card p,
+.glass-card small { color: rgba(255, 255, 255, .85); }
+
+.glass-card .table tbody tr { background: rgba(0, 0, 0, .22); }
+.glass-card .table tbody tr:nth-child(even) { background: rgba(0, 0, 0, .32); }
 
 .cart_link { transition: transform .18s; }
-.cart_link:hover { transform: scale(1.08); }
 
 /* ---------- buttons ---------- */
 .btn-success,
@@ -76,6 +446,20 @@ h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }
 
 .btn-success:disabled { opacity: .55; transform: none; box-shadow: none; }
 
+.btn-warning {
+    background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+    border: none;
+    color: #1c1c1c;
+    font-weight: 700;
+    border-radius: 30px;
+}
+
+.btn-outline-light {
+    border-radius: 30px;
+    font-weight: 600;
+    border-color: var(--sf-glass-line);
+}
+
 /* ---------- forms ---------- */
 .form-control,
 textarea.form-control,
@@ -83,7 +467,7 @@ select.form-control {
     background: rgba(255, 255, 255, .1);
     border: 1px solid var(--sf-glass-line);
     color: var(--sf-ink);
-    border-radius: 12px;
+    border-radius: var(--sf-radius-sm);
     padding: 11px 16px;
     transition: border-color .18s, box-shadow .18s, background-color .18s;
 }
@@ -95,7 +479,7 @@ select.form-control {
     color: var(--sf-ink);
 }
 
-.form-control::placeholder { color: rgba(255, 255, 255, .38); }
+.form-control::placeholder { color: var(--sf-faint); }
 
 .form-control:read-only,
 .form-control[readonly] {
@@ -103,7 +487,123 @@ select.form-control {
     cursor: not-allowed;
 }
 
+/* Native pickers render an invisible black glyph on a dark field. */
+.form-control[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .55; }
+
+select.form-control option { background: #1b1b20; color: var(--sf-ink); }
+
 label { font-weight: 600; color: rgba(255, 255, 255, .82); }
+
+.invalid-feedback, .text-danger { color: #ff8f80 !important; }
+
+.form-control.is-invalid { border-color: var(--sf-danger); }
+
+/* ---------- auth cards (login / register / forgot / account help) ---------- */
+.sf-auth-wrap {
+    min-height: 62vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+}
+
+.sf-auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255, 255, 255, .07);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: 22px;
+    box-shadow: var(--sf-shadow-lg);
+    padding: 32px 30px;
+}
+
+.sf-auth-card h3, .sf-auth-card h4 {
+    color: var(--sf-ink);
+    font-weight: 700;
+    margin: 0 0 6px;
+    text-align: center;
+}
+
+.sf-auth-sub {
+    color: var(--sf-muted);
+    font-size: 14px;
+    text-align: center;
+    margin: 0 0 24px;
+}
+
+.sf-auth-card .btn { width: 100%; padding: 12px; font-weight: 700; }
+
+.sf-auth-foot {
+    margin-top: 20px;
+    text-align: center;
+    color: var(--sf-muted);
+    font-size: 14px;
+}
+
+.sf-auth-foot a { color: var(--sf-accent); font-weight: 600; }
+
+/* Panel offering the "ask an admin" routes after a failed sign-in. */
+.sf-help-box {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: var(--sf-radius-sm);
+    background: rgba(241, 184, 22, .1);
+    border: 1px solid rgba(241, 184, 22, .3);
+}
+
+.sf-help-box p { color: rgba(255, 255, 255, .84); font-size: 13.5px; margin: 0 0 12px; }
+.sf-help-box .btn { width: auto; padding: 8px 16px; font-size: 13.5px; }
+.sf-help-box strong { color: var(--sf-accent); }
+
+/* Round badge above the account-help heading. */
+.sf-request-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    color: #1c1c1c;
+    background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+    box-shadow: 0 12px 26px rgba(241, 184, 22, .3);
+}
+
+/* Password field with a reveal button tucked inside. */
+.sf-password { position: relative; }
+.sf-password .form-control { padding-right: 46px; }
+
+.sf-password-eye {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: none;
+    color: var(--sf-faint);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: color .16s, background-color .16s;
+}
+
+.sf-password-eye:hover { color: var(--sf-accent); background: rgba(255, 255, 255, .07); }
+
+.sf-link-accent { color: var(--sf-accent); font-size: 13.5px; font-weight: 600; }
+.sf-link-accent:hover { color: var(--sf-accent-dark); text-decoration: none; }
+
+.sf-link-muted { color: var(--sf-muted); font-size: 13.5px; }
+.sf-link-muted:hover { color: var(--sf-accent); text-decoration: none; }
+
+.sf-req { color: var(--sf-danger); }
+.sf-optional { color: var(--sf-faint); font-weight: 500; font-size: 12.5px; }
+.sf-hint { display: block; margin-top: 6px; color: var(--sf-faint); font-size: 12.5px; }
+
+.form-check-label { color: rgba(255, 255, 255, .82); font-weight: 500; font-size: 13.5px; }
+.form-check-input { cursor: pointer; }
 
 /* ---------- tables inside glass panels ---------- */
 .glass-card .table { color: var(--sf-ink); border-color: var(--sf-glass-line); }
@@ -154,7 +654,7 @@ label { font-weight: 600; color: rgba(255, 255, 255, .82); }
 
 @media (prefers-reduced-motion: reduce) {
     .sf-reveal { opacity: 1; transform: none; transition: none; }
-    .food-box:hover, .cat-card:hover, .btn-success:hover { transform: none; }
+    .food-box:hover, .cat-card:hover, .btn-success:hover, .sf-icon-link:hover { transform: none; }
 }
 
 /* ---------- back to top ---------- */
@@ -182,10 +682,55 @@ label { font-weight: 600; color: rgba(255, 255, 255, .82); }
 /* =====================================================================
    Responsive
    ===================================================================== */
+
+@media (max-width: 1199.98px) {
+    .header_section .sf-nav .nav-link { padding: 8px 10px !important; font-size: 13.5px; }
+    .sf-search input { width: 140px; }
+    .sf-search input:focus { width: 180px; }
+}
+
 @media (max-width: 991.98px) {
-    .header_section .navbar-nav { padding: 10px 0; }
-    .header_section .nav-link::after { display: none; }
-    .user_option { justify-content: flex-start; gap: 14px; }
+    /* Collapsed menu: everything stacks, nothing competes for the row. */
+    .header_section { position: relative; }
+
+    .header_section .navbar-collapse {
+        background: var(--sf-panel);
+        border: 1px solid var(--sf-glass-line);
+        border-radius: 16px;
+        margin-top: 12px;
+        padding: 14px;
+        box-shadow: var(--sf-shadow-lg);
+    }
+
+    .header_section .sf-nav { align-items: stretch; }
+    .header_section .sf-nav .nav-link { text-align: left; padding: 11px 8px !important; }
+    .header_section .sf-nav .nav-link::after { display: none; }
+
+    .sf-dropdown {
+        background: rgba(255, 255, 255, .06);
+        border-color: var(--sf-glass-line);
+        box-shadow: none;
+        margin: 4px 0 8px;
+        width: 100%;
+    }
+
+    .sf-actions {
+        margin: 12px 0 0;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 14px;
+        border-top: 1px solid var(--sf-glass-line);
+    }
+
+    .sf-search { flex: 1 1 100%; }
+    .sf-search input { width: 100%; }
+    .sf-search input:focus { width: 100%; }
+
+    .sf-account { flex: 1 1 auto; }
+    .sf-account-name { max-width: none; }
+    .sf-btn { flex: 1 1 auto; }
+
+    .sf-dropdown-head span { white-space: normal; }
 }
 
 @media (max-width: 767.98px) {
@@ -205,14 +750,26 @@ label { font-weight: 600; color: rgba(255, 255, 255, .82); }
 
     /* Order tables scroll rather than overflow the page */
     .table-responsive { -webkit-overflow-scrolling: touch; }
+
+    .sf-auth-card { padding: 26px 20px; }
 }
 
 @media (max-width: 575.98px) {
+    .header_section .navbar-brand span { font-size: 25px; }
     .food-img { height: 150px; }
     .price-now { font-size: 16px; }
     .cat-card-body h6 { font-size: 13px; }
     .sf-top { right: 14px; bottom: 14px; }
 }
 
-/* The page body must never scroll sideways */
-html, body { overflow-x: hidden; }
+/* ---------------------------------------------------------------------
+   The page must never scroll sideways — but `overflow-x: hidden` on <body>
+   turns it into a scroll container, which silently kills `position: sticky`
+   on the header. `clip` trims the overflow without that side effect.
+   --------------------------------------------------------------------- */
+html, body { overflow-x: clip; }
+
+@supports not (overflow: clip) {
+    html, body { overflow-x: hidden; }
+    .header_section { position: relative; }
+}

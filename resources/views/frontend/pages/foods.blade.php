@@ -1,14 +1,40 @@
+{{--
+    LEGACY PAGE — kept, not reachable.
+
+    `menu.foods` (/menu/{subcategory}) now redirects into /menu with the
+    category + subcategory filter pre-applied, so MenuController never renders
+    this view any more. It is left in place, retheme only, in case the old
+    drill-down route is ever wired back up.
+
+    Expects: $subcategory, $foods
+--}}
 @extends('frontend.master')
 
-@section('content')
+@section('title', $subcategory->name ?? 'Food')
 
+@push('styles')
 <style>
+    .legacy-page .sf-page-head { margin-bottom: 26px; }
+
+    .legacy-page .sf-page-head h2 {
+        color: var(--sf-ink);
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .legacy-page .sf-page-head p {
+        color: var(--sf-muted);
+        margin-bottom: 0;
+    }
+
     .food-box {
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--sf-glass);
         backdrop-filter: blur(12px);
-        border-radius: 18px;
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--sf-glass-line);
+        border-radius: var(--sf-radius);
         overflow: hidden;
-        transition: all 0.25s ease;
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -16,16 +42,18 @@
 
     .food-box:hover {
         transform: translateY(-6px);
-        box-shadow: 0 14px 35px rgba(0,0,0,0.35);
+        border-color: var(--sf-accent);
+        box-shadow: var(--sf-shadow-lg);
     }
 
     .food-img {
         height: 220px;
-        background: #111;
+        background: rgba(0, 0, 0, .45);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        overflow: hidden;
     }
 
     .food-img img {
@@ -34,233 +62,303 @@
         object-fit: cover;
     }
 
+    .food-img i { color: rgba(255, 255, 255, .3); }
+
     .food-details {
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, .34);
         padding: 18px;
-        color: #fff;
+        color: var(--sf-ink);
         flex: 1;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
 
-    .discount-row {
-        min-height: 22px;
+    .food-details h5 {
+        color: var(--sf-ink);
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 5px;
     }
 
-    .discount-hidden {
-        visibility: hidden;
+    .food-desc {
+        color: var(--sf-muted);
+        font-size: 13px;
+        line-height: 1.55;
+        margin-bottom: 8px;
     }
+
+    .food-meta-line {
+        color: var(--sf-faint);
+        font-size: 12.5px;
+        margin-bottom: 2px;
+    }
+
+    /* .stock-out takes its colour from the already-themed .text-danger in
+       storefront-refresh.css, so the shade stays in one place. */
+    .stock-in  { color: var(--sf-green); font-weight: 700; }
+    .stock-out { font-weight: 700; }
+
+    .price-final {
+        color: var(--sf-ink);
+        font-size: 19px;
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+
+    .discount-row {
+        min-height: 22px;
+        color: var(--sf-accent);
+        font-size: 12.5px;
+        margin-bottom: 0;
+    }
+
+    .discount-hidden { visibility: hidden; }
 
     .discount-badge {
         position: absolute;
         top: 14px;
         right: 14px;
-        background: #198754;
-        color: #fff;
+        z-index: 10;
+        background: linear-gradient(135deg, var(--sf-green-dark), var(--sf-green));
+        color: var(--sf-ink);
         padding: 5px 12px;
         border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        z-index: 10;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .45);
     }
 
     .add-cart-btn {
-        background: #198754;
-        color: #fff;
-        padding: 10px 12px;
-        border-radius: 50%;
-        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
         border: none;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--sf-green-dark), var(--sf-green));
+        color: var(--sf-ink);
+        transition: transform .18s, box-shadow .18s;
     }
 
-    .add-cart-btn:hover {
-        background: #157347;
-        color: #fff;
+    .add-cart-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .45);
+        color: var(--sf-ink);
     }
 
-    .add-cart-btn.disabled-btn {
-        background: #6c757d;
+    .add-cart-btn.disabled-btn,
+    .add-cart-btn:disabled {
+        background: rgba(255, 255, 255, .12);
+        color: var(--sf-muted);
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
 
-    .details-link {
+    .cart-hint {
+        display: block;
+        margin-top: 6px;
+        color: var(--sf-accent);
+        font-size: 11.5px;
+        line-height: 1.4;
+    }
+
+    .cart-hint span { color: var(--sf-faint); }
+
+    .details-link,
+    .details-link:hover,
+    .details-link:focus {
         text-decoration: none;
         color: inherit;
     }
 
-    .details-link:hover {
-        color: inherit;
-    }
+    .details-link:hover h5 { color: var(--sf-accent); }
 
-    /* FOOD NOTE */
     .food-note {
-        background: linear-gradient(
-            135deg,
-            rgba(25,135,84,0.25),
-            rgba(25,135,84,0.05)
-        );
-        border: 1px solid rgba(25,135,84,0.4);
-        border-radius: 16px;
         padding: 18px 22px;
+        border-radius: var(--sf-radius-sm);
+        background: rgba(29, 191, 115, .12);
+        border: 1px solid rgba(29, 191, 115, .35);
+        color: rgba(255, 255, 255, .85);
         text-align: center;
-        color: #1dbf73;
-        font-weight: 700;
-        animation: fadeSlide 0.8s ease;
-        box-shadow: 0 8px 25px rgba(25,135,84,0.25);
+        font-size: 14.5px;
+        line-height: 1.65;
     }
 
-    @keyframes fadeSlide {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .legacy-empty {
+        text-align: center;
+        padding: 54px 22px;
+        border-radius: var(--sf-radius);
+        background: var(--sf-glass);
+        border: 1px dashed var(--sf-glass-line);
     }
+
+    .legacy-empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: rgba(0, 0, 0, .85);
+        background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .45);
+    }
+
+    .legacy-empty h5 { color: var(--sf-ink); font-weight: 700; margin-bottom: 6px; }
+    .legacy-empty p { color: var(--sf-muted); margin-bottom: 20px; }
 </style>
+@endpush
 
-<div class="container py-5">
+@section('content')
 
-    {{-- SUBCATEGORY TITLE --}}
-    <div class="text-center mb-3">
-        <h3 class="fw-bold text-success">
-            {{ $subcategory->name }}
-        </h3>
-    </div>
+<section class="legacy-foods-section legacy-page layout_padding">
+    <div class="container">
 
-    {{-- FOOD NOTE --}}
-    <div class="row justify-content-center mb-5">
-        <div class="col-lg-10">
-            <div class="food-note">
-                🍽️ Freshly prepared food items are listed below.
-                Prices may vary based on availability and offers — choose your favorite dish and enjoy a delicious experience!
+        {{-- SUBCATEGORY TITLE --}}
+        <div class="sf-page-head text-center">
+            <h2>{{ $subcategory->name }}</h2>
+            <p>Everything we cook in this section, ready to add to your cart.</p>
+        </div>
+
+        {{-- FOOD NOTE --}}
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-10">
+                <div class="food-note">
+                    Freshly prepared items are listed below. Prices move with the offers we are
+                    running, so what you see here is what you pay.
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
+        <div class="row">
 
-        @forelse ($foods as $food)
+            @forelse ($foods as $food)
 
-            @php
-                $price = $food->price;
-                $discountPercent = $food->discount ?? 0;
+                @php
+                    $price = $food->price;
+                    $discountPercent = $food->discount ?? 0;
 
-                if ($discountPercent > 0) {
-                    $discountAmount = ($price * $discountPercent) / 100;
-                    $finalPrice = $price - $discountAmount;
-                } else {
-                    $discountAmount = 0;
-                    $finalPrice = $price;
-                }
+                    if ($discountPercent > 0) {
+                        $discountAmount = ($price * $discountPercent) / 100;
+                        $finalPrice = $price - $discountAmount;
+                    } else {
+                        $discountAmount = 0;
+                        $finalPrice = $price;
+                    }
 
-                $cart = session('cart', []);
-                $alreadyInCart = isset($cart[$food->id]);
-            @endphp
+                    $cart = session('cart', []);
+                    $alreadyInCart = isset($cart[$food->id]);
+                @endphp
 
-            <div class="col-sm-6 col-lg-4 mb-4">
+                <div class="col-sm-6 col-lg-4 mb-4">
 
-                <div class="food-box position-relative">
+                    <div class="food-box position-relative">
 
-                    {{-- DISCOUNT BADGE --}}
-                    @if ($discountPercent > 0)
-                        <span class="discount-badge">
-                            -{{ $discountPercent }}%
-                        </span>
-                    @endif
+                        {{-- DISCOUNT BADGE --}}
+                        @if ($discountPercent > 0)
+                            <span class="discount-badge">
+                                -{{ (int) $discountPercent }}%
+                            </span>
+                        @endif
 
-                    {{-- IMAGE --}}
-                    <a href="{{ route('food.details', $food->id) }}" class="details-link">
-                        <div class="food-img">
-                            @if ($food->image)
-                                <img src="{{ asset('storage/'.$food->image) }}" alt="{{ $food->name }}">
-                            @else
-                                <i class="fa fa-image fa-3x text-light opacity-50"></i>
-                            @endif
-                        </div>
-                    </a>
+                        {{-- IMAGE --}}
+                        <a href="{{ route('food.details', $food->id) }}" class="details-link">
+                            <div class="food-img">
+                                @if ($food->image)
+                                    <img src="{{ asset('storage/'.$food->image) }}" alt="{{ $food->name }}">
+                                @else
+                                    <i class="fa fa-cutlery fa-3x" aria-hidden="true"></i>
+                                @endif
+                            </div>
+                        </a>
 
-                    {{-- DETAILS --}}
-                    <div class="food-details">
+                        {{-- DETAILS --}}
+                        <div class="food-details">
 
-                        <div>
-                            <a href="{{ route('food.details', $food->id) }}" class="details-link">
-                                <h5 class="fw-bold mb-1">
-                                    {{ $food->name }}
-                                </h5>
-                            </a>
+                            <div>
+                                <a href="{{ route('food.details', $food->id) }}" class="details-link">
+                                    <h5>{{ $food->name }}</h5>
+                                </a>
 
-                            @if ($food->description)
-                                <p class="text-light small mb-2">
-                                    {{ Str::limit($food->description, 80) }}
+                                @if ($food->description)
+                                    <p class="food-desc">
+                                        {{ Str::limit($food->description, 80) }}
+                                    </p>
+                                @endif
+
+                                <p class="food-meta-line {{ $food->quantity > 0 ? 'stock-in' : 'stock-out text-danger' }}">
+                                    {{ $food->quantity > 0 ? $food->quantity.' in stock' : 'Out of stock' }}
                                 </p>
-                            @endif
 
-                            <p class="fw-bold mb-1 {{ $food->quantity > 0 ? 'text-success' : 'text-danger' }}">
-                                Stock:
-                                {{ $food->quantity > 0 ? $food->quantity.' available' : 'Out of stock' }}
-                            </p>
+                                <p class="food-meta-line">
+                                    Price: ৳{{ number_format($price, 2) }}
+                                </p>
 
-                            <p class="text-muted small mb-0">
-                                Price: ৳{{ number_format($price, 2) }}
-                            </p>
+                                <p class="discount-row {{ $discountPercent == 0 ? 'discount-hidden' : '' }}">
+                                    You save ৳{{ number_format($discountAmount, 2) }}
+                                </p>
+                            </div>
 
-                            <p class="text-warning small discount-row {{ $discountPercent == 0 ? 'discount-hidden' : '' }}">
-                                Discount: ৳{{ number_format($discountAmount, 2) }}
-                            </p>
-                        </div>
+                            {{-- FINAL PRICE + CART --}}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <p class="price-final">
+                                    ৳{{ number_format($finalPrice, 2) }}
+                                </p>
 
-                        {{-- FINAL PRICE + CART --}}
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <h5 class="fw-bold text-success mb-0">
-                                ৳{{ number_format($finalPrice, 2) }}
-                            </h5>
+                                @if ($alreadyInCart)
+                                    <div class="text-right">
+                                        <button class="add-cart-btn disabled-btn" disabled>
+                                            <i class="fa fa-check" aria-hidden="true"></i>
+                                        </button>
+                                        <small class="cart-hint">
+                                            Already in cart<br>
+                                            <span>Change the amount from your cart</span>
+                                        </small>
+                                    </div>
+                                @else
+                                    <form action="{{ route('cart.add', $food->id) }}" method="POST" class="m-0">
+                                        @csrf
+                                        <button type="submit"
+                                                class="add-cart-btn"
+                                                title="{{ $food->quantity < 1 ? 'Out of stock' : 'Add to cart' }}"
+                                                {{ $food->quantity < 1 ? 'disabled' : '' }}>
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
 
-                            @if ($alreadyInCart)
-                                <div class="text-end">
-                                    <button class="add-cart-btn disabled-btn" disabled>
-                                        <i class="fa fa-check"></i>
-                                    </button>
-                                    <small class="d-block text-warning mt-1">
-                                        Already in cart<br>
-                                        <span class="text-muted">
-                                            Please update quantity from cart
-                                        </span>
-                                    </small>
-                                </div>
-                            @else
-                                <form action="{{ route('cart.add', $food->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit"
-                                            class="add-cart-btn"
-                                            {{ $food->quantity < 1 ? 'disabled' : '' }}>
-                                        <i class="fa fa-shopping-cart"></i>
-                                    </button>
-                                </form>
-                            @endif
                         </div>
 
                     </div>
-
                 </div>
-            </div>
 
-        @empty
-            <div class="col-12 text-center">
-                <div class="glass-card p-5">
-                    <h5 class="fw-bold text-muted">
-                        No food available
-                    </h5>
-                    <p>Please check back later for delicious options!</p>
+            @empty
+                <div class="col-12">
+                    <div class="legacy-empty">
+                        <div class="legacy-empty-icon">
+                            <i class="fa fa-cutlery" aria-hidden="true"></i>
+                        </div>
+
+                        <h5>Nothing in this section yet</h5>
+                        <p>The kitchen has not put anything here. The rest of the menu is still open.</p>
+
+                        <a href="{{ route('menu.index') }}" class="btn btn-warning">
+                            Show the full menu
+                        </a>
+                    </div>
                 </div>
-            </div>
-        @endforelse
+            @endforelse
+
+        </div>
 
     </div>
-
-</div>
+</section>
 
 @endsection

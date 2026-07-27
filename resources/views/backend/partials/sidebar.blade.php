@@ -1,382 +1,361 @@
-<style>
-    .logo-text {
-        font-weight: 700;
-        letter-spacing: 1px;
-        color: #0d0d0d;
-    }
+@php
+    /**
+     * Every entry is gated on a "<module>.view" permission, which is exactly
+     * what the superadmin ticks on the admin-users screen — so hiding a
+     * sidebar link and denying the page are the same decision, and nobody
+     * ever sees a menu item that would only answer with a 403.
+     */
+    $counts = $sidebarCounts ?? [];
 
-    .logo-lg {
-        font-size: 20px;
-    }
-
-    .logo-sm {
-        font-size: 18px;
-    }
-</style>
+    $isActive = fn (...$patterns) => request()->routeIs(...$patterns);
+@endphp
 
 <nav class="nxl-navigation">
     <div class="navbar-wrapper">
+
         <div class="m-header">
-            <a href="index.html" class="b-brand">
-                <!-- ======== change your logo here ============ -->
-                <span class="logo-text logo-lg">Duralux</span>
-                <span class="logo-text logo-sm">DL</span>
+            <a href="{{ route('admin.dashboard') }}" class="b-brand">
+                <span class="brand-mark">
+                    <i class="feather-hexagon"></i>
+                </span>
+                <span class="logo-text logo-lg">Feane<span class="logo-accent">Admin</span></span>
+                <span class="logo-text logo-sm">F</span>
             </a>
         </div>
 
         <div class="navbar-content">
             <ul class="nxl-navbar">
 
-                <li class="nxl-item nxl-caption">
-                    <label>Navigation</label>
-                </li>
+                {{-- ============================ MAIN ============================ --}}
+                <li class="nxl-item nxl-caption"><label>Main</label></li>
 
-                {{-- Dashboard --}}
-                <li class="nxl-item {{ request()->routeIs('admin.dashboard.*') ? 'active' : '' }}">
+                <li class="nxl-item {{ $isActive('admin.dashboard') ? 'active' : '' }}">
                     <a href="{{ route('admin.dashboard') }}" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-airplay"></i>
-                        </span>
+                        <span class="nxl-micon"><i class="feather-home"></i></span>
                         <span class="nxl-mtext">Dashboard</span>
                     </a>
                 </li>
 
-                {{-- POS --}}
-                @can('pos')
-                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.pos.*') ? 'active nxl-trigger' : '' }}">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-shopping-cart"></i>
-                        </span>
-                        <span class="nxl-mtext">POS Billing</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item {{ request()->routeIs('admin.pos.index') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.pos.index') }}">
-                                New Sale
-                            </a>
-                        </li>
-                        <li class="nxl-item {{ request()->routeIs('admin.pos.sales') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.pos.sales') }}">
-                                Sales History
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                {{-- ========================= OPERATIONS ========================= --}}
+                @canany(['pos.view', 'pos.create', 'orders.view', 'delivery_men.view', 'delivery_runs.view'])
+                    <li class="nxl-item nxl-caption"><label>Operations</label></li>
+                @endcanany
+
+                @canany(['pos.view', 'pos.create'])
+                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.pos.*') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shopping-cart"></i></span>
+                            <span class="nxl-mtext">POS Billing</span>
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            @can('pos.create')
+                                <li class="nxl-item {{ $isActive('admin.pos.index') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.pos.index') }}">New Sale</a>
+                                </li>
+                            @endcan
+                            @can('pos.view')
+                                <li class="nxl-item {{ $isActive('admin.pos.sales') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.pos.sales') }}">Sales History</a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endcanany
+
+                @can('orders.view')
+                    <li class="nxl-item {{ $isActive('admin.orders.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.orders.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-package"></i></span>
+                            <span class="nxl-mtext">Orders</span>
+                            @if (!empty($counts['orders']))
+                                <span class="nxl-badge">{{ $counts['orders'] }}</span>
+                            @endif
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Category --}}
-                @can('categories')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-grid"></i>
-                        </span>
-                        <span class="nxl-mtext">Category</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.category.index') }}">
-                                Category Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @canany(['delivery_men.view', 'delivery_runs.view', 'delivery_runs.create'])
+                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.delivery-men.*', 'admin.delivery-runs.*') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-truck"></i></span>
+                            <span class="nxl-mtext">Delivery</span>
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            @can('delivery_men.view')
+                                <li class="nxl-item {{ $isActive('admin.delivery-men.*') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.delivery-men.index') }}">Delivery Men</a>
+                                </li>
+                            @endcan
+                            @can('delivery_runs.view')
+                                <li class="nxl-item {{ $isActive('admin.delivery-runs.index', 'admin.delivery-runs.show') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.delivery-runs.index') }}">Delivery Runs</a>
+                                </li>
+                            @endcan
+                            @can('delivery_runs.create')
+                                <li class="nxl-item {{ $isActive('admin.delivery-runs.create') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.delivery-runs.create') }}">Assign Delivery</a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endcanany
+
+                {{-- ========================== CATALOG =========================== --}}
+                @canany(['foods.view', 'categories.view', 'subcategories.view', 'units.view'])
+                    <li class="nxl-item nxl-caption"><label>Catalog</label></li>
+                @endcanany
+
+                @can('foods.view')
+                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.foods.*') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shopping-bag"></i></span>
+                            <span class="nxl-mtext">Foods</span>
+                            @if (!empty($counts['foods']))
+                                <span class="nxl-badge">{{ $counts['foods'] }}</span>
+                            @endif
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ $isActive('admin.foods.index') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('admin.foods.index') }}">All Foods</a>
+                            </li>
+                            <li class="nxl-item {{ $isActive('admin.foods.inactive') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('admin.foods.inactive') }}">Inactive Foods</a>
+                            </li>
+                            @can('foods.create')
+                                <li class="nxl-item {{ $isActive('admin.foods.create') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.foods.create') }}">Add Food</a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
                 @endcan
 
-                {{-- Sub Category --}}
-                @can('subcategories')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-layers"></i>
-                        </span>
-                        <span class="nxl-mtext">Sub Category</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.subcategory.index') }}">
-                                Sub Category Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('categories.view')
+                    <li class="nxl-item {{ $isActive('admin.category.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.category.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-grid"></i></span>
+                            <span class="nxl-mtext">Categories</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Units --}}
-                @can('units')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-sliders"></i>
-                        </span>
-                        <span class="nxl-mtext">Units</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.units.index') }}">
-                                Units Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('subcategories.view')
+                    <li class="nxl-item {{ $isActive('admin.subcategory.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.subcategory.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-layers"></i></span>
+                            <span class="nxl-mtext">Sub Categories</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Food --}}
-                @can('foods')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-shopping-bag"></i>
-                        </span>
-                        <span class="nxl-mtext">Food</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.foods.index') }}">
-                                Food Index
-                            </a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.foods.inactive') }}">
-                                Inactive Foods
-                            </a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.foods.create') }}">
-                                Food Create
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('units.view')
+                    <li class="nxl-item {{ $isActive('admin.units.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.units.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-sliders"></i></span>
+                            <span class="nxl-mtext">Units</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Orders --}}
-                @can('orders')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-shopping-cart"></i>
-                        </span>
-                        <span class="nxl-mtext">Orders</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.orders.index') }}">
-                                Orders Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                {{-- ========================= MARKETING ========================== --}}
+                @canany(['coupons.view', 'promotions.view'])
+                    <li class="nxl-item nxl-caption"><label>Marketing</label></li>
+                @endcanany
+
+                @can('coupons.view')
+                    <li class="nxl-item {{ $isActive('admin.coupons.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.coupons.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-gift"></i></span>
+                            <span class="nxl-mtext">Coupons &amp; Offers</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Coupons --}}
-                @can('coupons')
-                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.coupons.*') ? 'active nxl-trigger' : '' }}">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-gift"></i>
-                        </span>
-                        <span class="nxl-mtext">Coupons</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item {{ request()->routeIs('admin.coupons.index') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.coupons.index') }}">
-                                Coupons & Offers
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('promotions.view')
+                    <li class="nxl-item {{ $isActive('admin.promotions.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.promotions.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-image"></i></span>
+                            <span class="nxl-mtext">Promo Banners</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Promo Banners --}}
-                @can('promotions')
-                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.promotions.*') ? 'active nxl-trigger' : '' }}">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-image"></i>
-                        </span>
-                        <span class="nxl-mtext">Promo Banners</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item {{ request()->routeIs('admin.promotions.index') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.promotions.index') }}">
-                                Banner List
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                {{-- =========================== PEOPLE =========================== --}}
+                @canany(['customers.view', 'account_requests.view', 'contact_messages.view'])
+                    <li class="nxl-item nxl-caption"><label>People</label></li>
+                @endcanany
+
+                @can('customers.view')
+                    <li class="nxl-item {{ $isActive('admin.registrations') ? 'active' : '' }}">
+                        <a href="{{ route('admin.registrations') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">Customers</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Delivery Man --}}
-                @can('delivery_men')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-truck"></i>
-                        </span>
-                        <span class="nxl-mtext">Delivery Man</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.delivery-men.index') }}">
-                                Delivery Man Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('account_requests.view')
+                    <li class="nxl-item {{ $isActive('admin.account-requests.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.account-requests.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-inbox"></i></span>
+                            <span class="nxl-mtext">Account Requests</span>
+                            @if (!empty($counts['account_requests']))
+                                <span class="nxl-badge">{{ $counts['account_requests'] }}</span>
+                            @endif
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Delivery Assign --}}
-                @can('delivery_runs')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-map"></i>
-                        </span>
-                        <span class="nxl-mtext">Delivery Assign</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.delivery-runs.create') }}">
-                                Delivery create
-                            </a>
-                        </li>
-                    </ul>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.delivery-runs.index') }}">
-                                Delivery Index
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('contact_messages.view')
+                    <li class="nxl-item {{ $isActive('admin.aboutus.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.aboutus.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-message-square"></i></span>
+                            <span class="nxl-mtext">Contact Messages</span>
+                        </a>
+                    </li>
                 @endcan
 
+                {{-- ========================= MONITORING ========================= --}}
+                @canany(['activity_log.view', 'login_history.view', 'admin_login_history.view'])
+                    <li class="nxl-item nxl-caption"><label>Monitoring</label></li>
+                @endcanany
 
-                {{-- Customers --}}
-                @can('customers')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-users"></i>
-                        </span>
-                        <span class="nxl-mtext">Customers</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.registrations') }}">
-                                Customers
-                            </a>
-                        </li>
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.login.history') }}">
-                                Customers Login History
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('activity_log.view')
+                    <li class="nxl-item {{ $isActive('admin.activity-log.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.activity-log.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-activity"></i></span>
+                            <span class="nxl-mtext">Activity Log</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Contact Messages --}}
-                @can('contact_messages')
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-life-buoy"></i>
-                        </span>
-                        <span class="nxl-mtext">Contacts Message</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item">
-                            <a class="nxl-link" href="{{ route('admin.aboutus.index') }}">
-                                Messages
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @can('login_history.view')
+                    <li class="nxl-item {{ $isActive('admin.login.history') ? 'active' : '' }}">
+                        <a href="{{ route('admin.login.history') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-log-in"></i></span>
+                            <span class="nxl-mtext">Customer Logins</span>
+                        </a>
+                    </li>
                 @endcan
 
-                {{-- Admin Users & Roles (superadmin only) --}}
+                @can('admin_login_history.view')
+                    <li class="nxl-item {{ $isActive('admin.admin-login-history.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.admin-login-history.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
+                            <span class="nxl-mtext">Admin Logins</span>
+                        </a>
+                    </li>
+                @endcan
+
+                {{-- =========================== SYSTEM =========================== --}}
                 @can('manage-admins')
-                <li class="nxl-item nxl-hasmenu {{ request()->routeIs('admin.admin-users.*') ? 'active nxl-trigger' : '' }}">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-shield"></i>
-                        </span>
-                        <span class="nxl-mtext">Admin Users</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item {{ request()->routeIs('admin.admin-users.index') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.admin-users.index') }}">
-                                Manage Admins
-                            </a>
-                        </li>
-                        <li class="nxl-item {{ request()->routeIs('admin.admin-users.create') ? 'active' : '' }}">
-                            <a class="nxl-link" href="{{ route('admin.admin-users.create') }}">
-                                Add Admin
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    <li class="nxl-item nxl-caption"><label>System</label></li>
+
+                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.admin-users.*') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user-check"></i></span>
+                            <span class="nxl-mtext">Admins &amp; Roles</span>
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ $isActive('admin.admin-users.index') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('admin.admin-users.index') }}">Manage Admins</a>
+                            </li>
+                            <li class="nxl-item {{ $isActive('admin.admin-users.create') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('admin.admin-users.create') }}">Add Admin</a>
+                            </li>
+                        </ul>
+                    </li>
                 @endcan
-
-                {{-- Logout --}}
-                <li class="nxl-item">
-                    <form method="POST"
-                          action="{{ route('admin.logout') }}"
-                          class="logout-form">
-                        @csrf
-                        <button type="submit"
-                                class="nxl-link w-100 text-start border-0 bg-transparent">
-                            <span class="nxl-micon">
-                                <i class="feather-power"></i>
-                            </span>
-                            <span class="nxl-mtext">Logout</span>
-                        </button>
-                    </form>
-                </li>
-
             </ul>
+
+            {{-- ============================ FOOTER ============================ --}}
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <span class="avatar-initials sm">
+                        {{ Str::of(auth()->user()->name ?? 'A')->substr(0, 2) }}
+                    </span>
+                    <div class="sidebar-user-text">
+                        <p class="sidebar-user-name">{{ auth()->user()->name ?? 'Admin' }}</p>
+                        <p class="sidebar-user-role">{{ auth()->user()?->roleLabel() }}</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('admin.logout') }}" class="logout-form">
+                    @csrf
+                    <button type="submit" class="btn btn-soft-danger w-100 btn-sm">
+                        <i class="feather-log-out"></i>
+                        <span>Log out</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>
+
+<style>
+    .nxl-navigation .m-header .b-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .nxl-navigation .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--ar-primary), var(--ar-accent));
+        color: #fff;
+        font-size: 16px;
+        flex-shrink: 0;
+        box-shadow: 0 6px 16px var(--ar-primary-glow);
+    }
+
+    .nxl-navigation .logo-text {
+        font-weight: 800;
+        letter-spacing: -.02em;
+        color: var(--ar-ink);
+        font-size: 18px;
+    }
+
+    .nxl-navigation .logo-accent { color: var(--ar-primary); }
+    .nxl-navigation .logo-sm { font-size: 17px; }
+
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        min-width: 0;
+    }
+
+    .sidebar-user-text { min-width: 0; }
+
+    .sidebar-user-name {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ar-ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sidebar-user-role {
+        margin: 1px 0 0;
+        font-size: 11.5px;
+        color: var(--ar-muted);
+    }
+
+    /* Collapsed rail: hide the wordy bits, keep the avatar. */
+    .minimenu .sidebar-footer { padding: 12px 10px 16px; }
+    .minimenu .sidebar-user-text,
+    .minimenu .sidebar-footer button span { display: none; }
+    .minimenu .nxl-badge { display: none; }
+</style>

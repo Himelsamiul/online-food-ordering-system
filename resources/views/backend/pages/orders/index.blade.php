@@ -1,347 +1,358 @@
 @extends('backend.master')
+@section('title', 'Orders')
 
 @section('content')
-
-{{-- ================= Flatpickr CSS ================= --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
-
 <div class="container-fluid">
 
-    <div class="row mb-3">
-        <div class="col">
-            <h4 class="fw-bold">Orders</h4>
+    @php
+        /**
+         * Status vocabulary for the whole page. The list the *form* offers is
+         * deliberately shorter than the list we can *render*: OrderController
+         * only accepts pending/cooking/cancelled, because out_for_delivery and
+         * delivered are owned by the delivery run, not by this screen.
+         */
+        $statusLabels = [
+            'pending'          => 'Pending',
+            'cooking'          => 'Cooking',
+            'out_for_delivery' => 'Out for Delivery',
+            'delivered'        => 'Delivered',
+            'cancelled'        => 'Cancelled',
+        ];
+
+        $statusTones = [
+            'pending'          => 'bg-warning',
+            'cooking'          => 'bg-info',
+            'out_for_delivery' => 'bg-primary',
+            'delivered'        => 'bg-success',
+            'cancelled'        => 'bg-danger',
+        ];
+
+        $editableStatuses = ['pending', 'cooking', 'cancelled'];
+    @endphp
+
+    <x-page-header
+        title="Orders"
+        subtitle="Every order placed from the storefront, with its payment and kitchen status."
+        icon="feather-package"
+        :breadcrumb="['Sales' => null, 'Orders' => null]">
+
+        @can('orders.view')
+            <a href="{{ route('admin.orders.export', request()->query()) }}" class="btn btn-soft-success">
+                <i class="feather-download"></i> Export Excel
+            </a>
+        @endcan
+    </x-page-header>
+
+    {{-- ================= FILTER ================= --}}
+    <form method="GET" action="{{ route('admin.orders.index') }}" class="filter-card">
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+                <label class="filter-label" for="filter_order_number">Order No</label>
+                <input type="text" id="filter_order_number" name="order_number"
+                       value="{{ request('order_number') }}"
+                       class="form-control" placeholder="ORD-000000-0000">
+            </div>
+
+            <div class="col-md-3">
+                <label class="filter-label" for="filter_customer_name">Customer</label>
+                <select name="customer_name" id="filter_customer_name" class="form-select">
+                    <option value="">All Customers</option>
+                    @foreach ($customers as $c)
+                        <option value="{{ $c->name }}" @selected(request('customer_name') == $c->name)>
+                            {{ $c->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label" for="filter_phone">Phone</label>
+                <input type="text" id="filter_phone" name="phone"
+                       value="{{ request('phone') }}"
+                       class="form-control" placeholder="01XXXXXXXXX">
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label" for="filter_payment_status">Payment Status</label>
+                <select name="payment_status" id="filter_payment_status" class="form-select">
+                    <option value="">All</option>
+                    <option value="paid" @selected(request('payment_status') == 'paid')>Paid</option>
+                    <option value="pending" @selected(request('payment_status') == 'pending')>Pending</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label" for="filter_order_status">Order Status</label>
+                <select name="order_status" id="filter_order_status" class="form-select">
+                    <option value="">All</option>
+                    @foreach ($statusLabels as $value => $label)
+                        <option value="{{ $value }}" @selected(request('order_status') == $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="filter-label" for="filter_delivery_man">Delivery Man</label>
+                <select name="delivery_man_id" id="filter_delivery_man" class="form-select">
+                    <option value="">All Delivery Men</option>
+                    @foreach ($deliveryMen as $man)
+                        <option value="{{ $man->id }}" @selected(request('delivery_man_id') == $man->id)>
+                            {{ $man->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label" for="from_date">From</label>
+                <input type="date" id="from_date" name="from_date"
+                       value="{{ request('from_date') }}"
+                       max="{{ date('Y-m-d') }}"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label" for="to_date">To</label>
+                <input type="date" id="to_date" name="to_date"
+                       value="{{ request('to_date') }}"
+                       max="{{ date('Y-m-d') }}"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="feather-filter"></i> Filter
+                </button>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-soft">Reset</a>
+            </div>
+
         </div>
-    </div>
+    </form>
 
-    {{-- ================= FILTER SECTION ================= --}}
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="GET" action="{{ route('admin.orders.index') }}">
-                <div class="row g-3 align-items-end">
-
-                    <div class="col-md-2">
-                        <label class="form-label">Order No</label>
-                        <input type="text" name="order_number"
-                               value="{{ request('order_number') }}"
-                               class="form-control" placeholder="ORD-XXXX">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Customer</label>
-                        <select name="customer_name" class="form-select">
-                            <option value="">All Customers</option>
-                            @foreach($customers as $c)
-                                <option value="{{ $c->name }}"
-                                    {{ request('customer_name') == $c->name ? 'selected' : '' }}>
-                                    {{ $c->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <label class="form-label">Phone</label>
-                        <input type="text" name="phone"
-                               value="{{ request('phone') }}"
-                               class="form-control" placeholder="01XXXXXXXXX">
-                    </div>
-
-                    <div class="col-md-2">
-                        <label class="form-label">Payment Status</label>
-                        <select name="payment_status" class="form-select">
-                            <option value="">All</option>
-                            <option value="paid" {{ request('payment_status')=='paid'?'selected':'' }}>Paid</option>
-                            <option value="pending" {{ request('payment_status')=='pending'?'selected':'' }}>Pending</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2">
-    <label class="form-label">Order Status</label>
-    <select name="order_status" class="form-select">
-        <option value="">All</option>
-        <option value="pending" {{ request('order_status')=='pending'?'selected':'' }}>Pending</option>
-        <option value="cooking" {{ request('order_status')=='cooking'?'selected':'' }}>Cooking</option>
-        <option value="out_for_delivery" {{ request('order_status')=='out_for_delivery'?'selected':'' }}>
-            Out for Delivery
-        </option>
-        <option value="delivered" {{ request('order_status')=='delivered'?'selected':'' }}>Delivered</option>
-        <option value="cancelled" {{ request('order_status')=='cancelled'?'selected':'' }}>Cancelled</option>
-    </select>
-</div>
-
-
-
-{{-- Delivery Man --}}
-<div class="col-md-3">
-    <label class="form-label">Delivery Man</label>
-    <select name="delivery_man_id" class="form-select">
-        <option value="">All Delivery Men</option>
-        @foreach($deliveryMen as $man)
-            <option value="{{ $man->id }}"
-                {{ request('delivery_man_id') == $man->id ? 'selected' : '' }}>
-                {{ $man->name }}
-            </option>
-        @endforeach
-    </select>
-</div>
-
-
-
-
-                    <div class="col-md-2">
-                        <label class="form-label">From Date</label>
-                        <input type="text" id="from_date" name="from_date"
-                               value="{{ request('from_date') }}"
-                               class="form-control" placeholder="YYYY-MM-DD">
-                    </div>
-
-                    <div class="col-md-2">
-                        <label class="form-label">To Date</label>
-                        <input type="text" id="to_date" name="to_date"
-                               value="{{ request('to_date') }}"
-                               class="form-control" placeholder="YYYY-MM-DD">
-                    </div>
-
-<div class="col-md-12 d-flex gap-2">
-    <button class="btn btn-primary">🔍 Search</button>
-
-    <a href="{{ route('admin.orders.index') }}"
-       class="btn btn-outline-secondary">
-        Reset
-    </a>
-
-    {{-- ✅ EXPORT EXCEL --}}
-<a href="{{ route('admin.orders.export', request()->query()) }}"
-   class="btn btn-success">
-    📥 Export Excel
-</a>
-
-</div>
-
-
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ================= ORDERS TABLE ================= --}}
+    {{-- ================= ORDERS ================= --}}
     <div class="card">
-        <div class="card-body table-responsive">
+        <div class="card-header">
+            <h5>All Orders</h5>
+            <span class="text-muted fs-13">
+                {{ $orders->total() }} {{ $orders->total() === 1 ? 'order' : 'orders' }}
+                &middot; both date fields are needed for the date filter to apply
+            </span>
+        </div>
 
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Order No</th>
-                    <th>Transaction No</th>
-                    <th>Customer</th>
-                    <th>Delivery Man</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Total (৳)</th>
-                    <th>Payment</th>
-                    <th>Payment Status</th>
-                    <th>Order Status</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                </tr>
+        <div class="table-scroll">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Delivery</th>
+                        <th class="num">Total (BDT)</th>
+                        <th>Payment</th>
+                        <th>Order Status</th>
+                        <th>Actions</th>
+                    </tr>
                 </thead>
 
                 <tbody>
-                @forelse($orders as $key => $order)
-                    <tr>
-                        <td>{{ $orders->firstItem() + $key }}</td>
-                        <td class="fw-semibold">{{ $order->order_number }}</td>
-                        <td class="text-muted">{{ $order->transaction_number ?? '-' }}</td>
-                        <td>{{ $order->name }}</td>
-                        <td>
-    @if($order->deliveryRun && $order->deliveryRun->deliveryMan)
-        <span class="fw-semibold text-primary">
-            {{ $order->deliveryRun->deliveryMan->name }}
-        </span>
-    @else
-        <span class="text-muted">Not Assigned</span>
-    @endif
-</td>
+                    @forelse ($orders as $order)
 
-                        <td>{{ $order->phone }}</td>
-                        <td>{{ $order->address }}</td>
-                        <td>{{ number_format($order->total_amount, 2) }}</td>
+                        @php
+                            $parts    = preg_split('/\s+/', trim((string) $order->name)) ?: [];
+                            $initials = mb_strtoupper(
+                                mb_substr($parts[0] ?? '', 0, 1) . mb_substr($parts[1] ?? '', 0, 1)
+                            );
 
-                        <td>
-                            <span class="badge bg-info text-dark">
-                                {{ strtoupper($order->payment_method) }}
-                            </span>
-                        </td>
+                            if ($initials === '') {
+                                $initials = '?';
+                            }
 
-                        <td>
-                            @if($order->payment_status === 'paid')
-                                <span class="badge bg-success">Paid</span>
-                            @else
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            @endif
-                        </td>
+                            $statusLabel = $statusLabels[$order->order_status]
+                                ?? ucfirst(str_replace('_', ' ', (string) $order->order_status));
+                            $statusTone  = $statusTones[$order->order_status] ?? 'bg-secondary';
 
-                        <td>
-                            @if($order->order_status === 'pending')
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            @elseif($order->order_status === 'cooking')
-                                <span class="badge bg-info text-dark">Cooking</span>
-                            @elseif($order->order_status === 'out_for_delivery')
-                                <span class="badge bg-primary">Out for Delivery</span>
-                            @elseif($order->order_status === 'delivered')
-                                <span class="badge bg-success">Delivered</span>
-                            @else
-                                <span class="badge bg-danger">Cancelled</span>
-                            @endif
-                        </td>
+                            $deliveryMan = $order->deliveryRun?->deliveryMan?->name;
 
-                        <td>{{ $order->created_at->format('d M Y, h:i A') }}</td>
+                            /*
+                             * updateStatus() refuses an order that is already on a
+                             * delivery run or already delivered, so the control is
+                             * not offered in those cases either.
+                             */
+                            $statusLocked = $order->delivery_run_id !== null
+                                || $order->order_status === 'delivered'
+                                || !in_array($order->order_status, $editableStatuses, true);
 
-                        {{-- ACTION --}}
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center align-items-center gap-2">
+                            $lockReason = $order->delivery_run_id !== null
+                                ? 'Assigned to a delivery run — the status is managed there'
+                                : ($order->order_status === 'delivered'
+                                    ? 'Delivered orders can no longer be changed'
+                                    : 'This status cannot be changed from here');
 
-                                {{-- Status change (ONLY if not assigned to delivery run) --}}
-                                @if(is_null($order->delivery_run_id))
-                                    <button type="button"
-                                            class="btn btn-light action-btn action-dot"
-                                            data-order-id="{{ $order->id }}"
-                                            title="Change Status">
-                                        &#8942;
-                                    </button>
+                            $canMarkPaid = $order->payment_method === 'cod'
+                                && $order->payment_status !== 'paid';
+                        @endphp
+
+                        <tr>
+                            <td>
+                                <div class="cell-media">
+                                    <div>
+                                        <p class="cell-title">
+                                            <a href="{{ route('admin.orders.show', $order->id) }}"
+                                               class="text-ink" style="text-decoration:none">
+                                                {{ $order->order_number }}
+                                            </a>
+                                        </p>
+                                        <p class="cell-sub">
+                                            {{ $order->created_at ? $order->created_at->format('d M Y, h:i A') : '—' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="cell-media">
+                                    <span class="avatar-initials sm">{{ $initials }}</span>
+                                    <div>
+                                        <p class="cell-title">{{ $order->name }}</p>
+                                        <p class="cell-sub">{{ $order->phone }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="cell-media">
+                                    <div>
+                                        @if ($deliveryMan)
+                                            <p class="cell-title">{{ $deliveryMan }}</p>
+                                        @else
+                                            <p class="cell-title text-muted">Not assigned</p>
+                                        @endif
+
+                                        <p class="cell-sub" title="{{ $order->address }}">
+                                            {{ \Illuminate\Support\Str::limit($order->address, 42) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="num">
+                                {{ number_format((float) $order->total_amount, 2) }}
+
+                                @if ((float) $order->discount_amount > 0)
+                                    <p class="text-muted mb-0" style="font-size:12.5px">
+                                        &minus;{{ number_format((float) $order->discount_amount, 2) }}
+                                        @if ($order->coupon_code)
+                                            &middot; {{ $order->coupon_code }}
+                                        @endif
+                                    </p>
                                 @endif
+                            </td>
 
-                                {{-- View --}}
-                                <a href="{{ route('admin.orders.show', $order->id) }}"
-                                   class="btn btn-light action-icon"
-                                   title="View Order">
-                                    👁
-                                </a>
+                            <td>
+                                <span class="badge {{ $order->payment_method === 'cod' ? 'bg-secondary' : 'bg-info' }}">
+                                    {{ strtoupper($order->payment_method) }}
+                                </span>
 
-                                {{-- Payment (COD only, pending only) --}}
-                                @if($order->payment_method === 'cod' && $order->payment_status === 'pending')
-                                    <form action="{{ route('admin.orders.payment.paid', $order->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Confirm cash payment received?')">
-                                        @csrf
-                                        @method('PATCH')
+                                <span class="badge {{ $order->payment_status === 'paid' ? 'bg-success' : 'bg-warning' }}">
+                                    {{ $order->payment_status === 'paid' ? 'Paid' : 'Pending' }}
+                                </span>
 
-                                        <button class="btn btn-light action-icon"
-                                                title="Mark Payment as Paid">
-                                            💰
-                                        </button>
-                                    </form>
-                                @endif
+                                <p class="text-muted mb-0" style="font-size:12.5px"
+                                   title="{{ $order->transaction_number }}">
+                                    {{ $order->transaction_number
+                                        ? \Illuminate\Support\Str::limit($order->transaction_number, 22)
+                                        : 'No reference yet' }}
+                                </p>
+                            </td>
 
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="12" class="text-center text-muted">No orders found</td>
-                    </tr>
-                @endforelse
+                            {{--
+                                This badge is also the read-only fallback: an admin
+                                without orders.edit gets no select anywhere on the row,
+                                so the status is still legible to them here.
+                            --}}
+                            <td>
+                                <span class="badge {{ $statusTone }}">{{ $statusLabel }}</span>
+                            </td>
+
+                            <td>
+                                <div class="action-group">
+                                    <a href="{{ route('admin.orders.show', $order->id) }}"
+                                       class="btn btn-icon btn-soft-info" title="View order">
+                                        <i class="feather-eye"></i>
+                                    </a>
+
+                                    @can('orders.edit')
+                                        @if ($statusLocked)
+                                            <span class="btn btn-icon btn-soft" title="{{ $lockReason }}">
+                                                <i class="feather-lock"></i>
+                                            </span>
+                                        @else
+                                            <form action="{{ route('admin.orders.status', $order->id) }}"
+                                                  method="POST" class="action-group">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <select name="order_status" class="form-select form-select-sm"
+                                                        style="min-width:132px"
+                                                        aria-label="Order status for {{ $order->order_number }}">
+                                                    @foreach ($editableStatuses as $value)
+                                                        <option value="{{ $value }}"
+                                                            @selected($order->order_status === $value)>
+                                                            {{ $statusLabels[$value] }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+
+                                                <button type="submit" class="btn btn-icon btn-soft-primary"
+                                                        title="Save order status">
+                                                    <i class="feather-check"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if ($canMarkPaid)
+                                            <form action="{{ route('admin.orders.payment.paid', $order->id) }}"
+                                                  method="POST" class="delete-form"
+                                                  data-confirm-title="Cash received?"
+                                                  data-confirm-text="Order {{ $order->order_number }} will be marked as paid."
+                                                  data-confirm-button="Yes, mark as paid">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <button type="submit" class="btn btn-icon btn-soft-success"
+                                                        title="Mark COD payment as paid">
+                                                    <i class="feather-dollar-sign"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
+
+                    @empty
+                        <tr>
+                            <td colspan="7">
+                                <x-empty-state icon="feather-package"
+                                               title="No orders match this filter"
+                                               message="Clear the filter to see every order placed so far.">
+                                    <a href="{{ route('admin.orders.index') }}" class="btn btn-soft">Reset filters</a>
+                                </x-empty-state>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
+        </div>
 
-            <div class="mt-3">
+        @if ($orders->hasPages())
+            <div class="table-foot">
+                <p class="foot-note">Showing {{ $orders->firstItem() }}&ndash;{{ $orders->lastItem() }}
+                    of {{ $orders->total() }}</p>
                 {{ $orders->links('pagination::bootstrap-5') }}
             </div>
-
-        </div>
+        @endif
     </div>
 
 </div>
-
-{{-- ================= STATUS MODAL ================= --}}
-<div id="statusModal" class="custom-modal d-none">
-    <div class="custom-modal-content">
-        <h5 class="mb-3">Update Order Status</h5>
-
-        <form id="statusForm" method="POST">
-            @csrf
-            @method('PATCH')
-
-            <input type="hidden" name="order_status" id="selectedStatus">
-
-            <div class="d-grid gap-2">
-                <button type="button" class="btn btn-outline-warning status-option" data-status="pending">Pending</button>
-                <button type="button" class="btn btn-outline-info status-option" data-status="cooking">Cooking</button>
-                <button type="button" class="btn btn-outline-danger status-option" data-status="cancelled">Cancelled</button>
-            </div>
-
-            <div class="mt-3 d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" id="closeModal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ================= CSS ================= --}}
-<style>
-.action-icon {
-    font-size: 18px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    line-height: 1;
-}
-.action-dot {
-    font-size: 30px;
-    line-height: 1;
-    padding: 6px 10px;
-    border-radius: 8px;
-}
-.custom-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-.custom-modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    width: 320px;
-}
-</style>
-
-{{-- ================= JS ================= --}}
-<script>
-const modal = document.getElementById('statusModal');
-const closeBtn = document.getElementById('closeModal');
-const statusForm = document.getElementById('statusForm');
-const statusInput = document.getElementById('selectedStatus');
-
-document.querySelectorAll('.action-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        statusForm.action = `/admin/orders/${btn.dataset.orderId}/status`;
-        modal.classList.remove('d-none');
-    });
-});
-
-document.querySelectorAll('.status-option').forEach(btn => {
-    btn.addEventListener('click', () => {
-        statusInput.value = btn.dataset.status;
-        document.querySelectorAll('.status-option').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
-});
-
-closeBtn.addEventListener('click', () => modal.classList.add('d-none'));
-modal.addEventListener('click', e => e.target === modal && modal.classList.add('d-none'));
-</script>
-
-{{-- ================= Flatpickr JS ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-flatpickr("#from_date",{dateFormat:"Y-m-d",maxDate:"today"});
-flatpickr("#to_date",{dateFormat:"Y-m-d",maxDate:"today"});
-</script>
-
 @endsection

@@ -1,200 +1,263 @@
 @extends('backend.master')
+@section('title', 'Inactive Foods')
 
 @section('content')
+<div class="container-fluid">
 
-{{-- ================= Flatpickr CSS ================= --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    @php
+        /**
+         * The only action on this page is "activate", which needs foods.edit.
+         * Without it the column would be empty, so it is not drawn at all —
+         * the item name still links through to the detail page.
+         */
+        $canEditFood = auth()->user()?->can('foods.edit') ?? false;
+        $colCount    = $canEditFood ? 9 : 8;
+    @endphp
 
-{{-- ================= Filter Styles (SAME) ================= --}}
-<style>
-    .filter-card {
-        background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(16,185,129,.08));
-        border-radius: 14px;
-        padding: 18px;
-        margin-bottom: 18px;
-    }
-    .filter-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 4px;
-    }
-    .filter-card .form-control,
-    .filter-card .form-select {
-        border-radius: 10px;
-        background: #fff;
-    }
-    .date-picker { cursor: pointer; }
-</style>
+    <x-page-header
+        title="Inactive Foods"
+        subtitle="Items taken off the menu. Activating one puts it straight back in the storefront."
+        icon="feather-archive"
+        :breadcrumb="['Catalog' => null, 'Foods' => route('admin.foods.index'), 'Inactive' => null]">
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between">
-        <h5>Inactive Food List</h5>
-        <a href="{{ route('admin.foods.index') }}" class="btn btn-outline-primary">
-            ← Active Foods
+        <a href="{{ route('admin.foods.index') }}" class="btn btn-soft">
+            <i class="feather-arrow-left"></i> Active Foods
         </a>
-    </div>
 
-    <div class="card-body">
+        @can('foods.create')
+            <a href="{{ route('admin.foods.create') }}" class="btn btn-primary">
+                <i class="feather-plus"></i> Add Food
+            </a>
+        @endcan
+    </x-page-header>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+    {{-- ================= FILTER ================= --}}
+    <form method="GET" action="{{ route('admin.foods.inactive') }}" class="filter-card">
+        <div class="row g-3 align-items-end">
 
-        {{-- ================= FILTER (SAME AS INDEX) ================= --}}
-        <div class="filter-card">
-            <form method="GET" action="{{ route('admin.foods.inactive') }}">
-                <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="filter-label" for="filter_name">Food Name</label>
+                <input type="text" id="filter_name" name="name"
+                       value="{{ request('name') }}"
+                       class="form-control"
+                       placeholder="Search by name">
+            </div>
 
-                    <div class="col-md-3">
-                        <label class="filter-label">Food Name</label>
-                        <input type="text" name="name"
-                               value="{{ request('name') }}"
-                               class="form-control"
-                               placeholder="🔍 Food name">
-                    </div>
+            <div class="col-md-3">
+                <label class="filter-label" for="filter_subcategory">Subcategory</label>
+                <select name="subcategory_id" id="filter_subcategory" class="form-select">
+                    <option value="">All Subcategories</option>
+                    @foreach ($subcategories as $sub)
+                        <option value="{{ $sub->id }}"
+                            {{ request('subcategory_id') == $sub->id ? 'selected' : '' }}>
+                            {{ $sub->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                    <div class="col-md-3">
-                        <label class="filter-label">Subcategory</label>
-                        <select name="subcategory_id" class="form-select">
-                            <option value="">All Subcategories</option>
-                            @foreach($subcategories as $sub)
-                                <option value="{{ $sub->id }}"
-                                    {{ request('subcategory_id') == $sub->id ? 'selected' : '' }}>
-                                    {{ $sub->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+            <div class="col-md-2">
+                <label class="filter-label" for="from_date">From</label>
+                <input type="date" id="from_date" name="from_date"
+                       value="{{ request('from_date') }}"
+                       max="{{ date('Y-m-d') }}"
+                       class="form-control date-picker">
+            </div>
 
-                    <div class="col-md-2">
-                        <label class="filter-label">From</label>
-                        <input type="text" id="from_date" name="from_date"
-                               value="{{ request('from_date') }}"
-                               class="form-control date-picker"
-                               placeholder="From date">
-                    </div>
+            <div class="col-md-2">
+                <label class="filter-label" for="to_date">To</label>
+                <input type="date" id="to_date" name="to_date"
+                       value="{{ request('to_date') }}"
+                       max="{{ date('Y-m-d') }}"
+                       class="form-control date-picker">
+            </div>
 
-                    <div class="col-md-2">
-                        <label class="filter-label">To</label>
-                        <input type="text" id="to_date" name="to_date"
-                               value="{{ request('to_date') }}"
-                               class="form-control date-picker"
-                               placeholder="To date">
-                    </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="feather-filter"></i> Filter
+                </button>
+                <a href="{{ route('admin.foods.inactive') }}" class="btn btn-soft">Reset</a>
+            </div>
 
-                    <div class="col-md-12 d-flex gap-2 mt-2">
-                        <button class="btn btn-primary">🔎 Search</button>
-                        <a href="{{ route('admin.foods.inactive') }}"
-                           class="btn btn-outline-secondary">Reset</a>
-                    </div>
+        </div>
+    </form>
 
-                </div>
-            </form>
+    <div class="card">
+        <div class="card-header">
+            <h5>Inactive Foods</h5>
+            <span class="text-muted fs-13">
+                {{ $foods->total() }} {{ $foods->total() === 1 ? 'item' : 'items' }} hidden from the storefront
+            </span>
         </div>
 
-        {{-- ================= TABLE (SAME STRUCTURE) ================= --}}
-        <div class="table-responsive">
+        <div class="table-scroll">
             <table class="table table-hover align-middle">
                 <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Food</th>
-                    <th>SKU</th>
-                    <th>Category</th>
-                    <th>Subcategory</th>
-                    <th>Price</th>
-                    <th>Discount</th>
-                    <th>Final Price</th>
-                    <th>Quantity</th>
-                    <th>Unit</th>
-                    <th>Status</th>
-                    <th width="160">Action</th>
-                </tr>
+                    <tr>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th class="num">Price (BDT)</th>
+                        <th class="num">Discount</th>
+                        <th class="num">Final (BDT)</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Highlights</th>
+                        @can('foods.edit')
+                            <th>Actions</th>
+                        @endcan
+                    </tr>
                 </thead>
 
                 <tbody>
-                @forelse($foods as $food)
+                    @forelse ($foods as $food)
 
-                    @php
-                        $price = $food->price;
-                        $discount = $food->discount ?? 0;
-                        $discountAmount = ($price * $discount) / 100;
-                        $finalPrice = $price - $discountAmount;
-                    @endphp
+                        @php
+                            $price           = (float) $food->price;
+                            $discountPercent = (float) ($food->discount ?? 0);
+                            $discountAmount  = ($price * $discountPercent) / 100;
+                            $finalPrice      = $price - $discountAmount;
 
-                    <tr>
-                        <td>
-                            @if($food->image)
-                                <img src="{{ asset('storage/'.$food->image) }}"
-                                     style="height:45px;border-radius:6px">
-                            @else
-                                -
-                            @endif
-                        </td>
+                            $qty        = (int) $food->quantity;
+                            $alert      = (int) ($food->low_stock_alert ?? 0);
+                            $stockClass = 'on';
+                            $stockLabel = 'In stock';
 
-                        <td>{{ $food->name }}</td>
-                        <td>{{ $food->sku }}</td>
-                        <td>{{ $food->subcategory->category->name ?? '-' }}</td>
-                        <td>{{ $food->subcategory->name ?? '-' }}</td>
-                        <td>{{ number_format($price,2) }} tk</td>
-                        <td>{{ $discount ? $discount.'%' : '-' }}</td>
-                        <td class="fw-semibold text-success">
-                            {{ number_format($finalPrice,2) }} tk
-                        </td>
-                        <td>{{ $food->quantity }}</td>
-                        <td>{{ $food->unit->name ?? '-' }}</td>
+                            if ($qty <= 0) {
+                                $stockClass = 'off';
+                                $stockLabel = 'Out of stock';
+                            } elseif ($alert > 0 && $qty <= $alert) {
+                                $stockClass = 'wait';
+                                $stockLabel = 'Low stock';
+                            }
 
-                        <td>
-                            <span class="badge bg-secondary">Inactive</span>
-                        </td>
+                            $initials = mb_strtoupper(mb_substr(trim((string) $food->name), 0, 2));
+                        @endphp
 
-                        <td>
-                            <form action="{{ route('admin.foods.activate', $food->id) }}"
-                                  method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button class="btn btn-sm btn-success"
-                                        onclick="return confirm('Activate this food?')">
-                                    Activate
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <div class="cell-media">
+                                    @if ($food->image)
+                                        <img src="{{ asset('storage/' . $food->image) }}"
+                                             alt="{{ $food->name }}"
+                                             style="width:44px;height:44px;object-fit:cover;border-radius:10px">
+                                    @else
+                                        <span class="avatar-initials sm">{{ $initials !== '' ? $initials : '?' }}</span>
+                                    @endif
 
-                @empty
-                    <tr>
-                        <td colspan="12" class="text-center text-muted">
-                            No inactive food found
-                        </td>
-                    </tr>
-                @endforelse
+                                    <div>
+                                        <p class="cell-title">
+                                            <a href="{{ route('admin.foods.show', $food->id) }}"
+                                               class="text-ink" style="text-decoration:none">
+                                                {{ $food->name }}
+                                            </a>
+                                        </p>
+                                        <p class="cell-sub">{{ $food->sku }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <p class="cell-title">{{ $food->subcategory->category->name ?? 'N/A' }}</p>
+                                <p class="cell-sub">{{ $food->subcategory->name ?? 'N/A' }}</p>
+                            </td>
+
+                            <td class="num">{{ number_format($price, 2) }}</td>
+
+                            <td class="num">
+                                @if ($discountPercent > 0)
+                                    {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }}%
+                                    <p class="cell-sub">&minus;{{ number_format($discountAmount, 2) }}</p>
+                                @else
+                                    <span class="text-muted">&mdash;</span>
+                                @endif
+                            </td>
+
+                            <td class="num fw-650">{{ number_format($finalPrice, 2) }}</td>
+
+                            <td>
+                                <span class="status-pill {{ $stockClass }}">{{ $stockLabel }}</span>
+                                <p class="cell-sub">
+                                    {{ $qty }} {{ $food->unit->name ?? 'units' }}
+                                    @if ($alert > 0)
+                                        &middot; alert at {{ $alert }}
+                                    @endif
+                                </p>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-secondary">Inactive</span>
+                            </td>
+
+                            <td>
+                                <div class="chip-row">
+                                    @if ($food->is_featured)
+                                        <span class="chip active"><i class="feather-star"></i> Featured</span>
+                                    @endif
+
+                                    @if ($food->is_popular)
+                                        <span class="chip active"><i class="feather-trending-up"></i> Popular</span>
+                                    @endif
+
+                                    @if (!$food->is_featured && !$food->is_popular)
+                                        <span class="text-muted fs-13">&mdash;</span>
+                                    @endif
+                                </div>
+                            </td>
+
+                            @can('foods.edit')
+                                <td>
+                                    <div class="action-group">
+                                        <form action="{{ route('admin.foods.activate', $food->id) }}"
+                                              method="POST" class="delete-form"
+                                              data-confirm-title="Activate {{ $food->name }}?"
+                                              data-confirm-text="The item goes back on the storefront immediately."
+                                              data-confirm-button="Yes, activate">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-soft-success btn-sm">
+                                                <i class="feather-check-circle"></i> Activate
+                                            </button>
+                                        </form>
+
+                                        <a href="{{ route('admin.foods.edit', $food->id) }}"
+                                           class="btn btn-icon btn-soft-warning" title="Edit food">
+                                            <i class="feather-edit-2"></i>
+                                        </a>
+
+                                        <a href="{{ route('admin.foods.show', $food->id) }}"
+                                           class="btn btn-icon btn-soft-info" title="View details">
+                                            <i class="feather-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            @endcan
+                        </tr>
+
+                    @empty
+                        <tr>
+                            <td colspan="{{ $colCount }}">
+                                <x-empty-state icon="feather-archive"
+                                               title="No inactive foods"
+                                               message="Nothing has been taken off the menu — everything is live.">
+                                    <a href="{{ route('admin.foods.index') }}" class="btn btn-soft">
+                                        Back to active foods
+                                    </a>
+                                </x-empty-state>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-3 d-flex justify-content-end">
-            {{ $foods->links('pagination::bootstrap-5') }}
-        </div>
-
+        @if ($foods->hasPages())
+            <div class="table-foot">
+                <p class="foot-note">Showing {{ $foods->firstItem() }}&ndash;{{ $foods->lastItem() }}
+                    of {{ $foods->total() }}</p>
+                {{ $foods->appends(request()->query())->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
+
 </div>
-
-{{-- ================= Flatpickr JS ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    const fromPicker = flatpickr("#from_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        onChange(_, d){ toPicker.set("minDate", d); }
-    });
-    const toPicker = flatpickr("#to_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        onChange(_, d){ fromPicker.set("maxDate", d); }
-    });
-</script>
-
 @endsection
-fdvyh

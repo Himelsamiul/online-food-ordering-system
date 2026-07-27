@@ -1,5 +1,10 @@
 {{-- Admin-managed promo banners. Expects $promotions (with coupon). --}}
 @if ($promotions->count())
+{{--
+    This <style> is deliberately inline rather than in @push('styles'):
+    the partial renders inside @section('content'), which the master lays
+    out after it has already emitted the styles stack in <head>.
+--}}
 <style>
     .promo-row {
         display: grid;
@@ -7,16 +12,25 @@
         gap: 20px;
     }
 
+    /* .promo-card is a reveal-animation target in storefront-refresh.js —
+       the class name has to stay. */
     .promo-card {
         position: relative;
-        border-radius: 20px;
-        overflow: hidden;
-        min-height: 190px;
         display: flex;
         align-items: flex-end;
-        background: linear-gradient(135deg, #2b1d00, #0f0f0f);
-        border: 1px solid rgba(241,184,22,.3);
-        box-shadow: 0 14px 34px rgba(0,0,0,.45);
+        min-height: 218px;
+        border-radius: var(--sf-radius);
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255, 255, 255, .12), rgba(0, 0, 0, .55));
+        border: 1px solid var(--sf-glass-line);
+        box-shadow: var(--sf-shadow);
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+
+    .promo-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--sf-accent);
+        box-shadow: var(--sf-shadow-lg);
     }
 
     .promo-card-bg {
@@ -28,7 +42,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: .45;
+        opacity: .5;
     }
 
     .promo-card-inner {
@@ -36,71 +50,144 @@
         z-index: 2;
         padding: 22px 24px;
         width: 100%;
-        background: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.25));
-        color: #fff;
+        /* The card sits on a photo, so this one scrim earns its keep. */
+        background: linear-gradient(to top, rgba(0, 0, 0, .92) 30%, rgba(0, 0, 0, .15));
+        color: var(--sf-ink);
     }
 
-    .promo-card h5 {
-        font-weight: 800;
-        margin-bottom: 4px;
-        color: #fff;
-    }
-
-    .promo-card p {
-        color: rgba(255,255,255,.75);
-        font-size: 14px;
-        margin-bottom: 12px;
+    .promo-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
     }
 
     .promo-offer {
         display: inline-block;
-        background: #198754;
-        color: #fff;
+        background: linear-gradient(135deg, var(--sf-green-dark), var(--sf-green));
+        color: var(--sf-ink);
         font-weight: 800;
         font-size: 13px;
-        padding: 4px 14px;
+        line-height: 1;
+        padding: 6px 14px;
         border-radius: 20px;
-        margin-bottom: 10px;
+    }
+
+    .promo-clock {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--sf-accent);
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid var(--sf-glass-line);
+        border-radius: 20px;
+        padding: 5px 12px;
+        line-height: 1;
+    }
+
+    .promo-card h5 {
+        font-weight: 800;
+        font-size: 21px;
+        margin-bottom: 4px;
+        color: var(--sf-ink);
+    }
+
+    .promo-card p {
+        color: var(--sf-muted);
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+
+    .promo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
     }
 
     .promo-code-btn {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        background: transparent;
-        border: 2px dashed #f1b816;
-        color: #f1b816;
+        background: rgba(255, 255, 255, .06);
+        border: 2px dashed var(--sf-accent);
+        color: var(--sf-accent);
         font-family: monospace;
         font-weight: 800;
         letter-spacing: 1.5px;
-        font-size: 16px;
-        border-radius: 10px;
-        padding: 8px 18px;
+        font-size: 15px;
+        line-height: 1;
+        border-radius: var(--sf-radius-sm);
+        padding: 10px 16px;
         cursor: pointer;
-        transition: .2s;
+        transition: background-color .2s, color .2s;
     }
 
-    .promo-code-btn:hover {
-        background: #f1b816;
-        color: #1c1c1c;
+    .promo-code-btn:hover,
+    .promo-code-btn:focus {
+        background: var(--sf-accent);
+        color: rgba(0, 0, 0, .85);
+        outline: none;
+    }
+
+    .promo-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 30px;
+        font-size: 13.5px;
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+        color: rgba(0, 0, 0, .85);
+        text-decoration: none;
+        transition: transform .18s, box-shadow .18s;
+    }
+
+    .promo-cta:hover,
+    .promo-cta:focus {
+        color: rgba(0, 0, 0, .85);
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .5);
     }
 
     .promo-terms {
-        color: rgba(255,255,255,.6);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .promo-terms span {
+        color: var(--sf-muted);
+        font-size: 11.5px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, .07);
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 20px;
+        padding: 4px 11px;
+        line-height: 1.4;
+    }
+
+    .promo-hint {
+        display: block;
+        margin-top: 10px;
+        color: var(--sf-faint);
         font-size: 12px;
-        margin-top: 8px;
     }
 
-    .promo-link {
-        display: inline-block;
-        margin-left: 10px;
-        color: #f1b816;
-        font-weight: 700;
-        font-size: 14px;
-        text-decoration: none;
+    @media (max-width: 575.98px) {
+        .promo-row { grid-template-columns: 1fr; }
+        .promo-card-inner { padding: 18px; }
+        .promo-card h5 { font-size: 19px; }
+        .promo-actions > * { flex: 1 1 100%; justify-content: center; }
     }
-
-    .promo-link:hover { text-decoration: underline; color: #f1b816; }
 </style>
 
 <div class="promo-row">
@@ -116,9 +203,23 @@
             @endif
 
             <div class="promo-card-inner">
-                @if ($coupon)
-                    <span class="promo-offer">{{ $coupon->offer_label }}</span>
-                @endif
+                <div class="promo-top">
+                    @if ($coupon)
+                        <span class="promo-offer">{{ $coupon->offer_label }}</span>
+                    @endif
+
+                    @if ($coupon && $coupon->expires_at)
+                        <span class="promo-clock">
+                            <i class="fa fa-clock-o" aria-hidden="true"></i>
+                            Ends {{ $coupon->expires_at->format('d M Y') }}
+                        </span>
+                    @elseif ($promotion->ends_at)
+                        <span class="promo-clock">
+                            <i class="fa fa-clock-o" aria-hidden="true"></i>
+                            Ends {{ $promotion->ends_at->format('d M Y') }}
+                        </span>
+                    @endif
+                </div>
 
                 <h5>{{ $promotion->title }}</h5>
 
@@ -126,31 +227,40 @@
                     <p>{{ $promotion->subtitle }}</p>
                 @endif
 
-                @if ($coupon)
-                    <button type="button" class="promo-code-btn js-copy-code"
-                            data-code="{{ $coupon->code }}">
-                        <i class="fa fa-clone"></i> {{ $coupon->code }}
-                    </button>
-
-                    @if ($promotion->link_url)
-                        <a href="{{ $promotion->link_url }}" class="promo-link">Shop now →</a>
+                <div class="promo-actions">
+                    @if ($coupon)
+                        <button type="button" class="promo-code-btn js-copy-code"
+                                data-code="{{ $coupon->code }}"
+                                title="Copy {{ $coupon->code }}">
+                            <i class="fa fa-clone" aria-hidden="true"></i> {{ $coupon->code }}
+                        </button>
                     @endif
 
+                    <a href="{{ $promotion->link_url ?: route('menu.index') }}" class="promo-cta">
+                        Order now <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+                @if ($coupon)
                     <div class="promo-terms">
-                        @if ($coupon->min_order_amount)
-                            Min order ৳{{ number_format($coupon->min_order_amount, 0) }}
-                        @else
-                            No minimum order
-                        @endif
+                        <span>
+                            @if ($coupon->min_order_amount)
+                                Min order ৳{{ number_format($coupon->min_order_amount, 0) }}
+                            @else
+                                No minimum order
+                            @endif
+                        </span>
+
                         @if ($coupon->type === 'percent' && $coupon->max_discount)
-                            · up to ৳{{ number_format($coupon->max_discount, 0) }}
+                            <span>Up to ৳{{ number_format($coupon->max_discount, 0) }} off</span>
                         @endif
-                        @if ($coupon->expires_at)
-                            · valid till {{ $coupon->expires_at->format('d M Y') }}
+
+                        @if ($coupon->per_user_limit)
+                            <span>{{ $coupon->per_user_limit }} use{{ $coupon->per_user_limit == 1 ? '' : 's' }} per customer</span>
                         @endif
                     </div>
-                @elseif ($promotion->link_url)
-                    <a href="{{ $promotion->link_url }}" class="promo-link">Learn more →</a>
+
+                    <small class="promo-hint">Tap the code to copy it, then paste it in your cart.</small>
                 @endif
             </div>
         </div>

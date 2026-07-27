@@ -1,91 +1,200 @@
 @extends('frontend.master')
 
+@section('title', 'Menu')
+
 @push('styles')
 @include('frontend.partials.food-card-styles')
 @include('frontend.partials.category-card-styles')
 <style>
-    /* ============ FILTER BAR ============ */
-    .menu-head {
-        text-align: center;
-        margin-bottom: 28px;
-    }
+    /* ============ PAGE HEAD ============ */
+    .sf-page-head { margin-bottom: 26px; }
 
-    .menu-head h2 {
+    .sf-page-head h2 {
+        color: var(--sf-ink);
         font-weight: 700;
-        color: #fff;
+        margin-bottom: 6px;
     }
 
-    .menu-head p {
-        color: rgba(255,255,255,0.7);
+    .sf-page-head p {
+        color: var(--sf-muted);
         margin-bottom: 0;
     }
 
+    /* ============ FILTER BAR ============ */
     .filter-bar {
-        background: rgba(255,255,255,0.08);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 18px;
-        padding: 20px 22px;
-        margin-bottom: 28px;
+        padding: 18px 20px;
+        margin-bottom: 22px;
+    }
+
+    .filter-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-top .menu-search { flex: 1 1 220px; }
+
+    /* Under lg the whole control set folds behind this button instead of
+       spilling out of the bar. */
+    .filter-toggle {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 46px;
+        padding: 0 18px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid var(--sf-glass-line);
+        color: var(--sf-ink);
+        font-size: 13.5px;
+        font-weight: 700;
+        transition: border-color .18s, color .18s, background-color .18s;
+    }
+
+    .filter-toggle:hover { background: rgba(255, 255, 255, .16); }
+
+    .filter-toggle:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, .2);
+    }
+
+    .filter-toggle.has-filters {
+        border-color: var(--sf-accent);
+        color: var(--sf-accent);
+    }
+
+    .filter-toggle .fa-angle-down { transition: transform .2s ease; }
+    .filter-toggle[aria-expanded="true"] .fa-angle-down { transform: rotate(180deg); }
+
+    #menuFilterBody { padding-top: 18px; }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px 26px;
     }
 
     .filter-label {
-        font-size: 12px;
-        letter-spacing: .08em;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11.5px;
+        letter-spacing: .1em;
         text-transform: uppercase;
-        color: rgba(255,255,255,0.55);
+        color: var(--sf-faint);
         font-weight: 700;
-        margin-bottom: 8px;
-        display: block;
+        margin-bottom: 9px;
     }
 
-    .menu-search {
-        position: relative;
+    .filter-label i { color: var(--sf-accent); font-size: 12px; }
+
+    .filter-divider {
+        height: 1px;
+        background: var(--sf-glass-line);
+        margin: 20px 0 16px;
     }
+
+    /* ============ SEARCH ============ */
+    .menu-search { position: relative; }
 
     .menu-search i {
         position: absolute;
-        left: 16px;
+        left: 18px;
         top: 50%;
         transform: translateY(-50%);
-        color: rgba(255,255,255,0.45);
+        color: var(--sf-faint);
+        pointer-events: none;
     }
 
     .menu-search input {
         width: 100%;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        height: 46px;
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid var(--sf-glass-line);
         border-radius: 30px;
-        color: #fff;
-        padding: 12px 18px 12px 44px;
+        color: var(--sf-ink);
+        padding: 0 18px 0 46px;
         outline: none;
-        transition: .2s;
+        transition: border-color .18s, background-color .18s, box-shadow .18s;
     }
 
     .menu-search input:focus {
-        border-color: #f1b816;
-        background: rgba(255,255,255,0.14);
+        border-color: var(--sf-accent);
+        background: rgba(255, 255, 255, .14);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, .12);
     }
 
-    .menu-search input::placeholder {
-        color: rgba(255,255,255,0.4);
-    }
+    .menu-search input::placeholder { color: var(--sf-faint); }
 
+    /* ============ SORT ============ */
     .sort-select {
         width: 100%;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        height: 46px;
+        line-height: 44px;
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid var(--sf-glass-line);
         border-radius: 30px;
-        color: #fff;
-        padding: 12px 16px;
+        color: var(--sf-ink);
+        padding: 0 42px 0 18px;
+        font-size: 14px;
         outline: none;
         cursor: pointer;
     }
 
-    .sort-select option {
-        background: #1c1c1c;
-        color: #fff;
+    select.sort-select option { background: var(--sf-panel); color: var(--sf-ink); }
+
+    /*
+     * The template's custom.js runs $('select').niceSelect() on every page,
+     * which hides the native control and inserts a div that copies the
+     * select's classes. Both paths therefore need dark styling.
+     */
+    .filter-bar .nice-select {
+        float: none;
+        display: block;
+        height: 46px;
+        line-height: 44px;
+        padding: 0 42px 0 18px;
+    }
+
+    .filter-bar .nice-select::after {
+        border-bottom-color: var(--sf-accent);
+        border-right-color: var(--sf-accent);
+        right: 20px;
+    }
+
+    .filter-bar .nice-select .current { color: var(--sf-ink); font-size: 14px; }
+
+    .filter-bar .nice-select .list {
+        width: 100%;
+        background: var(--sf-panel);
+        border: 1px solid var(--sf-glass-line);
+        border-radius: var(--sf-radius-sm);
+        box-shadow: var(--sf-shadow-lg);
+        padding: 6px;
+        margin-top: 8px;
+    }
+
+    .filter-bar .nice-select .option {
+        color: rgba(255, 255, 255, .82);
+        border-radius: 9px;
+        min-height: 38px;
+        line-height: 38px;
+        padding: 0 12px;
+        font-size: 13.5px;
+    }
+
+    .filter-bar .nice-select .option:hover,
+    .filter-bar .nice-select .option.focus,
+    .filter-bar .nice-select .option.selected.focus {
+        background: rgba(255, 255, 255, .1);
+        color: var(--sf-accent);
+    }
+
+    .filter-bar .nice-select .option.selected {
+        font-weight: 700;
+        color: var(--sf-accent);
     }
 
     /* ============ CHIPS ============ */
@@ -96,33 +205,34 @@
     }
 
     .chip {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.18);
-        color: rgba(255,255,255,0.8);
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid var(--sf-glass-line);
+        color: rgba(255, 255, 255, .8);
         border-radius: 30px;
-        padding: 7px 18px;
-        font-size: 14px;
+        padding: 7px 16px;
+        font-size: 13.5px;
         font-weight: 600;
+        line-height: 1.4;
         cursor: pointer;
         transition: .18s;
         user-select: none;
     }
 
     .chip:hover {
-        background: rgba(255,255,255,0.16);
-        color: #fff;
+        background: rgba(255, 255, 255, .16);
+        color: var(--sf-ink);
     }
 
     .chip.active {
-        background: #f1b816;
-        border-color: #f1b816;
-        color: #1c1c1c;
+        background: var(--sf-accent);
+        border-color: var(--sf-accent);
+        color: rgba(0, 0, 0, .85);
     }
 
     .chip-sub.active {
-        background: #198754;
-        border-color: #198754;
-        color: #fff;
+        background: linear-gradient(135deg, var(--sf-green-dark), var(--sf-green));
+        border-color: transparent;
+        color: var(--sf-ink);
     }
 
     /* ============ DUAL PRICE SLIDER ============ */
@@ -143,12 +253,10 @@
     .price-slider .track {
         left: 0;
         right: 0;
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, .2);
     }
 
-    .price-slider .fill {
-        background: #f1b816;
-    }
+    .price-slider .fill { background: var(--sf-accent); }
 
     /* Two range inputs stacked on top of each other; only the thumbs
        stay clickable so both handles remain grabbable. */
@@ -171,10 +279,10 @@
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #fff;
-        border: 3px solid #f1b816;
+        background: var(--sf-ink);
+        border: 3px solid var(--sf-accent);
         cursor: grab;
-        box-shadow: 0 2px 6px rgba(0,0,0,.4);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .5);
     }
 
     .price-slider input[type=range]::-moz-range-thumb {
@@ -182,16 +290,18 @@
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #fff;
-        border: 3px solid #f1b816;
+        background: var(--sf-ink);
+        border: 3px solid var(--sf-accent);
         cursor: grab;
-        box-shadow: 0 2px 6px rgba(0,0,0,.4);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .5);
     }
+
+    .price-slider input[type=range]:focus { outline: none; }
 
     .price-readout {
         display: flex;
         justify-content: space-between;
-        color: #f1b816;
+        color: var(--sf-accent);
         font-weight: 700;
         font-size: 14px;
         margin-top: 2px;
@@ -205,21 +315,41 @@
         flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 18px;
-        color: rgba(255,255,255,0.75);
+        color: var(--sf-muted);
+    }
+
+    .result-left {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .result-left strong { color: var(--sf-ink); }
+
+    .filter-count {
+        display: inline-block;
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid var(--sf-glass-line);
+        color: var(--sf-accent);
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 12px;
+        font-weight: 700;
     }
 
     .reset-link {
         background: none;
         border: none;
-        color: #f1b816;
+        color: var(--sf-accent);
         font-weight: 700;
+        font-size: 14px;
         cursor: pointer;
         padding: 0;
     }
 
-    .reset-link:hover {
-        text-decoration: underline;
-    }
+    .reset-link:hover { text-decoration: underline; }
+    .reset-link:focus { outline: none; text-decoration: underline; }
 
     #foodGrid.is-loading {
         opacity: .35;
@@ -229,8 +359,8 @@
 
     .load-more-btn {
         background: transparent;
-        border: 2px solid #f1b816;
-        color: #f1b816;
+        border: 2px solid var(--sf-accent);
+        color: var(--sf-accent);
         font-weight: 700;
         border-radius: 30px;
         padding: 12px 40px;
@@ -238,106 +368,143 @@
     }
 
     .load-more-btn:hover {
-        background: #f1b816;
-        color: #1c1c1c;
+        background: var(--sf-accent);
+        color: rgba(0, 0, 0, .85);
+    }
+
+    .load-more-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, .2);
+    }
+
+    @media (max-width: 575.98px) {
+        .filter-bar { margin-bottom: 18px; }
+        #menuFilterBody { padding-top: 14px; }
+        .result-bar { font-size: 14px; }
     }
 </style>
 @endpush
 
 @section('content')
 
-<div class="container py-5">
+<section class="menu-section layout_padding">
+    <div class="container">
 
-    <div class="menu-head">
-        <h2>Our Menu</h2>
-        <p>Everything we cook, on one page — filter it down to exactly what you're craving.</p>
-    </div>
+        <div class="sf-page-head text-center">
+            <h2>Our Menu</h2>
+            <p>Everything we cook, on one page — filter it down to exactly what you're craving.</p>
+        </div>
 
-    {{-- ================= FILTERS ================= --}}
-    <div class="filter-bar">
+        {{-- ================= FILTERS ================= --}}
+        <div class="filter-bar glass-card">
 
-        <div class="row g-3 align-items-end">
-
-            <div class="col-lg-5 mb-3 mb-lg-0">
-                <label class="filter-label" for="menuSearch">Search</label>
+            <div class="filter-top">
                 <div class="menu-search">
-                    <i class="fa fa-search"></i>
-                    <input type="text" id="menuSearch" placeholder="Search for a dish..."
-                           value="{{ request('q') }}" autocomplete="off">
-                </div>
-            </div>
-
-            <div class="col-lg-3 mb-3 mb-lg-0">
-                <label class="filter-label" for="menuSort">Sort by</label>
-                <select id="menuSort" class="sort-select">
-                    <option value="">Newest first</option>
-                    <option value="price_low"  @selected(request('sort') === 'price_low')>Price: low to high</option>
-                    <option value="price_high" @selected(request('sort') === 'price_high')>Price: high to low</option>
-                    <option value="discount"   @selected(request('sort') === 'discount')>Biggest discount</option>
-                    <option value="name"       @selected(request('sort') === 'name')>Name (A–Z)</option>
-                </select>
-            </div>
-
-            <div class="col-lg-4">
-                <label class="filter-label">Price range</label>
-
-                <div class="price-slider">
-                    <div class="track"></div>
-                    <div class="fill" id="priceFill"></div>
-                    <input type="range" id="priceMin"
-                           min="{{ $minPrice }}" max="{{ $maxPrice }}" step="1"
-                           value="{{ request('min_price', $minPrice) }}">
-                    <input type="range" id="priceMax"
-                           min="{{ $minPrice }}" max="{{ $maxPrice }}" step="1"
-                           value="{{ request('max_price', $maxPrice) }}">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                    <input type="text" id="menuSearch" placeholder="Search for a dish…"
+                           value="{{ request('q') }}" autocomplete="off"
+                           aria-label="Search the menu">
                 </div>
 
-                <div class="price-readout">
-                    <span>৳<span id="priceMinLabel">{{ request('min_price', $minPrice) }}</span></span>
-                    <span>৳<span id="priceMaxLabel">{{ request('max_price', $maxPrice) }}</span></span>
+                <button type="button" class="filter-toggle d-lg-none" id="filterToggle"
+                        data-toggle="collapse" data-target="#menuFilterBody"
+                        aria-expanded="false" aria-controls="menuFilterBody">
+                    <i class="fa fa-sliders" aria-hidden="true"></i>
+                    Filters
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            {{-- Collapsed on phones, always open from lg up (.d-lg-block is
+                 !important, so it beats .collapse:not(.show)). --}}
+            <div class="collapse d-lg-block" id="menuFilterBody">
+
+                <div class="filter-grid">
+                    <div>
+                        <label class="filter-label" for="menuSort">
+                            <i class="fa fa-sort-amount-asc" aria-hidden="true"></i> Sort by
+                        </label>
+                        <select id="menuSort" class="sort-select">
+                            <option value="">Newest first</option>
+                            <option value="price_low"  @selected(request('sort') === 'price_low')>Price: low to high</option>
+                            <option value="price_high" @selected(request('sort') === 'price_high')>Price: high to low</option>
+                            <option value="discount"   @selected(request('sort') === 'discount')>Biggest discount</option>
+                            <option value="name"       @selected(request('sort') === 'name')>Name (A–Z)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="filter-label">
+                            <i class="fa fa-money" aria-hidden="true"></i> Price range
+                        </label>
+
+                        <div class="price-slider">
+                            <div class="track"></div>
+                            <div class="fill" id="priceFill"></div>
+                            <input type="range" id="priceMin" aria-label="Lowest price"
+                                   min="{{ $minPrice }}" max="{{ $maxPrice }}" step="1"
+                                   value="{{ request('min_price', $minPrice) }}">
+                            <input type="range" id="priceMax" aria-label="Highest price"
+                                   min="{{ $minPrice }}" max="{{ $maxPrice }}" step="1"
+                                   value="{{ request('max_price', $maxPrice) }}">
+                        </div>
+
+                        <div class="price-readout">
+                            <span>৳<span id="priceMinLabel">{{ request('min_price', $minPrice) }}</span></span>
+                            <span>৳<span id="priceMaxLabel">{{ request('max_price', $maxPrice) }}</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                {{-- CATEGORY --}}
+                <label class="filter-label">
+                    <i class="fa fa-th-large" aria-hidden="true"></i> Category
+                </label>
+                <div class="mb-3" id="categoryChips">
+                    @include('frontend.partials.category-cards', [
+                        'categories'     => $categories,
+                        'compact'        => true,
+                        'activeCategory' => request('category'),
+                    ])
+                </div>
+
+                {{-- SUBCATEGORY (rendered by JS for the active category) --}}
+                <div id="subcategoryWrap" style="display:none;">
+                    <label class="filter-label">
+                        <i class="fa fa-tags" aria-hidden="true"></i> Subcategory
+                    </label>
+                    <div class="chip-row" id="subcategoryChips"></div>
                 </div>
             </div>
         </div>
 
-        <hr style="border-color: rgba(255,255,255,.15); margin: 20px 0 16px;">
+        {{-- ================= RESULTS ================= --}}
+        <div class="result-bar">
+            <div class="result-left">
+                <span><strong id="resultCount">{{ $foods->total() }}</strong> dish(es) found</span>
+                <span class="filter-count" id="filterCount" style="display:none;"></span>
+            </div>
 
-        {{-- CATEGORY --}}
-        <label class="filter-label">Category</label>
-        <div class="mb-3" id="categoryChips">
-            @include('frontend.partials.category-cards', [
-                'categories'     => $categories,
-                'compact'        => true,
-                'activeCategory' => request('category'),
-            ])
+            <button type="button" class="reset-link" id="resetFilters">
+                <i class="fa fa-times-circle" aria-hidden="true"></i> Reset filters
+            </button>
         </div>
 
-        {{-- SUBCATEGORY (rendered by JS for the active category) --}}
-        <div id="subcategoryWrap" style="display:none;">
-            <label class="filter-label">Subcategory</label>
-            <div class="chip-row" id="subcategoryChips"></div>
+        <div class="row" id="foodGrid">
+            @include('frontend.partials.food-grid', ['foods' => $foods])
         </div>
-    </div>
 
-    {{-- ================= RESULTS ================= --}}
-    <div class="result-bar">
-        <span><strong id="resultCount">{{ $foods->total() }}</strong> dish(es) found</span>
-        <button type="button" class="reset-link" id="resetFilters">
-            <i class="fa fa-times-circle"></i> Reset filters
-        </button>
-    </div>
+        <div class="text-center mt-3">
+            <button type="button" class="load-more-btn" id="loadMore"
+                    style="{{ $foods->hasMorePages() ? '' : 'display:none;' }}">
+                Load more
+            </button>
+        </div>
 
-    <div class="row" id="foodGrid">
-        @include('frontend.partials.food-grid', ['foods' => $foods])
     </div>
-
-    <div class="text-center mt-3 mb-5">
-        <button type="button" class="load-more-btn" id="loadMore"
-                style="{{ $foods->hasMorePages() ? '' : 'display:none;' }}">
-            Load more
-        </button>
-    </div>
-
-</div>
+</section>
 
 @endsection
 
@@ -431,6 +598,20 @@ $(function () {
         return Object.assign(p, extra);
     }
 
+    /* ---------- "3 filters on" badge, so a narrowed list never looks empty
+                  for no visible reason ---------- */
+    function paintFilterCount() {
+        const n = Object.keys(queryParams()).length;
+
+        $('#filterCount')
+            .text(n + (n === 1 ? ' filter on' : ' filters on'))
+            .toggle(n > 0);
+
+        $('#filterToggle').toggleClass('has-filters', n > 0);
+    }
+
+    paintFilterCount();
+
     /* ---------- fetch ---------- */
     let pending = null;
 
@@ -440,6 +621,7 @@ $(function () {
         if (pending) { pending.abort(); }
 
         $grid.addClass('is-loading');
+        paintFilterCount();
 
         pending = $.getJSON(MENU_URL, queryParams({ page: state.page }))
             .done(function (res) {
@@ -481,8 +663,8 @@ $(function () {
         state.category    = String($(this).data('id') || '');
         state.subcategory = '';       // old subcategory belongs to another category
 
-        $('#categoryChips .cat-card').removeClass('active');
-        $(this).addClass('active');
+        $('#categoryChips .cat-card').removeClass('active').removeAttr('aria-current');
+        $(this).addClass('active').attr('aria-current', 'true');
 
         renderSubcategories();
         reload();
@@ -505,7 +687,7 @@ $(function () {
         reload(true);
     });
 
-    $('#resetFilters').on('click', function () {
+    function resetFilters() {
         Object.assign(state, {
             q: '', sort: '', category: '', subcategory: '',
             min_price: PRICE_MIN, max_price: PRICE_MAX, page: 1,
@@ -513,14 +695,28 @@ $(function () {
 
         $('#menuSearch').val('');
         $('#menuSort').val('');
+
+        // custom.js swaps the select for a nice-select widget, which keeps
+        // its own label — tell it to re-read the value it now has.
+        if ($.fn.niceSelect) { $('#menuSort').niceSelect('update'); }
+
         $min.val(PRICE_MIN);
         $max.val(PRICE_MAX);
-        $('#categoryChips .cat-card').removeClass('active')
-            .filter('[data-id=""]').addClass('active');
+        $('#categoryChips .cat-card').removeClass('active').removeAttr('aria-current')
+            .filter('[data-id=""]').addClass('active').attr('aria-current', 'true');
 
         paintSlider();
         renderSubcategories();
         reload();
+    }
+
+    $('#resetFilters').on('click', resetFilters);
+
+    // The empty state offers the same escape hatch; it is re-rendered on
+    // every fetch, so the handler is delegated from the grid.
+    $grid.on('click', '.js-reset-filters', function (e) {
+        e.preventDefault();
+        resetFilters();
     });
 
     /* ---------- add to cart without losing the filters ---------- */
@@ -536,6 +732,8 @@ $(function () {
                     .addClass('disabled-btn')
                     .attr('title', 'Already in cart')
                     .find('i').attr('class', 'fa fa-check');
+
+                $btn.find('.add-cart-label').text('In cart');
 
                 if (res.cart_count !== undefined) {
                     $('#cartCount').text(res.cart_count).show();

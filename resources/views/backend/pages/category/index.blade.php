@@ -1,311 +1,316 @@
 @extends('backend.master')
+@section('title', 'Categories')
 
 @section('content')
+<div class="container-fluid">
 
-{{-- ================= Flatpickr CSS ================= --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    @php
+        $canCreate  = auth()->user()?->can('categories.create') ?? false;
+        $canEdit    = auth()->user()?->can('categories.edit') ?? false;
+        $canDelete  = auth()->user()?->can('categories.delete') ?? false;
+        $hasActions = $canEdit || $canDelete;
+        $listCols   = $canCreate ? 'col-lg-8' : 'col-12';
+        $colspan    = $hasActions ? 6 : 5;
+    @endphp
 
-{{-- ================= Custom Filter Styles ================= --}}
-<style>
-    .filter-card {
-        background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(16,185,129,0.08));
-        border-radius: 14px;
-        padding: 18px;
-        margin-bottom: 18px;
-    }
+    <x-page-header
+        title="Categories"
+        subtitle="The top level of the menu. Subcategories and food items hang off these."
+        icon="feather-grid"
+        :breadcrumb="['Catalog' => null, 'Categories' => null]">
+        @can('subcategories.view')
+            <a href="{{ route('admin.subcategory.index') }}" class="btn btn-soft">
+                <i class="feather-layers"></i> Subcategories
+            </a>
+        @endcan
+    </x-page-header>
 
-    .filter-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 4px;
-    }
+    <div class="row g-4">
 
-    .filter-card .form-control,
-    .filter-card .form-select {
-        border-radius: 10px;
-        transition: all 0.25s ease;
-        background: #fff;
-    }
+        {{-- ================= List ================= --}}
+        <div class="{{ $listCols }}">
 
-    .filter-card .form-control:focus,
-    .filter-card .form-select:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 .15rem rgba(99,102,241,.25);
-    }
+            <form method="GET" action="{{ route('admin.category.index') }}" class="filter-card">
+                <div class="row g-3 align-items-end">
 
-    .date-picker {
-        cursor: pointer;
-        font-weight: 500;
-    }
-
-    .flatpickr-calendar {
-        border-radius: 14px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.18);
-    }
-
-    .btn-filter {
-        border-radius: 10px;
-        padding: 8px 18px;
-        font-weight: 600;
-    }
-
-    .btn-reset {
-        border-radius: 10px;
-        padding: 8px 18px;
-    }
-</style>
-
-<div class="row">
-
-    <!-- ================= Add Category ================= -->
-    <div class="col-xl-4 col-lg-5 col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Add Category</h5>
-            </div>
-            <div class="card-body">
-
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
-
-                <form action="{{ route('admin.category.store') }}"
-                      method="POST"
-                      enctype="multipart/form-data">
-                    @csrf
-
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control"
-                               placeholder="Category name"
-                               value="{{ old('name') }}" required>
+                    <div class="col-md-4">
+                        <label class="filter-label" for="filter-name">Category Name</label>
+                        <input type="text" id="filter-name" name="name"
+                               value="{{ request('name') }}"
+                               class="form-control" placeholder="Search name">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control"
-                                  rows="3"
-                                  placeholder="Optional description">{{ old('description') }}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Category Image</label>
-                        <input type="file" name="image" class="form-control">
-                        <small class="text-muted">
-                            Shown on the storefront category cards.
-                        </small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-control">
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
+                    <div class="col-md-3">
+                        <label class="filter-label" for="filter-status">Status</label>
+                        <select name="status" id="filter-status" class="form-select">
+                            <option value="">All</option>
+                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">
-                        Add Category
-                    </button>
-                </form>
+                    <div class="col-md-2">
+                        <label class="filter-label" for="from_date">From Date</label>
+                        <input type="date" id="from_date" name="from_date"
+                               value="{{ request('from_date') }}" class="form-control">
+                    </div>
 
-            </div>
-        </div>
-    </div>
+                    <div class="col-md-3">
+                        <label class="filter-label" for="to_date">To Date</label>
+                        <input type="date" id="to_date" name="to_date"
+                               value="{{ request('to_date') }}" class="form-control">
+                    </div>
 
-    <!-- ================= Category List ================= -->
-    <div class="col-xl-8 col-lg-7 col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Category List</h5>
-            </div>
-            <div class="card-body">
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="feather-filter"></i> Filter
+                        </button>
+                        <a href="{{ route('admin.category.index') }}" class="btn btn-soft">Reset</a>
+                    </div>
 
-                {{-- ================= FILTER SECTION ================= --}}
-                <div class="filter-card">
-                    <form method="GET" action="{{ route('admin.category.index') }}">
-                        <div class="row g-3 align-items-end">
+                </div>
+            </form>
 
-                            <div class="col-md-3">
-                                <label class="filter-label">Category Name</label>
-                                <input type="text"
-                                       name="name"
-                                       value="{{ request('name') }}"
-                                       class="form-control"
-                                       placeholder="🔍 Search name">
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="filter-label">Status</label>
-                                <select name="status" class="form-select">
-                                    <option value="">All</option>
-                                    <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="filter-label">From Date</label>
-                                <input type="text"
-                                       id="from_date"
-                                       name="from_date"
-                                       value="{{ request('from_date') }}"
-                                       class="form-control date-picker"
-                                       placeholder="Select date">
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="filter-label">To Date</label>
-                                <input type="text"
-                                       id="to_date"
-                                       name="to_date"
-                                       value="{{ request('to_date') }}"
-                                       class="form-control date-picker"
-                                       placeholder="Select date">
-                            </div>
-
-                            <div class="col-md-3 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-filter">
-                                    🔎 Search
-                                </button>
-
-                                <a href="{{ route('admin.category.index') }}"
-                                   class="btn btn-outline-secondary btn-reset">
-                                    Reset
-                                </a>
-                            </div>
-
-                        </div>
-                    </form>
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Categories</h5>
+                    <span class="text-muted fs-13">{{ $categories->total() }} total</span>
                 </div>
 
-                {{-- ================= TABLE ================= --}}
-                <div class="table-responsive">
+                <div class="table-scroll">
                     <table class="table table-hover align-middle">
                         <thead>
-                        <tr>
-                            <th style="width:60px;">SL</th>
-                            <th style="width:80px;">Image</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Create Time</th>
-                            <th style="width:120px;">Status</th>
-                            <th style="width:160px;">Action</th>
-                        </tr>
+                            <tr>
+                                <th style="width:56px;">SL</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th style="width:170px;">Created</th>
+                                <th style="width:110px;">Status</th>
+                                @if ($hasActions)
+                                    <th style="width:110px;">Actions</th>
+                                @endif
+                            </tr>
                         </thead>
                         <tbody>
-                        @forelse($categories as $key => $category)
+                            @forelse ($categories as $key => $category)
 
-                            @php
-                                $subs = \App\Models\SubCategory::where('category_id', $category->id)->get();
-                            @endphp
+                                @php
+                                    $subs = \App\Models\Subcategory::where('category_id', $category->id)->get();
+                                @endphp
 
-                            <tr>
-                                <td>{{ $categories->firstItem() + $key }}</td>
-                                <td>
-                                    @if($category->image)
-                                        <img src="{{ asset('storage/'.$category->image) }}"
-                                             width="50" class="rounded">
-                                    @else
-                                        <i class="fa fa-image text-muted"></i>
-                                    @endif
-                                </td>
-                                <td>{{ $category->name }}</td>
-                                <td>{{ $category->description }}</td>
-                                <td>{{ $category->created_at->format('d M Y h:i A') }}</td>
-                                <td>
-                                    <span class="badge {{ $category->status ? 'bg-success' : 'bg-danger' }}">
-                                        {{ $category->status ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-grid gap-1">
-                                        <a href="{{ route('admin.category.edit', $category->id) }}"
-                                           class="btn btn-sm btn-primary w-100">
-                                            Edit
-                                        </a>
+                                <tr>
+                                    <td>{{ $categories->firstItem() + $key }}</td>
 
-                                        @if($subs->count() > 0)
-                                            <button type="button"
-                                                    class="btn btn-sm btn-secondary w-100"
-                                                    onclick="toggleSubs({{ $category->id }})">
-                                                Delete
-                                            </button>
-                                            <small class="text-muted text-center">Used in subcategory</small>
-                                            <div id="subs-{{ $category->id }}" style="display:none;">
-                                                <ul class="mb-0 ps-3 text-muted">
-                                                    @foreach($subs as $sub)
-                                                        <li>{{ $sub->name }}</li>
-                                                    @endforeach
-                                                </ul>
+                                    <td>
+                                        <div class="cell-media">
+                                            @if ($category->image)
+                                                <img src="{{ asset('storage/' . $category->image) }}"
+                                                     alt="{{ $category->name }}"
+                                                     width="42" height="42">
+                                            @else
+                                                <span class="avatar-initials">
+                                                    {{ mb_strtoupper(mb_substr($category->name, 0, 2)) }}
+                                                </span>
+                                            @endif
+                                            <div>
+                                                <p class="cell-title">{{ $category->name }}</p>
+                                                <p class="cell-sub">
+                                                    {{ $subs->count() }}
+                                                    {{ $subs->count() === 1 ? 'subcategory' : 'subcategories' }}
+                                                </p>
                                             </div>
-                                        @else
-                                            <form action="{{ route('admin.category.delete', $category->id) }}"
-                                                  method="POST" class="w-100">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger w-100"
-                                                        onclick="return confirm('Are you sure?')">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
+                                        </div>
 
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    No categories found
-                                </td>
-                            </tr>
-                        @endforelse
+                                        @can('categories.delete')
+                                            @if ($subs->count() > 0)
+                                                <div id="subs-{{ $category->id }}" class="dep-panel" hidden>
+                                                    <p class="dep-title">Delete these subcategories first</p>
+                                                    <ul class="dep-items">
+                                                        @foreach ($subs as $sub)
+                                                            <li>{{ $sub->name }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+                                        @endcan
+                                    </td>
+
+                                    <td>
+                                        @if (filled($category->description))
+                                            <span class="cell-desc" title="{{ $category->description }}">
+                                                {{ \Illuminate\Support\Str::limit($category->description, 80) }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">&mdash;</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        {{ $category->created_at?->format('d M Y, h:i A') ?? '—' }}
+                                    </td>
+
+                                    <td>
+                                        <span class="status-pill {{ $category->status ? 'on' : 'off' }}">
+                                            {{ $category->status ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+
+                                    @if ($hasActions)
+                                        <td>
+                                            <div class="action-group">
+                                                @can('categories.edit')
+                                                    <a href="{{ route('admin.category.edit', $category->id) }}"
+                                                       class="btn btn-icon btn-soft-warning" title="Edit category">
+                                                        <i class="feather-edit-2"></i>
+                                                    </a>
+                                                @endcan
+
+                                                @can('categories.delete')
+                                                    @if ($subs->count() > 0)
+                                                        <button type="button"
+                                                                class="btn btn-icon btn-soft"
+                                                                data-ar-toggle="#subs-{{ $category->id }}"
+                                                                title="In use by {{ $subs->count() }} subcategories — show them">
+                                                            <i class="feather-lock"></i>
+                                                        </button>
+                                                    @else
+                                                        <form action="{{ route('admin.category.delete', $category->id) }}"
+                                                              method="POST" class="delete-form"
+                                                              data-confirm-title="Delete {{ $category->name }}?"
+                                                              data-confirm-text="The category and its image are removed. This cannot be undone."
+                                                              data-confirm-button="Yes, delete it">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                    class="btn btn-icon btn-soft-danger" title="Delete category">
+                                                                <i class="feather-trash-2"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                @endcan
+                                            </div>
+                                        </td>
+                                    @endif
+                                </tr>
+
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $colspan }}">
+                                        <x-empty-state icon="feather-grid" title="No categories match this filter"
+                                                       message="Clear the filters, or add the first category from the panel beside this list." />
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-3 d-flex justify-content-end">
-                    {{ $categories->links('pagination::bootstrap-5') }}
-                </div>
-
+                @if ($categories->hasPages())
+                    <div class="table-foot">
+                        <p class="foot-note">Showing {{ $categories->firstItem() }}&ndash;{{ $categories->lastItem() }}
+                            of {{ $categories->total() }}</p>
+                        {{ $categories->links('pagination::bootstrap-5') }}
+                    </div>
+                @endif
             </div>
         </div>
+
+        {{-- ================= Add new ================= --}}
+        @can('categories.create')
+            <div class="col-lg-4">
+                <div class="card taxonomy-aside">
+                    <div class="card-header">
+                        <h5>Add Category</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('admin.category.store') }}"
+                              method="POST"
+                              enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label class="form-label" for="category-name">Name</label>
+                                <input type="text" id="category-name" name="name" class="form-control"
+                                       placeholder="Category name"
+                                       value="{{ old('name') }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="category-description">Description</label>
+                                <textarea name="description" id="category-description" class="form-control"
+                                          rows="3"
+                                          placeholder="Optional description">{{ old('description') }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="category-image">Category Image</label>
+                                <input type="file" id="category-image" name="image" class="form-control" accept="image/*">
+                                <small class="text-muted">
+                                    Shown on the storefront category cards. JPG, PNG or WEBP up to 2 MB.
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="category-status">Status</label>
+                                <select name="status" id="category-status" class="form-select">
+                                    <option value="1" {{ old('status') === '0' ? '' : 'selected' }}>Active</option>
+                                    <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="feather-plus"></i> Add Category
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endcan
+
     </div>
-
 </div>
-
-{{-- ================= Flatpickr JS ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-<script>
-    const fromPicker = flatpickr("#from_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        allowInput: true,
-        onChange: function (selectedDates, dateStr) {
-            toPicker.set("minDate", dateStr);
-        }
-    });
-
-    const toPicker = flatpickr("#to_date", {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        allowInput: true,
-        onChange: function (selectedDates, dateStr) {
-            fromPicker.set("maxDate", dateStr);
-        }
-    });
-
-    function toggleSubs(id) {
-        const el = document.getElementById('subs-' + id);
-        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
-    }
-</script>
 @endsection
+
+@push('styles')
+<style>
+    .cell-desc {
+        display: block;
+        max-width: 34ch;
+        font-size: 13px;
+        color: var(--ar-muted);
+    }
+
+    .dep-panel {
+        margin-top: 8px;
+        padding: 9px 11px;
+        border: 1px solid var(--ar-line);
+        border-radius: var(--ar-radius-xs);
+        background: var(--ar-surface-2);
+        max-width: 260px;
+        text-align: left;
+    }
+
+    .dep-title {
+        margin: 0 0 5px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: var(--ar-muted);
+    }
+
+    .dep-items {
+        margin: 0;
+        padding-left: 16px;
+        font-size: 12.5px;
+        color: var(--ar-ink-2);
+    }
+
+    @media (min-width: 992px) {
+        .taxonomy-aside {
+            position: sticky;
+            top: 92px;
+        }
+    }
+</style>
+@endpush

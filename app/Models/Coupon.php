@@ -2,10 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Coupon extends Model
 {
+    use LogsActivity;
+
+    /** used_count moves on every customer checkout — pure noise in the log. */
+    public function activityIgnoredAttributes(): array
+    {
+        return ['used_count'];
+    }
+
     protected $fillable = [
         'code', 'description', 'type', 'value',
         'min_order_amount', 'max_discount',
