@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\AccountRequest;
+use App\Models\ChatConversation;
 use App\Models\ContactMessage;
 use App\Models\Food;
 use App\Models\Order;
@@ -53,7 +54,9 @@ class AdminNotifications
         $since  = now()->subDays(self::WINDOW_DAYS);
 
         $items = collect()
+            ->concat(self::adminRequests($admin))
             ->concat(self::accountRequests($admin))
+            ->concat(self::chats($admin))
             ->concat(self::orders($admin, $since))
             ->concat(self::lowStock($admin))
             ->concat(self::contactMessages($admin, $since))
@@ -76,6 +79,34 @@ class AdminNotifications
         ];
     }
 
+    /**
+     * Admins locked out of the panel. Superadmin-only, and deliberately first
+     * in the feed — a colleague who cannot work is more urgent than stock.
+     */
+    private static function adminRequests(User $admin): Collection
+    {
+        if (!$admin->isSuperadmin()) {
+            return collect();
+        }
+
+        return AccountRequest::pending()
+            ->fromAdmins()
+            ->latest()
+            ->limit(6)
+            ->get()
+            ->map(fn (AccountRequest $req) => [
+                'icon'       => $req->typeIcon(),
+                'tone'       => 'danger',
+                'title'      => 'Admin ' . Str::lower($req->typeLabel()) . ' request',
+                'body'       => $req->name . ' — ' . $req->email,
+                'time'       => $req->created_at,
+                'url'        => $req->isPasswordReset()
+                    ? route('admin.password-reset-requests.index', ['status' => 'pending'])
+                    : route('admin.admin-activation-requests.index', ['status' => 'pending']),
+                'always_new' => false,
+            ]);
+    }
+
     /** Customers waiting on a password reset or reactivation. */
     private static function accountRequests(User $admin): Collection
     {
@@ -84,6 +115,7 @@ class AdminNotifications
         }
 
         return AccountRequest::pending()
+            ->fromCustomers()
             ->latest()
             ->limit(8)
             ->get()
@@ -170,6 +202,35 @@ class AdminNotifications
     }
 
     /**
+     * Customers waiting on a chat reply.
+     *
+     * `always_new` is true because an unanswered conversation should keep
+     * asking for attention until somebody actually answers it — unlike a
+     * contact message, which is just an FYI once it has been seen.
+     */
+    private static function chats(User $admin): Collection
+    {
+        if (!$admin->hasPermission('chat.view')) {
+            return collect();
+        }
+
+        return ChatConversation::awaitingReply()
+            ->with('customer:id,full_name')
+            ->recentFirst()
+            ->limit(6)
+            ->get()
+            ->map(fn (ChatConversation $chat) => [
+                'icon'       => 'feather-message-circle',
+                'tone'       => 'primary',
+                'title'      => ($chat->customer?->full_name ?? 'A customer') . ' is waiting for a reply',
+                'body'       => Str::limit((string) $chat->last_message_preview, 60),
+                'time'       => $chat->last_message_at,
+                'url'        => route('admin.chat.index', ['conversation' => $chat->id]),
+                'always_new' => true,
+            ]);
+    }
+
+    /**
      * Sidebar counters — small numbers next to menu entries. Kept separate
      * from the bell so a page can show a count without building the full list.
      *
@@ -190,7 +251,21 @@ class AdminNotifications
         $counts = [];
 
         if ($admin->hasPermission('account_requests.view')) {
-            $counts['account_requests'] = AccountRequest::pending()->count();
+            $counts['account_requests'] = AccountRequest::pending()->fromCustomers()->count();
+        }
+
+        if ($admin->isSuperadmin()) {
+            $counts['password_reset_requests'] = AccountRequest::pending()
+                ->fromAdmins()->passwordResets()->count();
+
+            $counts['admin_activation_requests'] = AccountRequest::pending()
+                ->fromAdmins()->activations()->count();
+        }
+
+        if ($admin->hasPermission('chat.view')) {
+            // Threads waiting on a reply, not total unread lines — the badge
+            // answers "how many customers need me", not "how many messages".
+            $counts['chat'] = ChatConversation::awaitingReply()->count();
         }
 
         if ($admin->hasPermission('orders.view')) {

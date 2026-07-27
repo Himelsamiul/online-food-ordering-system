@@ -69,6 +69,21 @@ class Permission extends Model
             'account_requests'  => ['label' => 'Account Requests',   'icon' => 'feather-inbox',     'actions' => ['view', 'edit', 'delete']],
             'contact_messages'  => ['label' => 'Contact Messages',   'icon' => 'feather-life-buoy', 'actions' => ['view', 'delete']],
         ],
+        'Support' => [
+            'chat' => [
+                'label'   => 'Live Chat',
+                'icon'    => 'feather-message-circle',
+                'actions' => ['view', 'create', 'edit', 'delete'],
+                // The generic hints ("Add new live chat") read wrong here, so
+                // this module spells its own out.
+                'hints'   => [
+                    'view'   => 'Open the support inbox and read customer conversations',
+                    'create' => 'Reply to customers in the chat',
+                    'edit'   => 'Mark conversations resolved or reopen them',
+                    'delete' => 'Permanently remove a conversation and its transcript',
+                ],
+            ],
+        ],
         'Monitoring' => [
             'activity_log'        => ['label' => 'Activity Log',        'icon' => 'feather-activity',  'actions' => ['view', 'delete']],
             'login_history'       => ['label' => 'Customer Logins',     'icon' => 'feather-log-in',    'actions' => ['view', 'delete']],
@@ -82,6 +97,14 @@ class Permission extends Model
      */
     public static function actionHint(string $module, string $action): string
     {
+        // A module may spell its own hints out when the generic sentence below
+        // would read badly for it.
+        foreach (self::MODULES as $modules) {
+            if (isset($modules[$module]['hints'][$action])) {
+                return $modules[$module]['hints'][$action];
+            }
+        }
+
         $label = strtolower(self::moduleLabel($module));
 
         return match ($action) {

@@ -19,7 +19,7 @@ class ActivityLogController extends Controller
     {
         $logs = $this->filtered($request)
             ->latest('id')
-            ->paginate((int) $request->query('per_page', 25))
+            ->paginate($this->perPage($request, 25, [25, 50, 100]))
             ->withQueryString();
 
         return view('backend.pages.activity-log.index', [

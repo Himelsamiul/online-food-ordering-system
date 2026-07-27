@@ -83,7 +83,20 @@
                                             <span class="badge bg-info">You</span>
                                         @endif
                                     </p>
-                                    <p class="cell-sub">{{ $admin->email }}</p>
+                                    <p class="cell-sub">
+                                        {{ $admin->email }}
+                                        @if ($admin->username)
+                                            <span class="text-muted">· {{ $admin->username }}</span>
+                                        @endif
+                                    </p>
+                                    <p class="cell-sub mt-1">
+                                        <span class="status-pill {{ $admin->is_active ? 'on' : 'off' }}">
+                                            {{ $admin->is_active ? 'Active' : 'Deactivated' }}
+                                        </span>
+                                        @if (!$admin->is_active && $admin->deactivation_reason)
+                                            <span class="text-muted">— {{ $admin->deactivation_reason }}</span>
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
 
@@ -143,6 +156,36 @@
                                        class="btn btn-soft-primary btn-sm">
                                         <i class="feather-edit-2"></i> Edit
                                     </a>
+                                @endcan
+
+                                {{--
+                                    Activate / deactivate. A deactivated admin is blocked at
+                                    login, kicked out of any live session, and pointed at the
+                                    activation request form. Never offered for your own account
+                                    or for the last active super admin — the controller refuses
+                                    both, so the UI matches.
+                                --}}
+                                @can('manage-admins')
+                                    @unless ($isSelf)
+                                        <form action="{{ route('admin.admin-users.status', $admin->id) }}"
+                                              method="POST" class="delete-form d-inline-flex"
+                                              data-confirm-title="{{ $admin->is_active ? 'Deactivate' : 'Activate' }} {{ $admin->name }}?"
+                                              data-confirm-text="{{ $admin->is_active
+                                                  ? 'They will be signed out immediately and blocked from the panel until reactivated. They will be emailed.'
+                                                  : 'They will be able to sign in again straight away, and will be emailed.' }}"
+                                              data-confirm-button="Yes, {{ $admin->is_active ? 'deactivate' : 'activate' }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            @if ($admin->is_active)
+                                                <input type="hidden" name="reason" value="Deactivated by a super admin.">
+                                            @endif
+                                            <button type="submit"
+                                                    class="btn btn-sm {{ $admin->is_active ? 'btn-soft-warning' : 'btn-soft-success' }}">
+                                                <i class="feather-{{ $admin->is_active ? 'user-x' : 'user-check' }}"></i>
+                                                {{ $admin->is_active ? 'Deactivate' : 'Activate' }}
+                                            </button>
+                                        </form>
+                                    @endunless
                                 @endcan
 
                                 @can('manage-admins')

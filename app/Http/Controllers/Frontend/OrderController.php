@@ -309,6 +309,17 @@ public function store(Request $request)
             'user'
         ])->findOrFail($order);
 
+        /*
+         * Ownership check. Without it any signed-in customer could walk
+         * /order/success/1, /2, … and read another customer's name, phone,
+         * delivery address, items and totals. viewOrder() already guards this
+         * way; success() was missing it.
+         */
+        abort_unless(
+            (int) $order->user_id === (int) Auth::guard('frontend')->id(),
+            403,
+        );
+
         return view('frontend.pages.order.success', compact('order'));
     }
 

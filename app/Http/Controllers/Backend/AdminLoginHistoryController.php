@@ -19,7 +19,7 @@ class AdminLoginHistoryController extends Controller
     {
         $histories = $this->filtered($request)
             ->latest('logged_in_at')
-            ->paginate((int) $request->query('per_page', 25))
+            ->paginate($this->perPage($request, 25, [25, 50, 100]))
             ->withQueryString();
 
         return view('backend.pages.admin-login-history.index', [

@@ -29,12 +29,29 @@
     </div>
 
     <div class="col-md-6">
+        <label class="form-label" for="adminUsername">Username</label>
+        <input type="text" name="username" id="adminUsername"
+               class="form-control @error('username') is-invalid @enderror"
+               value="{{ old('username', $adminUser->username ?? '') }}"
+               placeholder="Leave blank to generate one from the email">
+        @error('username') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+        <small class="form-text">
+            Letters, numbers, dashes and underscores. An admin who is locked out types this on
+            the password assistance form, so a super admin can check it against the account.
+        </small>
+    </div>
+
+    <div class="col-md-6">
         <label class="form-label" for="adminEmail">Email</label>
         <input type="email" name="email" id="adminEmail"
                class="form-control @error('email') is-invalid @enderror"
                value="{{ old('email', $adminUser->email ?? '') }}"
                placeholder="name@example.com" required>
         @error('email') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+        <small class="form-text">
+            The only address a reset link is ever sent to, and the one the assistance form is
+            validated against.
+        </small>
     </div>
 
     <div class="col-md-6">

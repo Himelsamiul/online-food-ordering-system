@@ -38,7 +38,7 @@ trait HandlesAccountRequests
         $requests = $this->filtered($request)
             ->with(['registration', 'adminUser', 'handler'])
             ->latest()
-            ->paginate((int) $request->query('per_page', 15))
+            ->paginate($this->perPage($request, 15, [15, 25, 50, 100]))
             ->withQueryString();
 
         $counts = [
@@ -147,7 +147,7 @@ trait HandlesAccountRequests
             ->with(['handler'])
             ->latest()
             ->lazy(500)
-            ->map(fn (AccountRequest $r, $i) => [
+            ->map(fn (AccountRequest $r) => [
                 $r->id,
                 $r->requesterLabel(),
                 $r->typeLabel(),

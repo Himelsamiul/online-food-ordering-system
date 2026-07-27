@@ -218,7 +218,7 @@ class RegistrationController extends Controller
 
         $registrations = $query->withCount('orders')
             ->latest()
-            ->paginate((int) $request->query('per_page', 20))
+            ->paginate($this->perPage($request, 20, [20, 50, 100]))
             ->withQueryString();
 
         $stats = [

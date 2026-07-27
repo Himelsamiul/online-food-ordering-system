@@ -54,6 +54,10 @@
 
   </div>{{-- /.hero_area — the template shipped this unclosed --}}
 
+  {{-- Live support chat. Outside .hero_area so its fixed position is measured
+       against the viewport rather than that container's stacking context. --}}
+  @include('frontend.partials.chat-widget')
+
   <!-- jquery -->
   <script src="{{ asset('feane-1.0.0/js/jquery-3.4.1.min.js') }}"></script>
 

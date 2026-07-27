@@ -22,7 +22,7 @@ class CustomerLoginHistoryController extends Controller
         $histories = $this->filtered($request)
             ->with('registration')
             ->latest('logged_in_at')
-            ->paginate((int) $request->query('per_page', 20))
+            ->paginate($this->perPage($request, 20, [20, 50, 100]))
             ->withQueryString();
 
         return view('backend.pages.loginhistory', [

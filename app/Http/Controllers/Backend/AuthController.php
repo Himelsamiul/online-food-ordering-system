@@ -83,7 +83,13 @@ class AuthController extends Controller
                 $user,
             );
 
-            return back()
+            /*
+             * Redirect by name, not back(). back() resolves off the Referer
+             * header and silently falls through to "/" when it is absent —
+             * which would drop a locked-out admin on the storefront with a
+             * flash and no way to act on it.
+             */
+            return redirect()->route('admin.login')
                 ->withInput($request->only('email'))
                 ->with('error', 'Your account has been deactivated.'
                     . ($reason ? ' Reason: ' . $reason : ''))

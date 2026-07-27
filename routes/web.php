@@ -12,6 +12,7 @@ use App\Http\Controllers\Backend\Auth\PasswordAssistanceController;
 use App\Http\Controllers\Backend\Auth\ResetLinkController as AdminResetLinkController;
 use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\ChatController as AdminChatController;
 use App\Http\Controllers\Backend\CouponController;
 use App\Http\Controllers\Backend\CustomerLoginHistoryController;
 use App\Http\Controllers\Backend\DashboardController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Backend\SubcategoryController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Frontend\AccountRequestController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\ChatController;
 use App\Http\Controllers\Frontend\CouponController as FrontendCouponController;
 use App\Http\Controllers\Frontend\ForgotPasswordController;
 use App\Http\Controllers\Frontend\HomeController;
@@ -148,6 +150,16 @@ Route::middleware('auth:frontend')->group(function () {
     Route::get('/order/payment/cancel/{order}', [OrderController::class, 'stripeCancel'])->name('order.payment.cancel');
 
     Route::get('/profile/order/{order}', [RegistrationController::class, 'viewOrder'])->name('profile.order.view');
+
+    /*
+     * Live support chat. Inside auth:frontend on purpose — the widget renders
+     * for anonymous visitors but only ever offers them the login page, and
+     * there is no endpoint here they could reach without a session.
+     */
+    Route::get('/support/chat/poll', [ChatController::class, 'poll'])
+        ->middleware('throttle:120,1')->name('chat.poll');
+    Route::post('/support/chat/send', [ChatController::class, 'send'])
+        ->middleware('throttle:' . config('security.chat.rate_per_minute', 20) . ',1')->name('chat.send');
 });
 
 /*
@@ -407,6 +419,23 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::middleware('can:account_requests.delete')->group(function () {
         Route::post('/account-requests/bulk-delete', [AdminAccountRequestController::class, 'bulkDelete'])->name('account-requests.bulk-delete');
         Route::delete('/account-requests/{accountRequest}/delete', [AdminAccountRequestController::class, 'destroy'])->name('account-requests.delete');
+    });
+
+    // ================= Live support chat =================
+    Route::middleware('can:chat.view')->group(function () {
+        Route::get('/chat', [AdminChatController::class, 'index'])->name('chat.index');
+        Route::get('/chat/poll', [AdminChatController::class, 'poll'])
+            ->middleware('throttle:180,1')->name('chat.poll');
+    });
+    Route::middleware('can:chat.create')->group(function () {
+        Route::post('/chat/{conversation}/send', [AdminChatController::class, 'send'])
+            ->middleware('throttle:' . config('security.chat.rate_per_minute', 20) . ',1')->name('chat.send');
+    });
+    Route::middleware('can:chat.edit')->group(function () {
+        Route::patch('/chat/{conversation}/status', [AdminChatController::class, 'updateStatus'])->name('chat.status');
+    });
+    Route::middleware('can:chat.delete')->group(function () {
+        Route::delete('/chat/{conversation}/delete', [AdminChatController::class, 'destroy'])->name('chat.delete');
     });
 
     // ================= Contact messages =================

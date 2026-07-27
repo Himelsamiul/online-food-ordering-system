@@ -218,6 +218,21 @@
                     </li>
                 @endcan
 
+                {{-- ============================ SUPPORT ============================ --}}
+                @can('chat.view')
+                    <li class="nxl-item nxl-caption"><label>Support</label></li>
+
+                    <li class="nxl-item {{ $isActive('admin.chat.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.chat.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-message-circle"></i></span>
+                            <span class="nxl-mtext">Live Chat</span>
+                            @if (!empty($counts['chat']))
+                                <span class="nxl-badge">{{ $counts['chat'] }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endcan
+
                 {{-- ========================= MONITORING ========================= --}}
                 @canany(['activity_log.view', 'login_history.view', 'admin_login_history.view'])
                     <li class="nxl-item nxl-caption"><label>Monitoring</label></li>
@@ -251,12 +266,37 @@
                 @endcan
 
                 {{-- =========================== SYSTEM =========================== --}}
-                @can('manage-admins')
+                @canany(['manage-admins', 'manage-admin-requests'])
                     <li class="nxl-item nxl-caption"><label>System</label></li>
+                @endcanany
 
+                {{-- Superadmin-only: admins locked out of the panel. --}}
+                @can('manage-admin-requests')
+                    <li class="nxl-item {{ $isActive('admin.password-reset-requests.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.password-reset-requests.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-key"></i></span>
+                            <span class="nxl-mtext">Password Requests</span>
+                            @if (!empty($counts['password_reset_requests']))
+                                <span class="nxl-badge">{{ $counts['password_reset_requests'] }}</span>
+                            @endif
+                        </a>
+                    </li>
+
+                    <li class="nxl-item {{ $isActive('admin.admin-activation-requests.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.admin-activation-requests.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user-check"></i></span>
+                            <span class="nxl-mtext">Activation Requests</span>
+                            @if (!empty($counts['admin_activation_requests']))
+                                <span class="nxl-badge">{{ $counts['admin_activation_requests'] }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endcan
+
+                @can('manage-admins')
                     <li class="nxl-item nxl-hasmenu {{ $isActive('admin.admin-users.*') ? 'active nxl-trigger' : '' }}">
                         <a href="javascript:void(0);" class="nxl-link">
-                            <span class="nxl-micon"><i class="feather-user-check"></i></span>
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
                             <span class="nxl-mtext">Admins &amp; Roles</span>
                             <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>

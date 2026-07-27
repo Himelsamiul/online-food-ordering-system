@@ -68,6 +68,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Live support chat
+    |--------------------------------------------------------------------------
+    |
+    | The widget polls rather than holding a socket open, so the intervals here
+    | are the real cost knob: every open widget is one query per interval.
+    |
+    */
+
+    'chat' => [
+        'max_length' => (int) env('CHAT_MAX_LENGTH', 2000),
+
+        // Messages one sender may post per minute.
+        'rate_per_minute' => (int) env('CHAT_RATE_PER_MINUTE', 20),
+
+        // How many lines the widget and the admin pane load up front.
+        'history_limit' => (int) env('CHAT_HISTORY_LIMIT', 50),
+
+        'poll' => [
+            // While the panel is open and the tab is focused.
+            'active_ms' => (int) env('CHAT_POLL_ACTIVE_MS', 3000),
+
+            // Panel shut — just keeping the unread badge honest.
+            'idle_ms'   => (int) env('CHAT_POLL_IDLE_MS', 20000),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit trail
     |--------------------------------------------------------------------------
     */

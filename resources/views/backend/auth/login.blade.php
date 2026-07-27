@@ -183,8 +183,10 @@
             color: var(--ar-success);
         }
 
-        /* Footer bits */
-        .auth-note {
+        /* Footer bits.
+           Named .auth-tagline, not .auth-note — the design system now defines
+           .auth-note as a tinted panel and the two would fight. */
+        .auth-tagline {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -193,6 +195,24 @@
             font-size: 12.5px;
             color: var(--ar-muted);
         }
+
+        .auth-links {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: -6px 0 18px;
+            font-size: 13px;
+        }
+
+        .auth-links a {
+            color: var(--ar-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-links a:hover { text-decoration: underline; }
 
         .auth-foot {
             margin: 20px 0 0;
@@ -266,6 +286,38 @@
                 </div>
             @endif
 
+            @if (session('error'))
+                <div class="alert alert-danger" role="alert">
+                    <i class="feather-alert-circle"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if (session('info'))
+                <div class="alert alert-success" role="status">
+                    <i class="feather-info"></i>
+                    <span>{{ session('info') }}</span>
+                </div>
+            @endif
+
+            {{--
+                A deactivated admin gets told exactly that, plus the one route
+                back in. Shown only when the controller flags it, so the login
+                page is not cluttered for everyone else.
+            --}}
+            @if (session('offer_activation_help'))
+                <div class="auth-note">
+                    <p>
+                        <strong>Your account has been deactivated.</strong>
+                        A super admin has to switch it back on before you can sign in.
+                    </p>
+                    <a href="{{ route('admin.activation.request', ['email' => session('help_email')]) }}"
+                       class="btn btn-soft-primary btn-sm">
+                        <i class="feather-user-check"></i> Request account activation
+                    </a>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('admin.login.submit') }}" novalidate>
                 @csrf
 
@@ -306,10 +358,22 @@
                     @enderror
                 </div>
 
-                <div class="form-check mb-4">
+                <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" name="remember" id="remember"
                            value="1" {{ old('remember') ? 'checked' : '' }}>
                     <label class="form-check-label" for="remember">Keep me signed in</label>
+                </div>
+
+                {{--
+                    Two different doors on purpose. Only a super admin can reset
+                    their own password by email; everyone else asks one to issue
+                    a signed single-use link.
+                --}}
+                <div class="auth-links">
+                    <a href="{{ route('admin.password.request') }}">Forgot password?</a>
+                    <a href="{{ route('admin.password.assistance') }}">
+                        Not a Super Admin? Request password assistance
+                    </a>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
@@ -317,7 +381,7 @@
                 </button>
             </form>
 
-            <p class="auth-note">
+            <p class="auth-tagline">
                 <i class="feather-shield"></i>
                 <span>Every sign-in attempt is recorded.</span>
             </p>

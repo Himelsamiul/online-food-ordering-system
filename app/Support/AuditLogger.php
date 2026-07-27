@@ -76,6 +76,7 @@ class AuditLogger
         \App\Models\User::class            => 'Admin Users',
         \App\Models\AccountRequest::class  => 'Account Requests',
         \App\Models\Permission::class      => 'Permissions',
+        \App\Models\ChatConversation::class => 'Support Chat',
     ];
 
     /**
