@@ -3,6 +3,14 @@
     $customer  = Auth::guard('frontend')->user();
 @endphp
 
+{{-- The stylesheet is linked in master.blade.php's <head>; a @push from here
+     would land after @stack('styles') had already rendered. --}}
+@once
+    @push('scripts')
+        <script src="{{ asset('assets/js/notifications.js') }}"></script>
+    @endpush
+@endonce
+
 {{--
     The old header put the account links inside the centre nav list and gave
     .navbar-nav a hard `padding-left: 18%`. With eight items plus the search
@@ -90,6 +98,38 @@
                     </a>
 
                     @auth('frontend')
+                        {{-- Notification bell. Rendered empty and filled by the
+                             first poll, so the header never blocks on a query. --}}
+                        <div class="sf-bell-wrap" id="sfBell"
+                             data-poll-url="{{ route('notifications.poll') }}"
+                             data-read-url="{{ route('notifications.read-all') }}"
+                             data-all-url="{{ route('notifications.index') }}"
+                             data-interval="{{ (int) config('security.notifications.poll_ms', 25000) }}">
+
+                            <button type="button" class="sf-icon-link sf-bell-toggle"
+                                    aria-label="Notifications" aria-expanded="false">
+                                <i class="fa fa-bell" aria-hidden="true"></i>
+                                <span class="sf-bell-badge" hidden>0</span>
+                            </button>
+
+                            <div class="sf-bell-panel" hidden>
+                                <div class="sf-bell-head">
+                                    <strong>Notifications</strong>
+                                    <button type="button" class="sf-bell-readall" hidden>Mark all read</button>
+                                </div>
+
+                                <div class="sf-bell-list">
+                                    <div class="sf-bell-loading">
+                                        <span class="sf-bell-spinner" aria-hidden="true"></span> Loading…
+                                    </div>
+                                </div>
+
+                                <a href="{{ route('notifications.index') }}" class="sf-bell-foot">
+                                    See all notifications
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="dropdown sf-account">
                             <a href="#" class="sf-account-toggle" id="accountDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

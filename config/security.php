@@ -96,6 +96,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Storefront notification bell
+    |--------------------------------------------------------------------------
+    */
+
+    'notifications' => [
+        // How often the header bell refreshes its badge. Slower than chat on
+        // purpose — an order status change is not a per-second event.
+        'poll_ms' => (int) env('NOTIFICATIONS_POLL_MS', 25000),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit trail
     |--------------------------------------------------------------------------
     */

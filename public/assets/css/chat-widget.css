@@ -1,9 +1,10 @@
 /* ==========================================================================
-   Live support chat widget (storefront)
+   Live support chat widget (storefront) — Messenger-shaped
 
-   Reuses the --sf-* tokens from storefront-refresh.css. That file defines them
-   on :root, and it is always loaded before this one, so the fallbacks in the
-   var() calls below only ever matter if this stylesheet is used standalone.
+   The thread itself is LIGHT even though the storefront is dark. That is
+   deliberate: a transcript is long-form reading, and light bubbles on a light
+   surface are what every chat product converges on. The launcher and the
+   header keep the brand colour so the widget still belongs to the site.
    ========================================================================== */
 
 .sf-chat {
@@ -12,66 +13,80 @@
     bottom: 24px;
     z-index: 1080;                      /* over the sticky header, under modals */
     font-family: inherit;
+
+    /* Local palette — the thread does not inherit the storefront's dark tokens. */
+    --chat-brand:      #f1b816;
+    --chat-brand-dark: #d9a412;
+    --chat-surface:    #ffffff;
+    --chat-canvas:     #f0f2f5;
+    --chat-ink:        #111b21;
+    --chat-ink-2:      #54656f;
+    --chat-faint:      #8696a0;
+    --chat-line:       #e5e8eb;
+    --chat-mine:       #f1b816;
+    --chat-mine-ink:   #1a1a1a;
+    --chat-them:       #ffffff;
 }
 
 /* ------------------------------------------------------------- launcher */
 
 .sf-chat-launcher {
     position: relative;
-    width: 58px;
-    height: 58px;
+    width: 60px;
+    height: 60px;
     border: 0;
     border-radius: 50%;
-    background: var(--sf-accent, #f1b816);
+    background: var(--chat-brand);
     color: #1a1a1a;
-    font-size: 22px;
     cursor: pointer;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, .42);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .34);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform .18s ease, background .18s ease;
+    transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), background .18s;
 }
 
-.sf-chat-launcher:hover  { background: var(--sf-accent-dark, #d9a412); transform: translateY(-2px); }
-.sf-chat-launcher:focus  { outline: 2px solid #fff; outline-offset: 3px; }
-.sf-chat-launcher:active { transform: translateY(0); }
+.sf-chat-launcher:hover  { background: var(--chat-brand-dark); transform: scale(1.06); }
+.sf-chat-launcher:focus  { outline: 3px solid rgba(255, 255, 255, .85); outline-offset: 2px; }
+.sf-chat-launcher:active { transform: scale(.96); }
 
-/* One button, two glyphs — swapped by the open state so the control never
-   jumps position the way a second button would. */
-.sf-chat-launcher-close             { display: none; }
+/* One button, two glyphs — swapped by the open state, so the control never
+   shifts position the way a second button would. */
+.sf-chat-launcher-close                  { display: none; }
 .sf-chat.is-open .sf-chat-launcher-open  { display: none; }
-.sf-chat.is-open .sf-chat-launcher-close { display: inline-block; }
+.sf-chat.is-open .sf-chat-launcher-close { display: block; }
+.sf-chat.is-open .sf-chat-launcher       { transform: rotate(90deg); }
+.sf-chat.is-open .sf-chat-launcher:hover { transform: rotate(90deg) scale(1.06); }
 
 .sf-chat-dot {
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: -1px;
+    right: -1px;
     min-width: 22px;
     height: 22px;
     padding: 0 6px;
     border-radius: 11px;
-    background: var(--sf-danger, #e74c3c);
+    background: #e74c3c;
     color: #fff;
     font-size: 11px;
     font-weight: 700;
     line-height: 22px;
     text-align: center;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, .35);
+    box-shadow: 0 0 0 3px rgba(18, 18, 22, .9);
 }
 
-/* A quiet pulse so an unread reply is noticed without being obnoxious. */
 .sf-chat-launcher.has-unread { animation: sf-chat-pulse 2.2s ease-out infinite; }
 
 @keyframes sf-chat-pulse {
-    0%   { box-shadow: 0 10px 28px rgba(0, 0, 0, .42), 0 0 0 0 rgba(241, 184, 22, .55); }
-    70%  { box-shadow: 0 10px 28px rgba(0, 0, 0, .42), 0 0 0 16px rgba(241, 184, 22, 0); }
-    100% { box-shadow: 0 10px 28px rgba(0, 0, 0, .42), 0 0 0 0 rgba(241, 184, 22, 0); }
+    0%   { box-shadow: 0 8px 24px rgba(0, 0, 0, .34), 0 0 0 0 rgba(241, 184, 22, .55); }
+    70%  { box-shadow: 0 8px 24px rgba(0, 0, 0, .34), 0 0 0 18px rgba(241, 184, 22, 0); }
+    100% { box-shadow: 0 8px 24px rgba(0, 0, 0, .34), 0 0 0 0 rgba(241, 184, 22, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .sf-chat-launcher.has-unread { animation: none; }
-    .sf-chat-panel               { transition: none !important; }
+    .sf-chat-panel, .sf-chat-launcher { transition: none !important; }
+    .sf-chat-msg { animation: none !important; }
 }
 
 /* ---------------------------------------------------------------- panel */
@@ -79,25 +94,25 @@
 .sf-chat-panel {
     position: absolute;
     right: 0;
-    bottom: 74px;
-    width: 370px;
+    bottom: 76px;
+    width: 384px;
     max-width: calc(100vw - 32px);
-    height: 520px;
-    max-height: calc(100vh - 140px);
+    height: 560px;
+    max-height: calc(100vh - 150px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: var(--sf-panel, rgba(18, 18, 22, .96));
-    border: 1px solid var(--sf-glass-line, rgba(255, 255, 255, .16));
-    border-radius: var(--sf-radius, 18px);
-    box-shadow: var(--sf-shadow-lg, 0 22px 60px rgba(0, 0, 0, .55));
-    color: var(--sf-ink, #fff);
+    background: var(--chat-surface);
+    border-radius: 16px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, .4), 0 2px 8px rgba(0, 0, 0, .2);
+    color: var(--chat-ink);
+    transform-origin: bottom right;
     opacity: 0;
-    transform: translateY(12px) scale(.98);
-    transition: opacity .18s ease, transform .18s ease;
+    transform: translateY(16px) scale(.94);
+    transition: opacity .2s ease, transform .24s cubic-bezier(.34, 1.4, .64, 1);
 }
 
-/* [hidden] alone loses to the flex display above, hence the explicit rule. */
+/* [hidden] alone loses to the flex display above. */
 .sf-chat-panel[hidden] { display: none; }
 
 .sf-chat.is-open .sf-chat-panel {
@@ -105,51 +120,68 @@
     transform: translateY(0) scale(1);
 }
 
+/* --------------------------------------------------------------- header */
+
 .sf-chat-head {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: rgba(255, 255, 255, .05);
-    border-bottom: 1px solid var(--sf-glass-line, rgba(255, 255, 255, .16));
+    gap: 11px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--chat-brand), var(--chat-brand-dark));
+    color: #1a1a1a;
     flex: 0 0 auto;
 }
 
 .sf-chat-avatar {
-    width: 38px;
-    height: 38px;
-    flex: 0 0 38px;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     border-radius: 50%;
-    background: var(--sf-accent, #f1b816);
-    color: #1a1a1a;
+    background: rgba(255, 255, 255, .9);
+    color: var(--chat-brand-dark);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
 }
 
+.sf-chat-presence {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #1dbf73;
+    border: 2px solid var(--chat-brand);
+}
+
 .sf-chat-head-text        { flex: 1 1 auto; min-width: 0; line-height: 1.3; }
-.sf-chat-head-text strong { display: block; font-size: 15px; }
+.sf-chat-head-text strong { display: block; font-size: 15px; font-weight: 700; }
 
 .sf-chat-status {
     display: block;
     font-size: 11.5px;
-    color: var(--sf-muted, rgba(255, 255, 255, .62));
+    opacity: .8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
-.sf-chat-status.is-closed { color: var(--sf-accent, #f1b816); }
 
 .sf-chat-close {
     border: 0;
     background: transparent;
-    color: var(--sf-muted, rgba(255, 255, 255, .62));
-    font-size: 15px;
+    color: #1a1a1a;
     cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
+    padding: 7px;
+    border-radius: 50%;
+    display: flex;
+    opacity: .75;
+    transition: opacity .15s, background .15s;
 }
 
-.sf-chat-close:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+.sf-chat-close:hover { opacity: 1; background: rgba(0, 0, 0, .09); }
 
 /* --------------------------------------------------------------- thread */
 
@@ -157,35 +189,55 @@
     flex: 1 1 auto;
     overflow-y: auto;
     overscroll-behavior: contain;       /* don't scroll the page at the ends */
-    padding: 16px;
+    padding: 16px 14px 8px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 2px;                           /* tight — grouping adds the spacing */
+    background: var(--chat-canvas);
     scrollbar-width: thin;
 }
 
 .sf-chat-body::-webkit-scrollbar       { width: 6px; }
-.sf-chat-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .18); border-radius: 3px; }
+.sf-chat-body::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .16); border-radius: 3px; }
 
 .sf-chat-loading,
 .sf-chat-empty {
     margin: auto;
     text-align: center;
     font-size: 13px;
-    color: var(--sf-muted, rgba(255, 255, 255, .62));
-    padding: 0 12px;
+    color: var(--chat-ink-2);
+    padding: 0 18px;
     line-height: 1.6;
+}
+
+.sf-chat-empty strong {
+    display: block;
+    color: var(--chat-ink);
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.sf-chat-empty-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(241, 184, 22, .16);
+    color: var(--chat-brand-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin: 0 auto 12px;
 }
 
 .sf-chat-spinner {
     display: inline-block;
-    width: 13px;
-    height: 13px;
-    border: 2px solid rgba(255, 255, 255, .25);
-    border-top-color: var(--sf-accent, #f1b816);
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid rgba(0, 0, 0, .12);
+    border-top-color: var(--chat-brand);
     border-radius: 50%;
     animation: sf-chat-spin .7s linear infinite;
-    vertical-align: -2px;
 }
 
 @keyframes sf-chat-spin { to { transform: rotate(360deg); } }
@@ -193,85 +245,177 @@
 .sf-chat-day {
     align-self: center;
     font-size: 10.5px;
-    letter-spacing: .06em;
+    font-weight: 600;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    color: var(--sf-faint, rgba(255, 255, 255, .38));
-    background: rgba(255, 255, 255, .06);
-    padding: 3px 10px;
+    color: var(--chat-ink-2);
+    background: rgba(0, 0, 0, .05);
+    padding: 4px 12px;
     border-radius: 999px;
-    margin: 4px 0;
+    margin: 12px 0 8px;
 }
+
+/* --------------------------------------------------------------- bubbles */
+
+.sf-chat-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 7px;
+    max-width: 100%;
+}
+
+.sf-chat-row.from-me   { justify-content: flex-end; }
+.sf-chat-row.from-them { justify-content: flex-start; }
+
+/* Extra air between speakers; consecutive lines from one side stay tight. */
+.sf-chat-row.group-start { margin-top: 10px; }
+
+.sf-chat-row-avatar {
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--chat-brand);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+/* Only the last bubble in a run shows the avatar; the rest keep the indent. */
+.sf-chat-row-avatar.is-spacer { visibility: hidden; }
 
 .sf-chat-msg {
-    max-width: 82%;
-    padding: 9px 13px;
-    border-radius: 14px;
-    font-size: 13.5px;
-    line-height: 1.55;
+    max-width: 76%;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.45;
     word-wrap: break-word;
     overflow-wrap: anywhere;            /* a pasted URL must not widen the panel */
-    white-space: pre-wrap;              /* the user's own line breaks survive */
+    white-space: pre-wrap;              /* the sender's own line breaks survive */
     position: relative;
+    animation: sf-chat-pop .18s ease-out;
 }
 
-.sf-chat-msg-mine {
-    align-self: flex-end;
-    background: var(--sf-accent, #f1b816);
-    color: #1a1a1a;
-    border-bottom-right-radius: 4px;
+@keyframes sf-chat-pop {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.sf-chat-msg-them {
-    align-self: flex-start;
-    background: rgba(255, 255, 255, .10);
-    border: 1px solid rgba(255, 255, 255, .10);
-    border-bottom-left-radius: 4px;
+/* Messenger's corner language: the run's outer corners stay round, the inner
+   ones tighten so a group reads as one block. */
+.sf-chat-row.from-me .sf-chat-msg {
+    background: var(--chat-mine);
+    color: var(--chat-mine-ink);
+    border-radius: 18px 18px 5px 18px;
 }
 
-.sf-chat-msg-system {
-    align-self: center;
-    max-width: 92%;
-    text-align: center;
-    background: transparent;
-    border: 1px dashed rgba(255, 255, 255, .18);
-    color: var(--sf-muted, rgba(255, 255, 255, .62));
-    font-size: 12px;
-    padding: 7px 12px;
+.sf-chat-row.from-me.group-start .sf-chat-msg { border-top-right-radius: 18px; }
+.sf-chat-row.from-me.group-end   .sf-chat-msg { border-bottom-right-radius: 18px; }
+.sf-chat-row.from-me:not(.group-end) .sf-chat-msg { border-bottom-right-radius: 5px; }
+
+.sf-chat-row.from-them .sf-chat-msg {
+    background: var(--chat-them);
+    color: var(--chat-ink);
+    border-radius: 18px 18px 18px 5px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
 }
+
+.sf-chat-row.from-them.group-end .sf-chat-msg { border-bottom-left-radius: 18px; }
+.sf-chat-row.from-them:not(.group-end) .sf-chat-msg { border-bottom-left-radius: 5px; }
 
 .sf-chat-msg-name {
     display: block;
     font-size: 10.5px;
     font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    opacity: .68;
-    margin-bottom: 3px;
+    color: var(--chat-brand-dark);
+    margin-bottom: 2px;
 }
 
+/* Time hides until hover so the thread stays clean, and is always visible on
+   the last message of a run. */
 .sf-chat-msg-time {
     display: block;
     font-size: 10px;
-    opacity: .6;
-    margin-top: 4px;
+    opacity: 0;
+    margin-top: 3px;
     text-align: right;
+    transition: opacity .15s;
 }
 
-.sf-chat-msg-system .sf-chat-msg-time { text-align: center; }
+.sf-chat-row:hover .sf-chat-msg-time,
+.sf-chat-row.group-end .sf-chat-msg-time { opacity: .55; }
 
-/* Optimistic bubble, dimmed until the server confirms the id. */
-.sf-chat-msg.is-pending { opacity: .55; }
-.sf-chat-msg.is-failed  { background: var(--sf-danger, #e74c3c); color: #fff; }
+.sf-chat-row.from-them .sf-chat-msg-time { text-align: left; color: var(--chat-faint); }
+
+/* System notes sit apart from both speakers. */
+.sf-chat-row.from-system { justify-content: center; margin: 10px 0; }
+
+.sf-chat-row.from-system .sf-chat-msg {
+    max-width: 90%;
+    text-align: center;
+    background: rgba(0, 0, 0, .05);
+    color: var(--chat-ink-2);
+    font-size: 12px;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.sf-chat-row.from-system .sf-chat-msg-time { text-align: center; }
+
+/* Delivery state under the last outgoing bubble. */
+.sf-chat-receipt {
+    align-self: flex-end;
+    font-size: 10px;
+    color: var(--chat-faint);
+    padding: 1px 4px 4px 0;
+}
+
+.sf-chat-msg.is-pending { opacity: .6; }
+
+.sf-chat-msg.is-failed {
+    background: #e74c3c !important;
+    color: #fff !important;
+}
+
+/* ------------------------------------------------------------ jump button */
+
+.sf-chat-jump {
+    position: absolute;
+    left: 50%;
+    bottom: 84px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--chat-ink);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+    z-index: 3;
+}
+
+.sf-chat-jump[hidden] { display: none; }
+
+.sf-chat-jump:hover { background: #000; }
 
 /* ------------------------------------------------------------- composer */
 
 .sf-chat-alert {
-    margin: 0 16px 8px;
-    padding: 8px 11px;
-    border-radius: 10px;
-    background: rgba(231, 76, 60, .16);
-    border: 1px solid rgba(231, 76, 60, .4);
-    color: #ffb3aa;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 8px 14px;
+    background: #fdecea;
+    border-top: 1px solid #f5c6c2;
+    color: #b3261e;
     font-size: 12px;
     line-height: 1.5;
 }
@@ -281,55 +425,56 @@
     display: flex;
     align-items: flex-end;
     gap: 8px;
-    padding: 12px 16px 6px;
-    border-top: 1px solid var(--sf-glass-line, rgba(255, 255, 255, .16));
+    padding: 10px 12px;
+    background: var(--chat-surface);
+    border-top: 1px solid var(--chat-line);
 }
+
+.sf-chat-input-wrap {
+    flex: 1 1 auto;
+    background: var(--chat-canvas);
+    border-radius: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    transition: box-shadow .15s;
+}
+
+.sf-chat-input-wrap:focus-within { box-shadow: 0 0 0 2px rgba(241, 184, 22, .55); }
 
 .sf-chat-composer textarea {
     flex: 1 1 auto;
     resize: none;
-    max-height: 110px;
-    padding: 9px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--sf-glass-line, rgba(255, 255, 255, .16));
-    background: rgba(255, 255, 255, .07);
-    color: var(--sf-ink, #fff);
-    font-size: 13.5px;
-    line-height: 1.5;
+    max-height: 96px;
+    padding: 10px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--chat-ink);
+    font-size: 14px;
+    line-height: 1.45;
     font-family: inherit;
 }
 
-.sf-chat-composer textarea::placeholder { color: var(--sf-faint, rgba(255, 255, 255, .38)); }
-
-.sf-chat-composer textarea:focus {
-    outline: none;
-    border-color: var(--sf-accent, #f1b816);
-    background: rgba(255, 255, 255, .11);
-}
+.sf-chat-composer textarea:focus      { outline: none; }
+.sf-chat-composer textarea::placeholder { color: var(--chat-faint); }
 
 .sf-chat-send {
-    flex: 0 0 40px;
-    width: 40px;
-    height: 40px;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
     border: 0;
     border-radius: 50%;
-    background: var(--sf-accent, #f1b816);
+    background: var(--chat-brand);
     color: #1a1a1a;
-    font-size: 15px;
     cursor: pointer;
-    transition: background .15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, transform .15s, opacity .15s;
 }
 
-.sf-chat-send:hover:not(:disabled) { background: var(--sf-accent-dark, #d9a412); }
-.sf-chat-send:disabled             { opacity: .45; cursor: not-allowed; }
-
-.sf-chat-hint {
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 0 16px 11px;
-    font-size: 10.5px;
-    color: var(--sf-faint, rgba(255, 255, 255, .38));
-}
+.sf-chat-send:hover:not(:disabled)  { background: var(--chat-brand-dark); transform: scale(1.06); }
+.sf-chat-send:disabled              { opacity: .35; cursor: default; }
 
 /* --------------------------------------------------------- signed-out gate */
 
@@ -340,71 +485,81 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 26px 24px;
+    padding: 30px 26px;
     gap: 8px;
+    background: var(--chat-canvas);
 }
 
 .sf-chat-gate-icon {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: rgba(241, 184, 22, .14);
-    color: var(--sf-accent, #f1b816);
+    background: rgba(241, 184, 22, .18);
+    color: var(--chat-brand-dark);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 21px;
     margin-bottom: 4px;
 }
 
-.sf-chat-gate h4 { font-size: 16px; margin: 0; }
+.sf-chat-gate h4 { font-size: 16.5px; margin: 0; color: var(--chat-ink); font-weight: 700; }
 
 .sf-chat-gate p {
-    font-size: 12.5px;
+    font-size: 13px;
     line-height: 1.6;
-    color: var(--sf-muted, rgba(255, 255, 255, .62));
-    margin: 0 0 6px;
+    color: var(--chat-ink-2);
+    margin: 0 0 8px;
 }
 
 .sf-chat-gate-btn {
     display: inline-block;
-    padding: 9px 30px;
+    padding: 10px 34px;
     border-radius: 999px;
-    background: var(--sf-accent, #f1b816);
+    background: var(--chat-brand);
     color: #1a1a1a !important;
-    font-weight: 600;
-    font-size: 13.5px;
+    font-weight: 700;
+    font-size: 14px;
     text-decoration: none !important;
+    transition: background .15s;
 }
 
-.sf-chat-gate-btn:hover { background: var(--sf-accent-dark, #d9a412); }
+.sf-chat-gate-btn:hover { background: var(--chat-brand-dark); }
 
 .sf-chat-gate-link {
-    font-size: 12px;
-    color: var(--sf-muted, rgba(255, 255, 255, .62)) !important;
+    font-size: 12.5px;
+    color: var(--chat-ink-2) !important;
     text-decoration: underline !important;
 }
 
-.sf-chat-gate-link:hover { color: var(--sf-accent, #f1b816) !important; }
+.sf-chat-gate-link:hover { color: var(--chat-brand-dark) !important; }
 
 /* ----------------------------------------------------------------- small */
 
 @media (max-width: 480px) {
     .sf-chat { right: 14px; bottom: 14px; }
 
-    .sf-chat-launcher { width: 52px; height: 52px; font-size: 20px; }
+    .sf-chat-launcher { width: 54px; height: 54px; }
 
+    /* Near full-screen, the way every mobile messenger behaves. */
     .sf-chat-panel {
-        width: calc(100vw - 28px);
-        height: calc(100vh - 110px);
-        bottom: 66px;
+        position: fixed;
+        right: 10px;
+        left: 10px;
+        bottom: 78px;
+        width: auto;
+        max-width: none;
+        height: calc(100vh - 100px);
+        max-height: none;
     }
+
+    .sf-chat-msg { max-width: 82%; }
 }
 
-/* The launcher would otherwise sit on top of the footer's last row on very
-   short viewports; give it back the room instead of overlapping content. */
-@media (max-height: 420px) {
-    .sf-chat-panel { height: calc(100vh - 90px); bottom: 62px; }
+/* The launcher would otherwise sit on top of page content on very short
+   viewports; give the panel back the room instead of overlapping. */
+@media (max-height: 460px) {
+    .sf-chat-panel { height: calc(100vh - 96px); bottom: 68px; }
 }
 
 .sr-only {

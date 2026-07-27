@@ -6,6 +6,7 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\Registration;
 use App\Models\User;
+use App\Services\CustomerNotifier;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -52,7 +53,7 @@ class ChatService
             );
 
             return $conversation;
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (\Illuminate\Database\QueryException) {
             // Lost the race — the other request created it a moment ago.
             return ChatConversation::where('registration_id', $customer->id)->firstOrFail();
         }
@@ -123,6 +124,10 @@ class ChatService
                 'last_message_from'    => ChatMessage::FROM_ADMIN,
             ])->save();
 
+            // Ring the customer's bell too — they may well have the chat panel
+            // shut, or be on another page entirely.
+            app(CustomerNotifier::class)->chatReply($locked, $admin->name, $this->preview($body));
+
             return $message;
         });
     }
@@ -182,10 +187,14 @@ class ChatService
         }
 
         $conversation->forceFill([
-            'status'         => ChatConversation::STATUS_OPEN,
-            'closed_at'      => null,
-            'closed_by'      => null,
-            'closed_by_name' => null,
+            'status'              => ChatConversation::STATUS_OPEN,
+            'closed_at'           => null,
+            'closed_by'           => null,
+            'closed_by_name'      => null,
+            // Whoever reopens it is now handling it, so the inbox header shows
+            // the right name instead of the admin who closed it days ago.
+            'assigned_admin_id'   => $admin->id,
+            'assigned_admin_name' => $admin->name,
         ])->save();
 
         AuditLogger::system(
@@ -198,7 +207,8 @@ class ChatService
         );
     }
 
-    public function delete(ChatConversation $conversation, User $admin): void
+    /** The acting admin is not a parameter — AuditLogger reads it from the session. */
+    public function delete(ChatConversation $conversation): void
     {
         // Read the label and count BEFORE the delete — afterwards the customer
         // relation and the message rows are gone and the trail would say "#12".

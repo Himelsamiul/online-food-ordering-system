@@ -1,11 +1,15 @@
 /* ==========================================================================
-   Live support chat widget (storefront)
+   Live support chat widget (storefront) — Messenger-shaped
 
    Polling, not sockets. Two intervals: a fast one while the panel is open and
    the tab is focused, a slow one when the panel is shut and we only care about
-   keeping the unread badge honest. Polling stops entirely on a hidden tab —
-   a background tab left open for a day would otherwise be thousands of
-   pointless queries.
+   keeping the unread badge honest. Polling stops entirely on a hidden tab — a
+   background tab left open for a day would otherwise be thousands of pointless
+   queries.
+
+   Rendering is row-based so consecutive messages from one side can be grouped
+   the way a real messenger does: tightened corners, one avatar per run, and a
+   timestamp only on the last of the run.
    ========================================================================== */
 (function () {
     'use strict';
@@ -21,6 +25,7 @@
     /* ------------------------------------------------------ open / close */
 
     var STORE_KEY = 'sf-chat-open';
+    var chat = null;
 
     function isOpen() {
         return root.classList.contains('is-open');
@@ -44,7 +49,7 @@
         try { sessionStorage.removeItem(STORE_KEY); } catch (e) {}
 
         // Wait out the transition before pulling it from the layout.
-        setTimeout(function () { if (!isOpen()) panel.hidden = true; }, 200);
+        setTimeout(function () { if (!isOpen()) panel.hidden = true; }, 240);
 
         if (chat) chat.onClose();
     }
@@ -56,12 +61,16 @@
         if (e.key === 'Escape' && isOpen()) close();
     });
 
+    function restoreOpenState() {
+        var wasOpen = false;
+        try { wasOpen = sessionStorage.getItem(STORE_KEY) === '1'; } catch (e) {}
+        if (wasOpen) open();
+    }
+
     /* --------------------------------------------------------- guest stop */
 
     // Signed out: the panel is a static "please log in" card. No endpoints, no
     // polling, nothing below this point applies.
-    var chat = null;
-
     if (!root.classList.contains('is-auth')) {
         restoreOpenState();
         return;
@@ -75,25 +84,33 @@
     var sendBtn  = root.querySelector('.sf-chat-send');
     var alertBox = root.querySelector('.sf-chat-alert');
     var status   = root.querySelector('.sf-chat-status');
+    var jumpBtn  = root.querySelector('.sf-chat-jump');
 
     var cfg = {
         pollUrl:   root.dataset.pollUrl,
         sendUrl:   root.dataset.sendUrl,
         activeMs:  parseInt(root.dataset.activeMs, 10) || 3000,
         idleMs:    parseInt(root.dataset.idleMs, 10) || 20000,
-        maxLength: parseInt(root.dataset.maxLength, 10) || 2000
+        maxLength: parseInt(root.dataset.maxLength, 10) || 2000,
+        initial:   root.dataset.initial || '?'
     };
 
     var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
+    // Two messages from the same side inside this window read as one thought.
+    var GROUP_WINDOW_MS = 5 * 60 * 1000;
+
     var state = {
-        lastId:  0,
-        loaded:  false,
-        timer:   null,
+        lastId:   0,
+        loaded:   false,
+        timer:    null,
         inFlight: false,
-        sending: false,
-        lastDay: null,
-        failures: 0
+        sending:  false,
+        lastDay:  null,
+        failures: 0,
+        lastRow:  null,       // previous row element
+        lastFrom: null,       // its sender type
+        lastTime: 0           // its timestamp, for the grouping window
     };
 
     chat = {
@@ -104,9 +121,11 @@
             setUnread(0);
             fetchMessages(true);
             focusInput();
+            scrollToBottom();
         },
         onClose: function () {
             schedule(false);
+            hideJump();
         }
     };
 
@@ -175,8 +194,21 @@
                 if (data.messages.length) {
                     var stick = isNearBottom();
                     clearEmpty();
-                    data.messages.forEach(function (m) { appendMessage(m); });
-                    if (stick || isOpen()) scrollToBottom();
+
+                    var gotIncoming = false;
+                    data.messages.forEach(function (m) {
+                        if (appendMessage(m) && m.from !== 'customer') gotIncoming = true;
+                    });
+
+                    paintReceipt(data.messages);
+
+                    if (stick) {
+                        scrollToBottom();
+                    } else if (gotIncoming) {
+                        // They are reading history; do not yank them away —
+                        // offer the jump button instead.
+                        showJump();
+                    }
                 }
 
                 if (data.conversation) paintStatus(data.conversation);
@@ -212,11 +244,14 @@
         }
     });
 
-    input.addEventListener('input', autoGrow);
+    input.addEventListener('input', function () {
+        autoGrow();
+        sendBtn.disabled = input.value.trim() === '';
+    });
 
     function autoGrow() {
         input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 110) + 'px';
+        input.style.height = Math.min(input.scrollHeight, 96) + 'px';
     }
 
     function submit() {
@@ -234,12 +269,13 @@
 
         // Optimistic bubble: the message shows the instant they hit send, and
         // is reconciled (or marked failed) when the server answers.
-        var bubble = appendMessage({
+        var row = appendMessage({
             id: null, from: 'customer', name: null, body: text,
             time: formatNow(), date: null
         });
-        bubble.classList.add('is-pending');
+        if (row) row.querySelector('.sf-chat-msg').classList.add('is-pending');
         scrollToBottom();
+        hideJump();
 
         input.value = '';
         autoGrow();
@@ -270,33 +306,42 @@
                 });
             })
             .then(function (data) {
-                bubble.classList.remove('is-pending');
+                var bubble = row && row.querySelector('.sf-chat-msg');
+                if (bubble) bubble.classList.remove('is-pending');
 
                 // The poll must not hand us this line back as "new".
                 if (data.message && data.message.id) {
-                    bubble.dataset.id = data.message.id;
+                    if (row) row.dataset.id = data.message.id;
                     state.lastId = Math.max(state.lastId, data.message.id);
                 }
+
+                setReceipt('Sent');
 
                 if (data.conversation) paintStatus(data.conversation);
             })
             .catch(function (err) {
-                bubble.classList.remove('is-pending');
-                bubble.classList.add('is-failed');
-                bubble.title = 'Not delivered';
+                var bubble = row && row.querySelector('.sf-chat-msg');
+                if (bubble) {
+                    bubble.classList.remove('is-pending');
+                    bubble.classList.add('is-failed');
+                    bubble.title = 'Not delivered';
+                }
                 showAlert(err.message || 'Could not send that message.');
                 // Give the text back so it is not lost.
-                if (!input.value) { input.value = text; autoGrow(); }
+                if (!input.value) { input.value = text; autoGrow(); sendBtn.disabled = false; }
             })
             .finally(function () {
                 state.sending = false;
-                sendBtn.disabled = false;
                 focusInput();
             });
     }
 
     /* ---------------------------------------------------------- rendering */
 
+    /**
+     * Append one message as a row, grouped against the previous one.
+     * Returns the row element, or null when the message was already drawn.
+     */
     function appendMessage(msg) {
         if (msg.id) {
             if (msg.id <= state.lastId) return null;              // already drawn
@@ -320,70 +365,132 @@
             day.className = 'sf-chat-day';
             day.textContent = msg.date;
             body.appendChild(day);
+            state.lastRow = null;                                  // a date breaks the run
         }
 
-        var el = document.createElement('div');
-        el.className = 'sf-chat-msg ' + bubbleClass(msg.from);
-        if (msg.id) el.dataset.id = msg.id;
+        var side = msg.from === 'customer' ? 'from-me'
+                 : msg.from === 'system'   ? 'from-system'
+                 : 'from-them';
 
-        if (msg.from === 'admin' && msg.name) {
+        var when = msg.iso ? Date.parse(msg.iso) : Date.now();
+
+        // System notes never group; everything else groups with the same side
+        // inside the window.
+        var continues = side !== 'from-system'
+            && state.lastRow
+            && state.lastFrom === side
+            && (when - state.lastTime) < GROUP_WINDOW_MS;
+
+        var row = document.createElement('div');
+        row.className = 'sf-chat-row ' + side + ' group-end' + (continues ? '' : ' group-start');
+        if (msg.id) row.dataset.id = msg.id;
+
+        if (continues) {
+            // The previous row is no longer the end of its run.
+            state.lastRow.classList.remove('group-end');
+            var prevAvatar = state.lastRow.querySelector('.sf-chat-row-avatar');
+            if (prevAvatar) prevAvatar.classList.add('is-spacer');
+        }
+
+        if (side === 'from-them') {
+            var avatar = document.createElement('span');
+            avatar.className = 'sf-chat-row-avatar';
+            avatar.textContent = (msg.name || 'S').charAt(0).toUpperCase();
+            row.appendChild(avatar);
+        }
+
+        var bubble = document.createElement('div');
+        bubble.className = 'sf-chat-msg';
+
+        if (side === 'from-them' && msg.name && !continues) {
             var who = document.createElement('span');
             who.className = 'sf-chat-msg-name';
             who.textContent = msg.name;
-            el.appendChild(who);
+            bubble.appendChild(who);
         }
 
         // textContent, never innerHTML — message bodies are stored raw and are
         // fully attacker-controlled.
-        el.appendChild(document.createTextNode(msg.body));
+        bubble.appendChild(document.createTextNode(msg.body));
 
         if (msg.time) {
             var t = document.createElement('span');
             t.className = 'sf-chat-msg-time';
             t.textContent = msg.time;
-            el.appendChild(t);
+            bubble.appendChild(t);
         }
 
-        body.appendChild(el);
+        row.appendChild(bubble);
+        body.appendChild(row);
 
-        return el;
+        state.lastRow  = row;
+        state.lastFrom = side;
+        state.lastTime = when;
+
+        return row;
     }
 
     /**
-     * Match an incoming customer line against an un-stamped optimistic bubble.
-     * Only bubbles still awaiting an id are candidates, so an identical message
+     * Match an incoming customer line against an un-stamped optimistic row.
+     * Only rows still awaiting an id are candidates, so an identical message
      * sent twice on purpose still renders twice.
      */
     function adoptPending(msg) {
         if (msg.from !== 'customer') return null;
 
-        var candidates = body.querySelectorAll('.sf-chat-msg-mine:not([data-id])');
+        var candidates = body.querySelectorAll('.sf-chat-row.from-me:not([data-id])');
 
         for (var i = 0; i < candidates.length; i++) {
-            var el = candidates[i];
-            var text = el.childNodes[0] && el.childNodes[0].nodeType === 3 ? el.childNodes[0].nodeValue : '';
+            var row = candidates[i];
+            var bubble = row.querySelector('.sf-chat-msg');
+            if (!bubble) continue;
+
+            var node = bubble.childNodes[0];
+            var text = node && node.nodeType === 3 ? node.nodeValue : '';
 
             if (text === msg.body) {
-                el.dataset.id = msg.id;
-                el.classList.remove('is-pending');
-                return el;
+                row.dataset.id = msg.id;
+                bubble.classList.remove('is-pending');
+                return row;
             }
         }
 
         return null;
     }
 
-    function bubbleClass(from) {
-        if (from === 'customer') return 'sf-chat-msg-mine';
-        if (from === 'system')   return 'sf-chat-msg-system';
-        return 'sf-chat-msg-them';
+    /** "Sent" / "Seen" under the newest outgoing message. */
+    function paintReceipt(messages) {
+        for (var i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].from === 'customer') {
+                setReceipt(messages[i].read ? 'Seen' : 'Sent');
+                return;
+            }
+        }
+    }
+
+    function setReceipt(label) {
+        var existing = body.querySelector('.sf-chat-receipt');
+        if (existing) existing.remove();
+
+        /*
+         * Only meaningful when our own message is the last thing in the
+         * thread. lastElementChild, not `:last-of-type` — every node here is a
+         * div, so `:last-of-type` matches on the tag and would miss.
+         */
+        var lastRow = body.lastElementChild;
+        if (!lastRow || !lastRow.classList.contains('from-me')) return;
+
+        var tag = document.createElement('div');
+        tag.className = 'sf-chat-receipt';
+        tag.textContent = label;
+        body.appendChild(tag);
     }
 
     function paintStatus(conversation) {
         if (!status) return;
 
         if (conversation.open) {
-            status.textContent = 'We usually reply within a few minutes';
+            status.textContent = 'Typically replies within a few minutes';
             status.classList.remove('is-closed');
         } else {
             status.textContent = 'Resolved — send a message to reopen';
@@ -414,7 +521,20 @@
 
         var el = document.createElement('div');
         el.className = 'sf-chat-empty';
-        el.textContent = 'No messages yet. Ask us anything about your order, delivery or payment.';
+
+        var icon = document.createElement('div');
+        icon.className = 'sf-chat-empty-icon';
+        icon.innerHTML = '<i class="fa fa-comments-o" aria-hidden="true"></i>';
+        el.appendChild(icon);
+
+        var head = document.createElement('strong');
+        head.textContent = 'Say hello!';
+        el.appendChild(head);
+
+        el.appendChild(document.createTextNode(
+            'Ask us anything about your order, delivery or payment. We usually reply within a few minutes.'
+        ));
+
         body.appendChild(el);
     }
 
@@ -423,13 +543,25 @@
         if (empty) empty.remove();
     }
 
+    /* -------------------------------------------------------- scroll state */
+
     function isNearBottom() {
         return body.scrollHeight - body.scrollTop - body.clientHeight < 90;
     }
 
     function scrollToBottom() {
         body.scrollTop = body.scrollHeight;
+        hideJump();
     }
+
+    function showJump() { if (jumpBtn) jumpBtn.hidden = false; }
+    function hideJump() { if (jumpBtn) jumpBtn.hidden = true; }
+
+    if (jumpBtn) jumpBtn.addEventListener('click', scrollToBottom);
+
+    body.addEventListener('scroll', function () {
+        if (isNearBottom()) hideJump();
+    });
 
     function focusInput() {
         // Not on touch — focusing pops the keyboard and covers the transcript.
@@ -458,12 +590,6 @@
     }
 
     /* ------------------------------------------------------------- startup */
-
-    function restoreOpenState() {
-        var wasOpen = false;
-        try { wasOpen = sessionStorage.getItem(STORE_KEY) === '1'; } catch (e) {}
-        if (wasOpen) open();
-    }
 
     restoreOpenState();
 

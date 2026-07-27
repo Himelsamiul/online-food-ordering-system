@@ -34,6 +34,7 @@ use App\Http\Controllers\Frontend\ForgotPasswordController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\LoginController;
 use App\Http\Controllers\Frontend\MenuController;
+use App\Http\Controllers\Frontend\NotificationController as CustomerNotificationController;
 use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Frontend\RegistrationController;
 use App\Http\Controllers\Frontend\ResetLinkController;
@@ -160,6 +161,21 @@ Route::middleware('auth:frontend')->group(function () {
         ->middleware('throttle:120,1')->name('chat.poll');
     Route::post('/support/chat/send', [ChatController::class, 'send'])
         ->middleware('throttle:' . config('security.chat.rate_per_minute', 20) . ',1')->name('chat.send');
+
+    /*
+     * Notification bell. Every action re-scopes to the signed-in customer, so
+     * these ids are safe to expose; see NotificationController.
+     * Literal segments first, the {notification} wildcard last.
+     */
+    Route::get('/notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/poll', [CustomerNotificationController::class, 'poll'])
+        ->middleware('throttle:120,1')->name('notifications.poll');
+    Route::post('/notifications/read-all', [CustomerNotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/clear', [CustomerNotificationController::class, 'clear'])->name('notifications.clear');
+    Route::get('/notifications/{notification}/open', [CustomerNotificationController::class, 'open'])
+        ->whereNumber('notification')->name('notifications.open');
+    Route::delete('/notifications/{notification}', [CustomerNotificationController::class, 'destroy'])
+        ->whereNumber('notification')->name('notifications.delete');
 });
 
 /*

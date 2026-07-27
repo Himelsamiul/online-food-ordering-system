@@ -148,10 +148,18 @@ public function orderDetails(Request $request)
             'note'            => $request->note,
         ]);
 
-        Order::whereIn('id', $request->order_ids)->update([
-            'delivery_run_id' => $run->id,
-            'order_status'    => 'out_for_delivery',
-        ]);
+        /*
+         * Saved one at a time rather than as a mass update.
+         * Order::whereIn(...)->update(...) bypasses Eloquent events, so the
+         * OrderObserver would never fire and the customer would never be told
+         * their food had been picked up. A run is capped at 5 orders, so the
+         * loop costs nothing.
+         */
+        foreach (Order::whereIn('id', $request->order_ids)->get() as $order) {
+            $order->delivery_run_id = $run->id;
+            $order->order_status    = 'out_for_delivery';
+            $order->save();
+        }
 
         return redirect()
             ->route('admin.delivery-runs.index')
@@ -203,9 +211,12 @@ public function orderDetails(Request $request)
             'returned_at' => Carbon::now(),
         ]);
 
-        Order::whereIn('id', $run->order_ids)->update([
-            'order_status' => 'delivered',
-        ]);
+        // Model saves, not a mass update — see the note in store(): events must
+        // fire so the customer is told their order arrived.
+        foreach (Order::whereIn('id', $run->order_ids)->get() as $order) {
+            $order->order_status = 'delivered';
+            $order->save();
+        }
 
         return back()->with('success', 'Delivery completed successfully.');
     }
@@ -217,7 +228,15 @@ public function orderDetails(Request $request)
 {
     $run = DeliveryRun::findOrFail($id);
 
-    // 🔥 ALWAYS rollback orders when a delivery run is deleted
+    /*
+     * ALWAYS rollback orders when a delivery run is deleted.
+     *
+     * Left as a mass update on purpose — unlike store() and complete(), this
+     * transition must NOT reach the customer. Being bounced back to "pending"
+     * because an admin removed a run is internal bookkeeping; telling someone
+     * their food un-departed would only alarm them. Skipping model events is
+     * how that is achieved, so do not "fix" this into a loop.
+     */
     Order::whereIn('id', $run->order_ids)->update([
         'delivery_run_id' => null,
         'order_status'    => 'pending',

@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\User;
+use App\Observers\OrderObserver;
 use App\Support\AdminNotifications;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -25,7 +27,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerGates();
+        $this->registerObservers();
         $this->registerViewComposers();
+    }
+
+    /**
+     * Order lifecycle → storefront notification bell.
+     *
+     * Registered centrally so every write path is covered; see OrderObserver
+     * for the mass-update caveat.
+     */
+    private function registerObservers(): void
+    {
+        Order::observe(OrderObserver::class);
     }
 
     /**

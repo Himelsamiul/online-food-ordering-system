@@ -25,6 +25,9 @@ class ChatController extends Controller
 
     public function index(Request $request): View
     {
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
+
         $conversations = $this->listQuery($request)->paginate($this->perPage($request, 20))->withQueryString();
 
         // ?conversation= wins; otherwise land on the first thread so the pane
@@ -56,9 +59,9 @@ class ChatController extends Controller
             'active'        => $active,
             'messages'      => $messages,
             'filters'       => $request->only(['q', 'status', 'unread']),
-            'canReply'      => Auth::user()->hasPermission('chat.create'),
-            'canManage'     => Auth::user()->hasPermission('chat.edit'),
-            'canDelete'     => Auth::user()->hasPermission('chat.delete'),
+            'canReply'      => $admin->hasPermission('chat.create'),
+            'canManage'     => $admin->hasPermission('chat.edit'),
+            'canDelete'     => $admin->hasPermission('chat.delete'),
         ]);
     }
 
@@ -161,7 +164,7 @@ class ChatController extends Controller
 
     public function destroy(ChatConversation $conversation): RedirectResponse
     {
-        $this->chat->delete($conversation, Auth::user());
+        $this->chat->delete($conversation);
 
         return redirect()
             ->route('admin.chat.index')

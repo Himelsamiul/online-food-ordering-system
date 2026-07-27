@@ -32,6 +32,19 @@
   <!-- Design refresh (loaded last so it wins over the template css) -->
   <link rel="stylesheet" href="{{ asset('assets/css/storefront-refresh.css') }}">
 
+  {{--
+      Linked here, NOT pushed from the partials that use them.
+
+      @stack('styles') below is yielded while the <head> renders, but the header
+      and chat-widget partials are @included further down in the <body> — so a
+      @push from either of them fires after the stack is already on the page and
+      is silently dropped. The scripts stack sits at the end of <body> and does
+      receive its pushes, which is how the widget ended up fully functional and
+      completely unstyled.
+  --}}
+  <link rel="stylesheet" href="{{ asset('assets/css/notifications.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/chat-widget.css') }}">
+
   @stack('styles')
 </head>
 
