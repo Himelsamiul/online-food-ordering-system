@@ -1869,3 +1869,154 @@ html.app-skin-dark .theme-toggle .icon-moon { opacity: 0; transform: rotate(90de
     * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
     .stat-card:hover { transform: none; }
 }
+
+/* ==========================================================================
+   Rider portal access block on the delivery-man forms
+   ========================================================================== */
+
+.rider-access-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 1px solid var(--ar-line);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ar-ink);
+}
+
+.rider-access-head i { color: var(--ar-primary); }
+
+.rider-access-head span {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--ar-surface-3);
+    color: var(--ar-muted);
+}
+
+.rider-access-head span.ok {
+    background: var(--ar-success-soft);
+    color: var(--ar-success);
+}
+
+/* ==========================================================================
+   Review moderation rows
+   ========================================================================== */
+
+.admin-review {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--ar-line-soft);
+}
+
+.admin-review:last-child { border-bottom: 0; }
+
+/* A hidden review stays legible — the admin has to read it to decide
+   whether to restore it — but must not be mistaken for a live one. */
+.admin-review.is-hidden { opacity: .62; }
+
+.admin-review-main { flex: 1 1 auto; min-width: 0; }
+
+.admin-review-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.admin-review-head strong { color: var(--ar-ink); font-size: 14.5px; }
+
+.admin-review-stars { display: inline-flex; gap: 1px; color: var(--ar-line); }
+
+.admin-review-stars i { font-size: 14px; }
+.admin-review-stars i.filled { color: var(--ar-warning); }
+
+.admin-review-meta {
+    font-size: 11.5px;
+    color: var(--ar-muted);
+    margin-bottom: 8px;
+}
+
+.admin-review-title {
+    font-weight: 700;
+    color: var(--ar-ink);
+    font-size: 13.5px;
+    margin-bottom: 3px;
+}
+
+.admin-review-body {
+    color: var(--ar-ink-2);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0 0 10px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.admin-review-reply {
+    background: var(--ar-surface-3);
+    border-left: 3px solid var(--ar-primary);
+    border-radius: 0 var(--ar-radius-xs) var(--ar-radius-xs) 0;
+    padding: 9px 13px;
+    margin-bottom: 10px;
+}
+
+.admin-review-reply strong {
+    display: block;
+    font-size: 11.5px;
+    color: var(--ar-primary);
+    margin-bottom: 3px;
+}
+
+.admin-review-reply p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ar-ink-2);
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.admin-review-replyform {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.admin-review-replyform textarea {
+    flex: 1 1 auto;
+    border: 1px solid var(--ar-line);
+    border-radius: var(--ar-radius-sm);
+    background: var(--ar-surface-2);
+    color: var(--ar-ink);
+    padding: 8px 11px;
+    font-size: 13px;
+    resize: vertical;
+}
+
+.admin-review-replyform textarea:focus {
+    outline: none;
+    border-color: var(--ar-primary);
+    box-shadow: 0 0 0 3px var(--ar-primary-soft);
+}
+
+.admin-review-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.admin-review-actions form { margin: 0; }
+
+@media (max-width: 575px) {
+    .admin-review { flex-direction: column; gap: 12px; }
+    .admin-review-actions { flex-direction: row; }
+}

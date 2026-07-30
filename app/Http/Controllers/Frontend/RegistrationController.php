@@ -392,7 +392,16 @@ public function viewOrder(Order $order)
 
     $order->load('items.food');
 
-    return view('frontend.pages.order.view', compact('order'));
+    // Only items on a delivered order that have not been rated yet; the
+    // partial renders nothing when this is empty.
+    $reviewableItems = app(\App\Services\ReviewService::class)->reviewableItems($order);
+
+    $myReviews = \App\Models\Review::where('order_id', $order->id)
+        ->where('registration_id', $user->id)
+        ->with('food:id,name')
+        ->get();
+
+    return view('frontend.pages.order.view', compact('order', 'reviewableItems', 'myReviews'));
 }
 
 

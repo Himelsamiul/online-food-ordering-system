@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Food;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
+use App\Models\DeliveryZone;
 use App\Services\StripeGateway;
 use App\Support\CartTotals;
 use Illuminate\Http\Request;
@@ -36,8 +37,9 @@ public function create()
     $user = Auth::guard('frontend')->user();
 
     $totals = CartTotals::fromSession($user?->id);
+    $zones  = DeliveryZone::active()->ordered()->get();
 
-    return view('frontend.pages.order.place', compact('cart', 'user', 'totals'));
+    return view('frontend.pages.order.place', compact('cart', 'user', 'totals', 'zones'));
 }
 
     /**
@@ -60,10 +62,25 @@ public function store(Request $request)
 
     // ================= VALIDATION =================
     $request->validate([
-        'phone'          => 'required|string|max:20',
-        'address'        => 'required|string|max:500',
-        'payment_method' => 'required|in:cod,stripe',
+        'phone'            => 'required|string|max:20',
+        'address'          => 'required|string|max:500',
+        'payment_method'   => 'required|in:cod,stripe',
+        'delivery_zone_id' => 'required|integer',
+    ], [
+        'delivery_zone_id.required' => 'Choose the area we are delivering to.',
     ]);
+
+    // ================= DELIVERY ZONE =================
+    // Only the id is accepted; the charge is looked up here, never taken from
+    // the form. Writing it into the session first means CartTotals below is
+    // the single thing that decides what delivery costs.
+    $zone = DeliveryZone::active()->find($request->delivery_zone_id);
+
+    if (!$zone) {
+        return back()->withInput()->with('error', 'We are not delivering to that area right now.');
+    }
+
+    session()->put(CartTotals::ZONE_KEY, $zone->id);
 
     // ================= USER =================
     $user = Auth::guard('frontend')->user();
@@ -80,8 +97,16 @@ public function store(Request $request)
         return redirect()->route('cart.index')->with('error', $problem);
     }
 
-    // ================= TOTALS (re-validates any applied coupon) =================
+    // ================= TOTALS (re-validates coupon AND zone) =================
     $totals = CartTotals::fromSession($user->id);
+
+    // Some areas are not worth a rider's trip for a single drink.
+    if ($totals->belowZoneMinimum()) {
+        return back()->withInput()->with(
+            'error',
+            'Orders to ' . $zone->name . ' start at ' . number_format((float) $zone->min_order, 2) . ' Tk.'
+        );
+    }
 
     // ================= ORDER NUMBER =================
     $orderNumber = 'ORD-' . now()->format('ymd') . '-' . rand(1000, 9999);
@@ -99,10 +124,15 @@ public function store(Request $request)
             'name'               => $user->full_name,
             'phone'              => $request->phone,
             'address'            => $request->address,
+            // The zone name is snapshotted so a rename or deletion next year
+            // cannot rewrite what this invoice says.
+            'delivery_zone_id'   => $totals->zone?->id,
+            'delivery_zone_name' => $totals->zone?->name,
             'subtotal'           => $totals->subtotal,
             'coupon_id'          => $totals->coupon?->id,
             'coupon_code'        => $totals->coupon?->code,
             'discount_amount'    => $totals->discount,
+            'delivery_charge'    => $totals->deliveryCharge,
             'total_amount'       => $totals->total(),
             'payment_method'     => $paymentMethod,
             'payment_status'     => 'pending',

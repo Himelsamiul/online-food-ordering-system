@@ -71,6 +71,12 @@ class DeliveryManController extends Controller
             ],
             'photo'      => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'note'       => 'nullable|string|max:500',
+
+            // Portal credentials. Optional — a rider who is only tracked on
+            // paper does not need a login, and leaving these blank simply
+            // means they cannot sign in.
+            'username'   => 'nullable|string|max:60|alpha_dash|unique:delivery_men,username',
+            'password'   => 'nullable|string|min:6|max:100|confirmed',
         ]);
 
         // image upload
@@ -84,6 +90,9 @@ class DeliveryManController extends Controller
             'nid_number' => $request->nid_number,
             'photo'      => $photoPath,
             'note'       => $request->note,
+            'username'   => $request->username ?: null,
+            // The model casts password => 'hashed', so this is stored hashed.
+            'password'   => $request->password ?: null,
             'status'     => 1,
         ]);
 
@@ -121,6 +130,11 @@ class DeliveryManController extends Controller
             ],
             'photo'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'note'       => 'nullable|string|max:500',
+
+            'username'   => 'nullable|string|max:60|alpha_dash|unique:delivery_men,username,' . $deliveryMan->id,
+            // Blank means "leave the current password alone", so a rider is
+            // not locked out every time their phone number is corrected.
+            'password'   => 'nullable|string|min:6|max:100|confirmed',
         ]);
 
         // photo update (if new uploaded)
@@ -131,18 +145,28 @@ class DeliveryManController extends Controller
             $deliveryMan->photo = $request->file('photo')->store('delivery_men', 'public');
         }
 
-        $deliveryMan->update([
+        $payload = [
             'name'       => $request->name,
             'email'      => $request->email,
             'phone'      => $request->phone,
             'address'    => $request->address,
             'nid_number' => $request->nid_number,
             'note'       => $request->note,
-        ]);
+            'username'   => $request->username ?: null,
+        ];
+
+        // Only touch the password when a new one was actually typed.
+        if ($request->filled('password')) {
+            $payload['password'] = $request->password;
+        }
+
+        $deliveryMan->update($payload);
 
         return redirect()
             ->route('admin.delivery-men.index')
-            ->with('success', 'Delivery man updated successfully');
+            ->with('success', $request->filled('password')
+                ? 'Delivery man updated and their portal password reset.'
+                : 'Delivery man updated successfully');
     }
 
     /**

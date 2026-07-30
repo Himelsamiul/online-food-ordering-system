@@ -79,6 +79,16 @@
                     <h6 class="food-name">{{ $food->name }}</h6>
                 </a>
 
+                {{-- Only shown once something has actually been rated; an
+                     empty star row on every card reads as "nobody likes this". --}}
+                @if ($food->rating_count > 0)
+                    <span class="food-rating">
+                        <x-stars :value="$food->rating_avg" size="sm" />
+                        <strong>{{ number_format((float) $food->rating_avg, 1) }}</strong>
+                        <span>({{ $food->rating_count }})</span>
+                    </span>
+                @endif
+
                 @if ($food->description)
                     <p class="food-desc">{{ Str::limit($food->description, 60) }}</p>
                 @endif

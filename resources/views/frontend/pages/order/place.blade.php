@@ -10,6 +10,18 @@
 
     .checkout-card { padding: 24px 22px; margin-bottom: 22px; }
 
+    /* Shown when no delivery area has been configured at all — checkout
+       cannot complete, so it needs to read as a blocker, not a hint. */
+    .zone-empty {
+        background: rgba(231, 76, 60, .14);
+        border: 1px solid rgba(231, 76, 60, .42);
+        border-radius: var(--sf-radius-sm);
+        color: var(--sf-danger);
+        padding: 11px 14px;
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
     .checkout-head {
         display: flex;
         align-items: center;
@@ -225,7 +237,7 @@
                             @endif
                         </div>
 
-                        <div class="form-group mb-0">
+                        <div class="form-group">
                             <label for="address">Delivery address <span class="sf-req">*</span></label>
                             <textarea name="address" id="address" rows="3"
                                       class="form-control {{ $errors->has('address') ? 'is-invalid' : '' }}"
@@ -236,6 +248,50 @@
                                 <div class="invalid-feedback d-block">{{ $errors->first('address') }}</div>
                             @else
                                 <small class="sf-hint">A landmark helps the rider find you faster.</small>
+                            @endif
+                        </div>
+
+                        {{-- ---------- DELIVERY AREA ---------- --}}
+                        <div class="form-group mb-0">
+                            <label for="delivery_zone_id">Delivery area <span class="sf-req">*</span></label>
+
+                            @if ($zones->isEmpty())
+                                <div class="zone-empty">
+                                    No delivery areas are set up yet. Please contact us before ordering.
+                                </div>
+                            @else
+                                <select name="delivery_zone_id" id="delivery_zone_id"
+                                        class="form-control {{ $errors->has('delivery_zone_id') ? 'is-invalid' : '' }}"
+                                        data-select-url="{{ route('delivery.zone.select') }}"
+                                        required>
+                                    <option value="">Select your area…</option>
+
+                                    @foreach ($zones as $zone)
+                                        <option value="{{ $zone->id }}"
+                                                data-charge="{{ number_format((float) $zone->charge, 2) }}"
+                                                @selected(old('delivery_zone_id', $totals->zone?->id) == $zone->id)>
+                                            {{ $zone->name }}
+                                            @if ((float) $zone->charge > 0)
+                                                — ৳{{ number_format((float) $zone->charge, 2) }}
+                                            @else
+                                                — Free
+                                            @endif
+                                            @if ($zone->eta_minutes) · ~{{ $zone->eta_minutes }} min @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @if ($errors->has('delivery_zone_id'))
+                                    <div class="invalid-feedback d-block">{{ $errors->first('delivery_zone_id') }}</div>
+                                @endif
+
+                                <small class="sf-hint" id="zoneHint">
+                                    @if ($totals->hasZone() && $totals->zone->areas)
+                                        Covers {{ $totals->zone->areas }}
+                                    @else
+                                        The charge is added to your total once you pick an area.
+                                    @endif
+                                </small>
                             @endif
                         </div>
                     </div>
@@ -346,6 +402,99 @@
 
         if (!form) {
             return;
+        }
+
+        /* ---------------------------------------------------------------
+           Delivery area → live totals.
+
+           The select posts only the zone id; the charge and the new total
+           come back from the server. Nothing here computes a price, so the
+           number on screen can never disagree with the one that gets
+           charged.
+           --------------------------------------------------------------- */
+        var zoneSelect = document.getElementById('delivery_zone_id');
+
+        if (zoneSelect) {
+            var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+            zoneSelect.addEventListener('change', function () {
+                var deliveryEl = document.querySelector('[data-totals-delivery]');
+                if (deliveryEl) { deliveryEl.textContent = '…'; }
+
+                fetch(zoneSelect.dataset.selectUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ zone_id: zoneSelect.value || null })
+                })
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (data) {
+                        if (!data) { window.location.reload(); return; }
+                        paintTotals(data);
+                    })
+                    .catch(function () {
+                        // Fall back to a reload rather than leaving a stale price.
+                        window.location.reload();
+                    });
+            });
+        }
+
+        function paintTotals(data) {
+            var deliveryEl = document.querySelector('[data-totals-delivery]');
+            var grandEl    = document.querySelector('[data-totals-grand]');
+            var zoneEl     = document.querySelector('[data-totals-zone]');
+            var nudgeEl    = document.querySelector('[data-totals-nudge]');
+            var minEl      = document.querySelector('[data-totals-minimum]');
+            var hintEl     = document.getElementById('zoneHint');
+
+            if (deliveryEl) {
+                deliveryEl.classList.remove('totals-free', 'totals-pending');
+
+                if (!data.has_zone) {
+                    deliveryEl.textContent = 'Choose an area';
+                    deliveryEl.classList.add('totals-pending');
+                } else if (data.free_delivery) {
+                    deliveryEl.textContent = 'Free';
+                    deliveryEl.classList.add('totals-free');
+                } else {
+                    deliveryEl.textContent = '৳' + data.delivery_charge;
+                }
+            }
+
+            if (grandEl) { grandEl.textContent = '৳' + data.total; }
+
+            if (zoneEl) { zoneEl.textContent = data.zone_name ? '(' + data.zone_name + ')' : ''; }
+
+            if (nudgeEl) {
+                if (data.to_free_delivery) {
+                    nudgeEl.textContent = 'Add ৳' + data.to_free_delivery + ' more for free delivery';
+                    nudgeEl.hidden = false;
+                } else {
+                    nudgeEl.hidden = true;
+                }
+            }
+
+            if (minEl) {
+                minEl.hidden = !data.below_minimum;
+                if (data.below_minimum) {
+                    minEl.textContent = 'Orders to ' + data.zone_name + ' start at ৳' + data.minimum + '.';
+                }
+            }
+
+            if (hintEl && data.eta) {
+                hintEl.textContent = 'Usually arrives in about ' + data.eta + ' minutes.';
+            }
+
+            // The place-order button carries the total in its label.
+            var placeBtn = document.getElementById('placeOrderBtn');
+            if (placeBtn && !placeBtn.disabled) {
+                placeBtn.textContent = 'Place order · ৳' + data.total;
+            }
         }
 
         // Highlight the chosen payment card.

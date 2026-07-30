@@ -7,6 +7,7 @@ use App\Models\ChatConversation;
 use App\Models\ContactMessage;
 use App\Models\Food;
 use App\Models\Order;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -260,6 +261,15 @@ class AdminNotifications
 
             $counts['admin_activation_requests'] = AccountRequest::pending()
                 ->fromAdmins()->activations()->count();
+        }
+
+        if ($admin->hasPermission('reviews.view')) {
+            // Only the ones that need a human: unanswered and unflattering.
+            // A five-star review with no reply is not a task.
+            $counts['reviews'] = Review::approved()
+                ->whereNull('admin_reply')
+                ->where('rating', '<=', 3)
+                ->count();
         }
 
         if ($admin->hasPermission('chat.view')) {

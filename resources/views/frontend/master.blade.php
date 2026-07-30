@@ -44,6 +44,7 @@
   --}}
   <link rel="stylesheet" href="{{ asset('assets/css/notifications.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/chat-widget.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/reviews.css') }}">
 
   @stack('styles')
 </head>

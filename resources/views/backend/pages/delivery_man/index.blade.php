@@ -103,6 +103,46 @@
                                     @enderror
                                 </div>
 
+                                {{-- Rider portal access. Optional: leave blank and the
+                                     rider simply has no login. --}}
+                                <div class="col-12">
+                                    <div class="rider-access-head">
+                                        <i class="feather-smartphone"></i>
+                                        Rider app access <span>optional</span>
+                                    </div>
+                                    <small class="text-muted d-block mb-2">
+                                        Give them a username and password and they can sign in at
+                                        <code>{{ url('/rider') }}</code> to mark their own drops delivered.
+                                    </small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="filter-label" for="dm_username">Username</label>
+                                    <input type="text" id="dm_username" name="username"
+                                           value="{{ old('username') }}" class="form-control"
+                                           autocomplete="off" placeholder="rahim_rider">
+                                    @error('username')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="filter-label" for="dm_password">Password</label>
+                                    <input type="password" id="dm_password" name="password"
+                                           class="form-control" autocomplete="new-password"
+                                           placeholder="At least 6 characters">
+                                    @error('password')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="filter-label" for="dm_password_confirmation">Confirm password</label>
+                                    <input type="password" id="dm_password_confirmation"
+                                           name="password_confirmation" class="form-control"
+                                           autocomplete="new-password">
+                                </div>
+
                                 <div class="col-12">
                                     <label class="filter-label" for="dm_photo">Profile Photo</label>
                                     <input type="file" id="dm_photo" name="photo"

@@ -75,8 +75,8 @@
                     </li>
                 @endcan
 
-                @canany(['delivery_men.view', 'delivery_runs.view', 'delivery_runs.create'])
-                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.delivery-men.*', 'admin.delivery-runs.*') ? 'active nxl-trigger' : '' }}">
+                @canany(['delivery_men.view', 'delivery_runs.view', 'delivery_runs.create', 'delivery_zones.view'])
+                    <li class="nxl-item nxl-hasmenu {{ $isActive('admin.delivery-men.*', 'admin.delivery-runs.*', 'admin.delivery-zones.*') ? 'active nxl-trigger' : '' }}">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-truck"></i></span>
                             <span class="nxl-mtext">Delivery</span>
@@ -96,6 +96,11 @@
                             @can('delivery_runs.create')
                                 <li class="nxl-item {{ $isActive('admin.delivery-runs.create') ? 'active' : '' }}">
                                     <a class="nxl-link" href="{{ route('admin.delivery-runs.create') }}">Assign Delivery</a>
+                                </li>
+                            @endcan
+                            @can('delivery_zones.view')
+                                <li class="nxl-item {{ $isActive('admin.delivery-zones.*') ? 'active' : '' }}">
+                                    <a class="nxl-link" href="{{ route('admin.delivery-zones.index') }}">Delivery Areas</a>
                                 </li>
                             @endcan
                         </ul>
@@ -219,9 +224,23 @@
                 @endcan
 
                 {{-- ============================ SUPPORT ============================ --}}
-                @can('chat.view')
+                @canany(['chat.view', 'reviews.view'])
                     <li class="nxl-item nxl-caption"><label>Support</label></li>
+                @endcanany
 
+                @can('reviews.view')
+                    <li class="nxl-item {{ $isActive('admin.reviews.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.reviews.index') }}" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-star"></i></span>
+                            <span class="nxl-mtext">Reviews</span>
+                            @if (!empty($counts['reviews']))
+                                <span class="nxl-badge">{{ $counts['reviews'] }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endcan
+
+                @can('chat.view')
                     <li class="nxl-item {{ $isActive('admin.chat.*') ? 'active' : '' }}">
                         <a href="{{ route('admin.chat.index') }}" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-message-circle"></i></span>

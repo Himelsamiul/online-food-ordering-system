@@ -210,6 +210,29 @@
                 color: var(--sf-green);
                 font-weight: 600;
             }
+
+            .totals-zone {
+                display: block;
+                font-size: 11.5px;
+                color: var(--sf-faint);
+                font-weight: 400;
+            }
+
+            .totals-pending {
+                color: var(--sf-faint) !important;
+                font-weight: 400 !important;
+                font-size: 13px;
+            }
+
+            .totals-nudge {
+                margin-top: 2px;
+                font-size: 12px;
+                color: var(--sf-accent);
+                text-align: right;
+            }
+
+            .totals-nudge[hidden],
+            [data-totals-minimum][hidden] { display: none; }
         </style>
     @endpush
 @endonce
@@ -283,16 +306,47 @@
             </div>
         @endif
 
-        {{-- This site does not charge for delivery anywhere in the codebase,
-             so it is stated rather than left as a silent gap. --}}
-        <div class="totals-row">
-            <span>Delivery</span>
-            <span class="totals-free">Free</span>
+        {{-- Delivery. The row reads differently depending on whether an area
+             has been chosen yet, because "Free" and "not picked yet" are very
+             different things to show above a Total. --}}
+        <div class="totals-row" data-totals-delivery-row>
+            <span>
+                Delivery
+                @if ($totals->hasZone())
+                    <small class="totals-zone" data-totals-zone>({{ $totals->zone->name }})</small>
+                @endif
+            </span>
+
+            @if (!$totals->hasZone())
+                <span class="totals-pending" data-totals-delivery>Choose an area</span>
+            @elseif ($totals->hasFreeDelivery())
+                <span class="totals-free" data-totals-delivery>Free</span>
+            @else
+                <span data-totals-delivery>৳{{ number_format($totals->deliveryCharge, 2) }}</span>
+            @endif
+        </div>
+
+        {{-- Always in the DOM, hidden when not applicable: the checkout script
+             toggles these as the area changes, and it cannot show an element
+             that was never rendered. --}}
+        <div class="totals-nudge" data-totals-nudge
+             @unless ($totals->amountToFreeDelivery()) hidden @endunless>
+            @if ($totals->amountToFreeDelivery())
+                Add ৳{{ number_format($totals->amountToFreeDelivery(), 2) }} more for free delivery
+            @endif
+        </div>
+
+        <div class="coupon-note is-error mt-2 mb-0" data-totals-minimum
+             @unless ($totals->belowZoneMinimum()) hidden @endunless>
+            @if ($totals->belowZoneMinimum())
+                Orders to {{ $totals->zone->name }} start at
+                ৳{{ number_format((float) $totals->zone->min_order, 2) }}.
+            @endif
         </div>
 
         <div class="totals-row grand">
             <span>Total</span>
-            <span>৳{{ number_format($totals->total(), 2) }}</span>
+            <span data-totals-grand>৳{{ number_format($totals->total(), 2) }}</span>
         </div>
 
         @if ($totals->hasCoupon())

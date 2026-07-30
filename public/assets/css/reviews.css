@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Ratings and reviews (storefront)
+
+   Uses the --sf-* tokens from storefront-refresh.css, which always loads
+   first. Linked from master.blade.php's <head>, never @push'd from a partial
+   included in the body — see the note in that layout.
+   ========================================================================== */
+
+/* ----------------------------------------------------------- star display */
+
+.sf-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--sf-accent);
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sf-stars .fa-star-o { color: rgba(255, 255, 255, .26); }
+
+.sf-stars-sm { font-size: 11.5px; }
+.sf-stars-lg { font-size: 19px; gap: 3px; }
+
+.sf-stars-count {
+    margin-left: 5px;
+    color: var(--sf-faint);
+    font-size: 11.5px;
+}
+
+/* Rating chip on a food card. */
+.food-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: var(--sf-muted);
+}
+
+.food-rating strong { color: var(--sf-ink); font-weight: 700; }
+
+/* ------------------------------------------------- summary on food details */
+
+.review-summary {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--sf-glass);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: var(--sf-radius);
+    padding: 20px 22px;
+    margin-bottom: 22px;
+}
+
+.review-score { text-align: center; flex: 0 0 auto; }
+
+.review-score-value {
+    display: block;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--sf-ink);
+}
+
+.review-score small {
+    display: block;
+    color: var(--sf-faint);
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.review-bars { flex: 1 1 240px; min-width: 200px; }
+
+.review-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 5px;
+    font-size: 11.5px;
+    color: var(--sf-muted);
+}
+
+.review-bar-label { flex: 0 0 30px; white-space: nowrap; }
+
+.review-bar-track {
+    flex: 1 1 auto;
+    height: 7px;
+    background: rgba(255, 255, 255, .1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.review-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--sf-accent);
+    border-radius: 4px;
+}
+
+.review-bar-count { flex: 0 0 26px; text-align: right; }
+
+/* ------------------------------------------------------------- review list */
+
+.review-list { margin-top: 8px; }
+
+.review-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--sf-glass-line);
+}
+
+.review-item:last-child { border-bottom: 0; }
+
+.review-item-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 7px;
+}
+
+.review-avatar {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-dark));
+    color: #1c1c1c;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.review-who { flex: 1 1 auto; min-width: 0; }
+
+.review-who strong {
+    display: block;
+    font-size: 14px;
+    color: var(--sf-ink);
+}
+
+.review-when { font-size: 11.5px; color: var(--sf-faint); }
+
+.review-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    color: var(--sf-green);
+    margin-left: 6px;
+}
+
+.review-title {
+    display: block;
+    font-weight: 700;
+    color: var(--sf-ink);
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.review-body {
+    color: var(--sf-muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Shop's answer, indented under the review it belongs to. */
+.review-reply {
+    margin-top: 11px;
+    margin-left: 47px;
+    padding: 11px 14px;
+    background: rgba(255, 255, 255, .05);
+    border-left: 2px solid var(--sf-accent);
+    border-radius: 0 var(--sf-radius-sm) var(--sf-radius-sm) 0;
+}
+
+.review-reply strong {
+    display: block;
+    font-size: 12px;
+    color: var(--sf-accent);
+    margin-bottom: 3px;
+}
+
+.review-reply p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--sf-muted);
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.review-empty {
+    padding: 34px 20px;
+    text-align: center;
+    color: var(--sf-faint);
+}
+
+.review-empty i { font-size: 30px; display: block; margin-bottom: 10px; opacity: .5; }
+
+/* ------------------------------------------------------- submission block */
+
+.review-prompt {
+    background: var(--sf-glass);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: var(--sf-radius);
+    padding: 20px;
+    margin-bottom: 22px;
+}
+
+.review-prompt-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+}
+
+.review-prompt-head > i {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 50%;
+    background: rgba(241, 184, 22, .16);
+    color: var(--sf-accent);
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+}
+
+.review-prompt-head strong { display: block; color: var(--sf-ink); font-size: 15.5px; }
+.review-prompt-head small  { display: block; color: var(--sf-muted); font-size: 12.5px; }
+
+.review-form {
+    padding: 14px 0;
+    border-top: 1px solid var(--sf-glass-line);
+}
+
+.review-form-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.review-form-item img,
+.review-form-thumb {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 9px;
+    object-fit: cover;
+}
+
+.review-form-thumb {
+    background: rgba(255, 255, 255, .08);
+    color: var(--sf-faint);
+    display: grid;
+    place-items: center;
+}
+
+.review-form-item strong { color: var(--sf-ink); font-size: 14.5px; }
+
+/*
+   Star picker.
+
+   The radios are rendered 5→1 so that `~` (general sibling) can reach every
+   star that comes AFTER the hovered one in the DOM, which is every star to
+   its LEFT on screen once the row is reversed. This is the standard CSS-only
+   star widget; without the reversal there is no selector that walks backwards.
+*/
+.review-stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.review-stars input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.review-stars label {
+    cursor: pointer;
+    font-size: 24px;
+    color: rgba(255, 255, 255, .22);
+    margin: 0;
+    transition: color .12s, transform .12s;
+}
+
+.review-stars label:hover,
+.review-stars label:hover ~ label,
+.review-stars input:checked ~ label { color: var(--sf-accent); }
+
+.review-stars label:hover { transform: scale(1.12); }
+
+/* Keyboard users must still see where they are. */
+.review-stars input:focus-visible + label {
+    outline: 2px solid var(--sf-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.review-form textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid var(--sf-glass-line);
+    border-radius: var(--sf-radius-sm);
+    color: var(--sf-ink);
+    padding: 10px 13px;
+    font-size: 13.5px;
+    resize: vertical;
+    margin-bottom: 12px;
+}
+
+.review-form textarea:focus {
+    outline: none;
+    border-color: var(--sf-accent);
+    background: rgba(255, 255, 255, .11);
+}
+
+.review-form textarea::placeholder { color: var(--sf-faint); }
+
+.review-submit { width: auto; }
+
+/* ------------------------------------------------------------ my reviews */
+
+.my-review {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--sf-glass-line);
+}
+
+.my-review:last-child { border-bottom: 0; }
+
+.my-review-food { color: var(--sf-ink); font-size: 14px; font-weight: 600; }
+
+.my-review p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--sf-muted);
+    line-height: 1.55;
+}
+
+.my-review-remove {
+    flex: 0 0 auto;
+    background: none;
+    border: 1px solid var(--sf-glass-line);
+    color: var(--sf-faint);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.my-review-remove:hover { border-color: var(--sf-danger); color: var(--sf-danger); }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

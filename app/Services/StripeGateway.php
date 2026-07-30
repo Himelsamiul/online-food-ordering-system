@@ -52,6 +52,29 @@ class StripeGateway
             ];
         }
 
+        /*
+         * Delivery as its own line so the customer sees what they are paying
+         * for, and so the session total matches the order total exactly.
+         *
+         * The Stripe coupon below is an amount_off across the whole session,
+         * giving (food + delivery) - discount, while CartTotals computes
+         * (food - discount) + delivery. Those are the same number, so the two
+         * cannot drift — the one exception being a discount larger than the
+         * food subtotal, which Coupon::validateFor already caps.
+         */
+        if ($order->delivery_charge > 0) {
+            $lineItems[] = [
+                'quantity'   => 1,
+                'price_data' => [
+                    'currency'     => config('services.stripe.currency'),
+                    'unit_amount'  => $this->toMinorUnit((float) $order->delivery_charge),
+                    'product_data' => [
+                        'name' => 'Delivery' . ($order->delivery_zone_name ? ' — ' . $order->delivery_zone_name : ''),
+                    ],
+                ],
+            ];
+        }
+
         $payload = [
             'mode'                => 'payment',
             'line_items'          => $lineItems,

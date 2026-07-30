@@ -32,6 +32,12 @@ return [
             'driver' => 'session',
             'provider' => 'registrations',
         ],
+
+        // 🔹 Delivery riders (delivery_men table)
+        'rider' => [
+            'driver' => 'session',
+            'provider' => 'riders',
+        ],
     ],
 
     /*
@@ -52,6 +58,12 @@ return [
         'registrations' => [
             'driver' => 'eloquent',
             'model' => App\Models\Registration::class,
+        ],
+
+        // 🔹 Delivery riders provider
+        'riders' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\DeliveryMan::class,
         ],
     ],
 

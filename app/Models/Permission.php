@@ -61,8 +61,9 @@ class Permission extends Model
             'promotions' => ['label' => 'Promo Banners',    'icon' => 'feather-image', 'actions' => ['view', 'create', 'edit', 'delete']],
         ],
         'Delivery' => [
-            'delivery_men'  => ['label' => 'Delivery Men',  'icon' => 'feather-truck', 'actions' => ['view', 'create', 'edit', 'delete']],
-            'delivery_runs' => ['label' => 'Delivery Runs', 'icon' => 'feather-map',   'actions' => ['view', 'create', 'edit', 'delete']],
+            'delivery_men'   => ['label' => 'Delivery Men',   'icon' => 'feather-truck',    'actions' => ['view', 'create', 'edit', 'delete']],
+            'delivery_runs'  => ['label' => 'Delivery Runs',  'icon' => 'feather-map',      'actions' => ['view', 'create', 'edit', 'delete']],
+            'delivery_zones' => ['label' => 'Delivery Areas', 'icon' => 'feather-map-pin',  'actions' => ['view', 'create', 'edit', 'delete']],
         ],
         'People' => [
             'customers'         => ['label' => 'Customers',          'icon' => 'feather-users',     'actions' => ['view', 'edit', 'delete']],
@@ -70,6 +71,16 @@ class Permission extends Model
             'contact_messages'  => ['label' => 'Contact Messages',   'icon' => 'feather-life-buoy', 'actions' => ['view', 'delete']],
         ],
         'Support' => [
+            'reviews' => [
+                'label'   => 'Reviews',
+                'icon'    => 'feather-star',
+                'actions' => ['view', 'edit', 'delete'],
+                'hints'   => [
+                    'view'   => 'Read customer reviews and ratings',
+                    'edit'   => 'Hide or restore reviews, and reply to them',
+                    'delete' => 'Permanently remove a review',
+                ],
+            ],
             'chat' => [
                 'label'   => 'Live Chat',
                 'icon'    => 'feather-message-circle',

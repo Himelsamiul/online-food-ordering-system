@@ -325,6 +325,51 @@
             <p>Everything we recorded for this order.</p>
         </div>
 
+        {{-- Rating prompt sits first on a delivered order: it is the one thing
+             we want from the customer here, and burying it under the receipt
+             means nobody ever fills it in. Renders nothing when there is
+             nothing left to rate. --}}
+        <div class="no-print">
+            @include('frontend.partials.review-form', [
+                'order'           => $order,
+                'reviewableItems' => $reviewableItems,
+            ])
+
+            @if ($myReviews->isNotEmpty())
+                <div class="glass-card order-card">
+                    <div class="order-card-head">
+                        <i class="fa fa-star" aria-hidden="true"></i>
+                        <h3>Your reviews for this order</h3>
+                    </div>
+
+                    @foreach ($myReviews as $review)
+                        <div class="my-review">
+                            <div>
+                                <span class="my-review-food">{{ $review->food?->name ?? 'Item' }}</span>
+                                <x-stars :value="$review->rating" class="d-block mt-1" />
+                                @if ($review->comment)
+                                    <p>{{ $review->comment }}</p>
+                                @endif
+                                @if ($review->hasReply())
+                                    <div class="review-reply mt-2" style="margin-left:0">
+                                        <strong>{{ $review->admin_reply_by ?: 'Feane' }} replied</strong>
+                                        <p>{{ $review->admin_reply }}</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <form method="POST" action="{{ route('review.delete', $review->id) }}"
+                                  onsubmit="return confirm('Remove your review?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="my-review-remove" title="Remove review"
+                                        aria-label="Remove review">&times;</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
         {{-- ================= HEADER ================= --}}
         <div class="glass-card order-card">
             <div class="order-top">
@@ -440,8 +485,19 @@
                         @endif
 
                         <div class="line">
-                            <span>Delivery</span>
-                            <strong>Free</strong>
+                            <span>
+                                Delivery
+                                @if ($order->delivery_zone_name)
+                                    <small class="d-block text-muted">{{ $order->delivery_zone_name }}</small>
+                                @endif
+                            </span>
+                            <strong>
+                                @if ((float) $order->delivery_charge > 0)
+                                    ৳{{ number_format((float) $order->delivery_charge, 2) }}
+                                @else
+                                    Free
+                                @endif
+                            </strong>
                         </div>
 
                         <div class="line grand">

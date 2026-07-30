@@ -719,6 +719,91 @@
 
         </div>
 
+        {{-- ==================== REVIEWS ==================== --}}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="info-panel glass-card">
+                    <h5>Reviews</h5>
+
+                    @if ($food->hasRating())
+                        <div class="review-summary">
+                            <div class="review-score">
+                                <span class="review-score-value">{{ number_format((float) $food->rating_avg, 1) }}</span>
+                                <x-stars :value="$food->rating_avg" size="lg" />
+                                <small>{{ $food->rating_count }} {{ Str::plural('review', $food->rating_count) }}</small>
+                            </div>
+
+                            <div class="review-bars">
+                                @foreach ($distribution as $star => $count)
+                                    @php
+                                        // Guard the divide: rating_count is never 0 inside
+                                        // this branch, but the bar must not blow up if it is.
+                                        $pct = $food->rating_count > 0
+                                            ? round($count / $food->rating_count * 100)
+                                            : 0;
+                                    @endphp
+                                    <div class="review-bar">
+                                        <span class="review-bar-label">{{ $star }} <i class="fa fa-star" aria-hidden="true"></i></span>
+                                        <span class="review-bar-track">
+                                            <span class="review-bar-fill" style="width: {{ $pct }}%"></span>
+                                        </span>
+                                        <span class="review-bar-count">{{ $count }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="review-list">
+                            @foreach ($reviews as $review)
+                                <div class="review-item">
+                                    <div class="review-item-head">
+                                        <span class="review-avatar">
+                                            {{ mb_substr($review->customer_name ?: '?', 0, 1) }}
+                                        </span>
+
+                                        <span class="review-who">
+                                            <strong>
+                                                {{ $review->customer_name }}
+                                                <span class="review-verified">
+                                                    <i class="fa fa-check-circle" aria-hidden="true"></i> Verified order
+                                                </span>
+                                            </strong>
+                                            <span class="review-when">{{ $review->created_at?->diffForHumans() }}</span>
+                                        </span>
+
+                                        <x-stars :value="$review->rating" size="sm" />
+                                    </div>
+
+                                    @if ($review->title)
+                                        <span class="review-title">{{ $review->title }}</span>
+                                    @endif
+
+                                    @if ($review->comment)
+                                        <p class="review-body">{{ $review->comment }}</p>
+                                    @endif
+
+                                    @if ($review->hasReply())
+                                        <div class="review-reply">
+                                            <strong>{{ $review->admin_reply_by ?: 'Feane' }} replied</strong>
+                                            <p>{{ $review->admin_reply }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="review-empty">
+                            <i class="fa fa-star-o" aria-hidden="true"></i>
+                            <p>
+                                No reviews yet.<br>
+                                Only customers who have received this item can leave one.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>
 

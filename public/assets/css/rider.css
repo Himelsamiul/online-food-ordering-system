@@ -1,0 +1,441 @@
+/* ==========================================================================
+   Rider portal
+
+   Phone-first and deliberately plain: a rider is standing on a road, in
+   sunlight, one-handed. Big tap targets, high contrast, no decoration that
+   costs legibility. Its own stylesheet rather than the storefront's, because
+   nothing here shares that layout.
+   ========================================================================== */
+
+:root {
+    --rd-bg:       #0f172a;
+    --rd-surface:  #1e293b;
+    --rd-surface-2:#273449;
+    --rd-line:     #334155;
+    --rd-ink:      #f1f5f9;
+    --rd-muted:    #94a3b8;
+    --rd-accent:   #f1b816;
+    --rd-green:    #22c55e;
+    --rd-red:      #ef4444;
+    --rd-blue:     #38bdf8;
+    --rd-radius:   14px;
+}
+
+* { box-sizing: border-box; }
+
+.rider-body {
+    margin: 0;
+    background: var(--rd-bg);
+    color: var(--rd-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    /* Room for the fixed header and the bottom tab bar, including the
+       iOS home indicator. */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust: 100%;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.rider-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--rd-surface);
+    border-bottom: 1px solid var(--rd-line);
+    padding-top: env(safe-area-inset-top);
+}
+
+.rider-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.rider-brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+.rider-mark {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 50%;
+    background: var(--rd-accent);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.rider-brand strong {
+    display: block;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rider-brand small { display: block; color: var(--rd-muted); font-size: 11.5px; }
+
+.rider-logout {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--rd-line);
+    border-radius: 50%;
+    background: var(--rd-surface-2);
+    color: var(--rd-muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.rider-logout:active { background: var(--rd-red); color: #fff; }
+
+/* ------------------------------------------------------------------ main */
+
+.rider-main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.rider-page-title { font-size: 19px; margin: 0 0 14px; }
+
+.rider-flash {
+    border-radius: var(--rd-radius);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.rider-flash.is-success { background: rgba(34, 197, 94, .16);  border: 1px solid rgba(34, 197, 94, .45);  color: #86efac; }
+.rider-flash.is-error   { background: rgba(239, 68, 68, .16);  border: 1px solid rgba(239, 68, 68, .45);  color: #fca5a5; }
+.rider-flash.is-info    { background: rgba(56, 189, 248, .14); border: 1px solid rgba(56, 189, 248, .42); color: #7dd3fc; }
+
+/* ----------------------------------------------------------------- stats */
+
+.rider-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.rider-stat {
+    background: var(--rd-surface);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    padding: 14px;
+    text-align: center;
+}
+
+.rider-stat strong { display: block; font-size: 26px; line-height: 1.1; }
+.rider-stat span   { display: block; font-size: 11.5px; color: var(--rd-muted); margin-top: 3px; }
+
+/* ------------------------------------------------------------------- run */
+
+.rider-run { margin-bottom: 22px; }
+
+.rider-run-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 4px 10px;
+}
+
+.rider-run-head strong { font-size: 15px; }
+.rider-run-head small  { display: block; color: var(--rd-muted); font-size: 12px; }
+
+.rider-run-note { color: var(--rd-accent); font-size: 16px; }
+
+.rider-run-finish { margin-top: 4px; }
+
+/* ----------------------------------------------------------------- order */
+
+.rider-order {
+    background: var(--rd-surface);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.rider-order.is-done { opacity: .55; }
+
+.rider-order-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.rider-order-no {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    color: var(--rd-muted);
+}
+
+.rider-badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.rider-badge.is-cash { background: rgba(241, 184, 22, .18); color: var(--rd-accent); }
+.rider-badge.is-paid { background: rgba(56, 189, 248, .16); color: var(--rd-blue); }
+.rider-badge.is-done { background: rgba(34, 197, 94, .16);  color: var(--rd-green); }
+
+.rider-order-who {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rider-order-who strong { font-size: 16px; }
+
+.rider-zone {
+    font-size: 11px;
+    color: var(--rd-muted);
+    border: 1px solid var(--rd-line);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+
+.rider-order-address {
+    margin: 6px 0 8px;
+    font-size: 14px;
+    color: var(--rd-ink);
+    line-height: 1.5;
+}
+
+.rider-order-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.rider-order-items span {
+    font-size: 11.5px;
+    background: var(--rd-surface-2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--rd-muted);
+}
+
+.rider-order-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rider-order-actions form { margin: 0; flex: 1 1 auto; }
+
+/* --------------------------------------------------------------- buttons */
+
+.rider-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    /* 46px minimum: this is tapped with a thumb, often gloved. */
+    min-height: 46px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+.rider-btn-primary { background: var(--rd-green); color: #04220f; }
+.rider-btn-primary:active { background: #16a34a; }
+
+.rider-btn-ghost {
+    flex: 0 0 auto;
+    width: auto;
+    background: var(--rd-surface-2);
+    border-color: var(--rd-line);
+    color: var(--rd-ink);
+}
+
+.rider-btn-ghost:active { background: var(--rd-line); }
+
+.rider-btn-outline {
+    background: transparent;
+    border-color: var(--rd-line);
+    color: var(--rd-muted);
+}
+
+.rider-btn:disabled { opacity: .55; }
+
+/* --------------------------------------------------------------- history */
+
+.rider-history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--rd-surface);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    padding: 13px 14px;
+    margin-bottom: 10px;
+}
+
+.rider-history-row small { display: block; color: var(--rd-muted); font-size: 12px; }
+
+.rider-pager { margin-top: 16px; }
+.rider-pager .pagination { display: flex; gap: 6px; list-style: none; padding: 0; justify-content: center; }
+.rider-pager .page-link { color: var(--rd-ink); text-decoration: none; padding: 6px 11px; border: 1px solid var(--rd-line); border-radius: 8px; }
+.rider-pager .active .page-link { background: var(--rd-accent); color: #1a1a1a; border-color: var(--rd-accent); }
+
+/* ----------------------------------------------------------------- empty */
+
+.rider-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--rd-muted);
+}
+
+.rider-empty i  { font-size: 42px; opacity: .4; display: block; margin-bottom: 14px; }
+.rider-empty h3 { color: var(--rd-ink); font-size: 18px; margin: 0 0 6px; }
+.rider-empty p  { font-size: 13.5px; margin: 0; }
+
+/* ------------------------------------------------------------------ tabs */
+
+.rider-tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--rd-surface);
+    border-top: 1px solid var(--rd-line);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.rider-tabs a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 11px 0;
+    color: var(--rd-muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.rider-tabs a i      { font-size: 18px; }
+.rider-tabs a.active { color: var(--rd-accent); }
+
+/* ------------------------------------------------------------------ auth */
+
+.rider-auth {
+    max-width: 380px;
+    margin: 8vh auto 0;
+    text-align: center;
+}
+
+.rider-auth-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: var(--rd-accent);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+}
+
+.rider-auth h1 { font-size: 23px; margin: 0 0 5px; }
+
+.rider-auth-sub { color: var(--rd-muted); font-size: 13.5px; margin: 0 0 24px; }
+
+.rider-form { text-align: left; }
+
+.rider-form label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--rd-muted);
+    margin-bottom: 6px;
+}
+
+.rider-form input[type="text"],
+.rider-form input[type="password"] {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    margin-bottom: 16px;
+    background: var(--rd-surface);
+    border: 1px solid var(--rd-line);
+    border-radius: 11px;
+    color: var(--rd-ink);
+    /* 16px stops iOS Safari zooming the page on focus. */
+    font-size: 16px;
+}
+
+.rider-form input:focus {
+    outline: none;
+    border-color: var(--rd-accent);
+    box-shadow: 0 0 0 3px rgba(241, 184, 22, .22);
+}
+
+.rider-pw { position: relative; }
+
+.rider-pw input { padding-right: 48px; }
+
+.rider-pw-eye {
+    position: absolute;
+    right: 6px;
+    top: 4px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    color: var(--rd-muted);
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.rider-check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    color: var(--rd-muted);
+    font-weight: 400;
+    margin-bottom: 20px;
+}
+
+.rider-check input { width: 18px; height: 18px; margin: 0; }
+
+.rider-auth-help {
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: var(--rd-muted);
+    line-height: 1.6;
+}
+
+@media (min-width: 641px) {
+    .rider-order-actions .rider-btn-primary { max-width: 220px; }
+}

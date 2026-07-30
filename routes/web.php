@@ -18,18 +18,21 @@ use App\Http\Controllers\Backend\CustomerLoginHistoryController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\DeliveryManController;
 use App\Http\Controllers\Backend\DeliveryRunController;
+use App\Http\Controllers\Backend\DeliveryZoneController as AdminDeliveryZoneController;
 use App\Http\Controllers\Backend\FoodController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\OrderExportController;
 use App\Http\Controllers\Backend\PasswordResetRequestController;
 use App\Http\Controllers\Backend\PosController;
 use App\Http\Controllers\Backend\PromotionController;
+use App\Http\Controllers\Backend\ReviewController as AdminReviewController;
 use App\Http\Controllers\Backend\SubcategoryController;
 use App\Http\Controllers\Backend\UnitController;
 use App\Http\Controllers\Frontend\AccountRequestController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\ChatController;
 use App\Http\Controllers\Frontend\CouponController as FrontendCouponController;
+use App\Http\Controllers\Frontend\DeliveryZoneController as FrontendDeliveryZoneController;
 use App\Http\Controllers\Frontend\ForgotPasswordController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\LoginController;
@@ -38,6 +41,9 @@ use App\Http\Controllers\Frontend\NotificationController as CustomerNotification
 use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Frontend\RegistrationController;
 use App\Http\Controllers\Frontend\ResetLinkController;
+use App\Http\Controllers\Frontend\ReviewController as FrontendReviewController;
+use App\Http\Controllers\Rider\AuthController as RiderAuthController;
+use App\Http\Controllers\Rider\DashboardController as RiderDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -142,6 +148,10 @@ Route::middleware('auth:frontend')->group(function () {
     Route::post('/coupon/apply', [FrontendCouponController::class, 'apply'])->name('coupon.apply');
     Route::post('/coupon/remove', [FrontendCouponController::class, 'remove'])->name('coupon.remove');
 
+    // Only the zone id is accepted; the charge is always looked up server-side.
+    Route::post('/delivery-zone', [FrontendDeliveryZoneController::class, 'select'])
+        ->middleware('throttle:60,1')->name('delivery.zone.select');
+
     Route::get('/order/place', [OrderController::class, 'create'])->name('order.place');
     Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
     Route::get('/order/success/{order}', [OrderController::class, 'success'])->name('order.success');
@@ -151,6 +161,12 @@ Route::middleware('auth:frontend')->group(function () {
     Route::get('/order/payment/cancel/{order}', [OrderController::class, 'stripeCancel'])->name('order.payment.cancel');
 
     Route::get('/profile/order/{order}', [RegistrationController::class, 'viewOrder'])->name('profile.order.view');
+
+    // Reviews — eligibility (bought it, on a delivered order, once per order)
+    // is decided in ReviewService, not here.
+    Route::post('/orders/{order}/review', [FrontendReviewController::class, 'store'])
+        ->middleware('throttle:20,1')->name('review.store');
+    Route::delete('/reviews/{review}', [FrontendReviewController::class, 'destroy'])->name('review.delete');
 
     /*
      * Live support chat. Inside auth:frontend on purpose — the widget renders
@@ -176,6 +192,33 @@ Route::middleware('auth:frontend')->group(function () {
         ->whereNumber('notification')->name('notifications.open');
     Route::delete('/notifications/{notification}', [CustomerNotificationController::class, 'destroy'])
         ->whereNumber('notification')->name('notifications.delete');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rider portal
+|--------------------------------------------------------------------------
+|
+| Riders sign in with the username the office gives them and mark their own
+| drops delivered. Everything behind `rider` is scoped to the signed-in
+| rider's own runs — see Rider\DashboardController::assertOwned().
+|
+*/
+
+Route::prefix('rider')->name('rider.')->group(function () {
+    Route::get('/login', [RiderAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [RiderAuthController::class, 'login'])
+        ->middleware('throttle:20,1')->name('login.submit');
+    Route::post('/logout', [RiderAuthController::class, 'logout'])->name('logout');
+
+    Route::middleware('rider')->group(function () {
+        Route::get('/', [RiderDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/history', [RiderDashboardController::class, 'history'])->name('history');
+        Route::patch('/orders/{order}/delivered', [RiderDashboardController::class, 'markDelivered'])
+            ->name('orders.delivered');
+        Route::patch('/runs/{deliveryRun}/complete', [RiderDashboardController::class, 'completeRun'])
+            ->name('runs.complete');
+    });
 });
 
 /*
@@ -412,6 +455,21 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/delivery-runs/{id}', [DeliveryRunController::class, 'show'])->name('delivery-runs.show');
     });
 
+    // ================= Delivery zones =================
+    Route::middleware('can:delivery_zones.view')->group(function () {
+        Route::get('/delivery-zones', [AdminDeliveryZoneController::class, 'index'])->name('delivery-zones.index');
+    });
+    Route::middleware('can:delivery_zones.create')->group(function () {
+        Route::post('/delivery-zones', [AdminDeliveryZoneController::class, 'store'])->name('delivery-zones.store');
+    });
+    Route::middleware('can:delivery_zones.edit')->group(function () {
+        Route::put('/delivery-zones/{deliveryZone}', [AdminDeliveryZoneController::class, 'update'])->name('delivery-zones.update');
+        Route::patch('/delivery-zones/{deliveryZone}/status', [AdminDeliveryZoneController::class, 'toggleStatus'])->name('delivery-zones.status');
+    });
+    Route::middleware('can:delivery_zones.delete')->group(function () {
+        Route::delete('/delivery-zones/{deliveryZone}', [AdminDeliveryZoneController::class, 'destroy'])->name('delivery-zones.delete');
+    });
+
     // ================= Customers =================
     Route::middleware('can:customers.view')->group(function () {
         Route::get('/registrations', [RegistrationController::class, 'registrations'])->name('registrations');
@@ -435,6 +493,18 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::middleware('can:account_requests.delete')->group(function () {
         Route::post('/account-requests/bulk-delete', [AdminAccountRequestController::class, 'bulkDelete'])->name('account-requests.bulk-delete');
         Route::delete('/account-requests/{accountRequest}/delete', [AdminAccountRequestController::class, 'destroy'])->name('account-requests.delete');
+    });
+
+    // ================= Reviews =================
+    Route::middleware('can:reviews.view')->group(function () {
+        Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+    });
+    Route::middleware('can:reviews.edit')->group(function () {
+        Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
+        Route::post('/reviews/{review}/reply', [AdminReviewController::class, 'reply'])->name('reviews.reply');
+    });
+    Route::middleware('can:reviews.delete')->group(function () {
+        Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.delete');
     });
 
     // ================= Live support chat =================

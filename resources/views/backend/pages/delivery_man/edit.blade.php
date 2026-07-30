@@ -91,6 +91,53 @@
                                 @enderror
                             </div>
 
+                            {{-- Rider portal access --}}
+                            <div class="col-12">
+                                <div class="rider-access-head">
+                                    <i class="feather-smartphone"></i>
+                                    Rider app access
+                                    @if ($deliveryMan->canSignIn())
+                                        <span class="ok">enabled</span>
+                                    @else
+                                        <span>not set up</span>
+                                    @endif
+                                </div>
+                                <small class="text-muted d-block mb-2">
+                                    They sign in at <code>{{ url('/rider') }}</code>.
+                                    Leave the password blank to keep the current one.
+                                    @if ($deliveryMan->last_login_at)
+                                        Last signed in {{ $deliveryMan->last_login_at->diffForHumans() }}.
+                                    @endif
+                                </small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="filter-label" for="username">Username</label>
+                                <input type="text" id="username" name="username" class="form-control"
+                                       value="{{ old('username', $deliveryMan->username) }}"
+                                       autocomplete="off" placeholder="rahim_rider">
+                                @error('username')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="filter-label" for="password">
+                                    {{ $deliveryMan->password ? 'New password' : 'Set password' }}
+                                </label>
+                                <input type="password" id="password" name="password" class="form-control"
+                                       autocomplete="new-password" placeholder="Leave blank to keep current">
+                                @error('password')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="filter-label" for="password_confirmation">Confirm password</label>
+                                <input type="password" id="password_confirmation" name="password_confirmation"
+                                       class="form-control" autocomplete="new-password">
+                            </div>
+
                         </div>
                     </div>
 

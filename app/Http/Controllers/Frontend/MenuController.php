@@ -130,7 +130,14 @@ class MenuController extends Controller
             abort(404);
         }
 
-        return view('frontend.pages.food-details', compact('food'));
+        $reviews = $food->approvedReviews()
+            ->latest('id')
+            ->limit(20)
+            ->get();
+
+        $distribution = app(\App\Services\ReviewService::class)->distributionFor($food->id);
+
+        return view('frontend.pages.food-details', compact('food', 'reviews', 'distribution'));
     }
 
     /**
